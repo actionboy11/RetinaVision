@@ -1,0 +1,22 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: retina_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: retina_vision
+      MYSQL_USER: retina
+      MYSQL_PASSWORD: retina123456
+      TZ: Asia/Shanghai
+    ports:
+      - "3307:3306"
+    volumes:
+      - retina_mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command:                          #MySQL 默认字符集和排序规则
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  retina_mysql_data:  #MySQL 数据持久化
