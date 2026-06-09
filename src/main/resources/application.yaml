@@ -8,3 +8,9 @@ spring:
 
   profiles:
     active: dev
+
+
+retina:
+  jwt:
+    secret: retina-vision-dev-secret-retina-vision-dev-secret
+    expire-hours: 24

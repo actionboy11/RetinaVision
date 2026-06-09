@@ -11,4 +11,5 @@ public interface UserRegisterMapper extends BaseMapper<UserEntity> {
         return selectCount(new QueryWrapper<UserEntity>().eq("username",username))>0;
 
     }
+
 }

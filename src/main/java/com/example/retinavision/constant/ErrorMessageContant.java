@@ -7,4 +7,6 @@ public class ErrorMessageContant {
     public static final String USERNAME_LENGTH_ERROR = "用户名长度必须在4-20个字符之间";
     public static final String USER_NOT_LOGIN = "用户未登录";
     public static final String USER_NOT_AUTHORIZED = "用户未授权";
+    public static final String USER_PASSWORD_ERROR = "用户名或者密码错误";
+    public static final String USER_NOT_ACTIVE = "该用户账号不可使用";
 }
