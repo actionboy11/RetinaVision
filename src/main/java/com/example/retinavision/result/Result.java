@@ -1,39 +1,41 @@
 package com.example.retinavision.result;
 
-/**
- * 后端统一返回结果
- * @param <T>
- */
-
 import lombok.Data;
 
 import java.io.Serializable;
 
-@Data  //自动生成getter、setter、toString等方法
+/**
+ * Backend unified API response.
+ *
+ * @param <T> response data type
+ */
+@Data
 public class Result<T> implements Serializable {
-    private Integer code; //编码：1成功，0和其它数字为失败
-    private String msg; //错误信息
-    private T data; //数据
+    // 前端 ApiResponse 约定 code=0 表示成功。
+    private Integer code;
+    // 前端统一读取 message 字段展示错误信息，不能返回 msg。
+    private String message;
+    private T data;
 
-
-    //第一个 <T> —— 声明（声明这是一个泛型方法）PageResult
     public static <T> Result<T> success() {
         Result<T> result = new Result<T>();
-        result.code = 1;
+        result.code = 0;
+        result.message = "success";
         return result;
     }
 
     public static <T> Result<T> success(T object) {
         Result<T> result = new Result<T>();
         result.data = object;
-        result.code = 1;
+        result.code = 0;
+        result.message = "success";
         return result;
     }
 
-    public static <T> Result<T> error(String msg) {
-        Result result = new Result();
-        result.msg = msg;
-        result.code = 0;
+    public static <T> Result<T> error(String message) {
+        Result<T> result = new Result<T>();
+        result.message = message;
+        result.code = 1;
         return result;
     }
 }

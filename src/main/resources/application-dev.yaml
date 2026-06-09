@@ -1,6 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3307/retina_vision?useUnicode=true&characterEncoding=utf8mb4&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    # Codex修复：MySQL 表可以使用 utf8mb4，但 JDBC characterEncoding 需要写 Java 支持的 UTF-8，否则会抛 UnsupportedEncodingException 并导致注册接口表现为 403。
+    url: jdbc:mysql://localhost:3307/retina_vision?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     username: retina
     password: retina123456
