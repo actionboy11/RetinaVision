@@ -6,23 +6,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 用户角色枚举
+ * 患者性别枚举
  */
 @Getter
 @AllArgsConstructor
-public enum UserRole {
+public enum PatientGender {
     
-    /** 管理员 */
-    ADMIN("ADMIN", "管理员"),
+    /** 男性 */
+    MALE("MALE", "男性"),
     
-    /** 普通用户 */
-    USER("USER", "普通用户"),
+    /** 女性 */
+    FEMALE("FEMALE", "女性"),
     
-    /** 医生 */
-    DOCTOR("DOCTOR", "医生"),
-    
-    /** 研究员 */
-    RESEARCHER("RESEARCHER", "研究员");
+    /** 未知 */
+    UNKNOWN("UNKNOWN", "未知");
     
     @EnumValue
     @JsonValue

@@ -2,6 +2,7 @@ package com.example.retinavision.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.retinavision.constant.ErrorMessageContant;
+import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.AccountNotFoundException;
 import com.example.retinavision.mapper.UserRegisterMapper;
@@ -43,19 +44,19 @@ public class UserLoginServiceImpl implements UserLoginService {
         String password = normalizeBlank(userRegisterDTO.getPassword());
         String realname = normalizeBlank(userRegisterDTO.getRealName());
         if (username == null || password == null || realname == null){
-            throw new AccountNotFoundException("用户名、密码、真实姓名不能为空");
+            throw new AccountNotFoundException(ErrorMessageSignal.PARAM_ERROR, "用户名、密码、真实姓名不能为空");
         }
         if (username.length() < 4 || username.length() > 20){
-            throw new AccountNotFoundException(ErrorMessageContant.USERNAME_LENGTH_ERROR);
+            throw new AccountNotFoundException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.USERNAME_LENGTH_ERROR);
         }
         if (password.length() < 6 || password.length() > 20){
-            throw new AccountNotFoundException(ErrorMessageContant.PASSWORD_LENGTH_ERROR);
+            throw new AccountNotFoundException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.PASSWORD_LENGTH_ERROR);
         }
         if(userRegisterDTO.getRoleCode()== UserRole.ADMIN){
-            throw new AccountNotFoundException(ErrorMessageContant.USER_NOT_AUTHORIZED);
+            throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_AUTHORIZED);
         }
         if(userRegisterMapper.existsByUsername( username)){
-            throw new AccountNotFoundException(ErrorMessageContant.USER_ALREADY_EXISTS);
+            throw new AccountNotFoundException(ErrorMessageSignal.CONFLICT, ErrorMessageContant.USER_ALREADY_EXISTS);
         }
         UserEntity  userEntity = new UserEntity();
         userEntity.setUsername(username);
@@ -73,18 +74,18 @@ public class UserLoginServiceImpl implements UserLoginService {
     @Override
     public UserLoginVO UserLogin(UserLoginDTO userLoginDTO) {
         if (userLoginDTO.getUsername() == null || userLoginDTO.getPassword() == null){
-            throw new AccountNotFoundException(ErrorMessageContant.USER_PASSWORD_ERROR);
+            throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
         UserEntity user=userRegisterMapper.selectOne(
                 new QueryWrapper<UserEntity>().eq("username",userLoginDTO.getUsername()));
         if (user == null){
-            throw new AccountNotFoundException(ErrorMessageContant.USER_NOT_FOUND);
+            throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
         if (!passwordEncoder.matches(userLoginDTO.getPassword(),user.getPasswordHash())){
-            throw new AccountNotFoundException(ErrorMessageContant.USER_PASSWORD_ERROR);
+            throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
         if(user.getStatus()==0){
-            throw new AccountNotFoundException(ErrorMessageContant.USER_NOT_ACTIVE);
+            throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_ACTIVE);
         }
 
         String token = jwtUtil.generateToken(user.getId(),user.getUsername(),user.getRoleCode().name());
@@ -97,11 +98,11 @@ public class UserLoginServiceImpl implements UserLoginService {
         UserEntity user = userRegisterMapper.selectById(userId);
 
         if (user == null) {
-            throw new AccountNotFoundException(ErrorMessageContant.USER_NOT_FOUND);
+            throw new AccountNotFoundException(ErrorMessageSignal.NOT_FOUND, ErrorMessageContant.USER_NOT_FOUND);
         }
 
         if (user.getStatus() == 0) {
-            throw new AccountNotFoundException(ErrorMessageContant.USER_NOT_ACTIVE);
+            throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_ACTIVE);
         }
 
         return new CurrentUserVO(user.getId(), user.getUsername(), user.getRealName(), user.getRoleCode());

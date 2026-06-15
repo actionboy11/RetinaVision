@@ -13,10 +13,11 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PageResult implements Serializable {
+public class PageResult <T> implements Serializable {  //Serializable 是 Java 序列化的接口，用于对象序列化。
 
-    private long total; //总记录数
-
-    private List records; //当前页数据集合
+    private List<T> records;
+    private long total;
+    private Integer pageNo;
+    private Integer pageSize;
 
 }

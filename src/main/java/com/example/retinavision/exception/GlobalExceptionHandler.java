@@ -1,5 +1,7 @@
 package com.example.retinavision.exception;
 
+import com.example.retinavision.constant.ErrorMessageContant;
+import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.result.Result;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,7 +13,7 @@ public class GlobalExceptionHandler {
     // 优先级高：精确匹配 BaseException 及其子类
     public Result<Boolean> handleBaseException(BaseException exception) {
         // 业务异常统一返回前端约定的 JSON，避免注册页直接显示 HTTP 500。
-        return Result.error(exception.getMessage());
+        return Result.error(exception.getCode(), exception.getMessage());
     }
 
     // 优先级低：兜底处理所有其他异常
@@ -19,6 +21,6 @@ public class GlobalExceptionHandler {
     public Result<Boolean> handleException(Exception exception) {
         // 兜底异常也返回统一 JSON，便于前端展示错误信息；后端日志仍可用于定位真实原因。
         exception.printStackTrace();
-        return Result.error("服务器异常，请稍后重试");
+        return Result.error(ErrorMessageSignal.SERVER_ERROR, ErrorMessageContant.SERVER_ERROR_MSG);
     }
 }

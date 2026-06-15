@@ -6,23 +6,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 用户角色枚举
+ * 图片状态枚举
  */
 @Getter
 @AllArgsConstructor
-public enum UserRole {
+public enum ImageStatus {
     
-    /** 管理员 */
-    ADMIN("ADMIN", "管理员"),
+    /** 已上传 - 可用于创建任务 */
+    UPLOADED("UPLOADED", "已上传"),
     
-    /** 普通用户 */
-    USER("USER", "普通用户"),
+    /** 已绑定任务 - 已有关联任务 */
+    BOUND_TASK("BOUND_TASK", "已绑定任务"),
     
-    /** 医生 */
-    DOCTOR("DOCTOR", "医生"),
-    
-    /** 研究员 */
-    RESEARCHER("RESEARCHER", "研究员");
+    /** 已删除 - 不可用于创建任务 */
+    DELETED("DELETED", "已删除");
     
     @EnumValue
     @JsonValue

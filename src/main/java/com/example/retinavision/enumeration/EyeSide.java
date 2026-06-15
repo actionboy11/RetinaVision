@@ -6,23 +6,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 用户角色枚举
+ * 眼别枚举
  */
 @Getter
 @AllArgsConstructor
-public enum UserRole {
+public enum EyeSide {
     
-    /** 管理员 */
-    ADMIN("ADMIN", "管理员"),
+    /** 左眼 */
+    LEFT("LEFT", "左眼"),
     
-    /** 普通用户 */
-    USER("USER", "普通用户"),
+    /** 右眼 */
+    RIGHT("RIGHT", "右眼"),
     
-    /** 医生 */
-    DOCTOR("DOCTOR", "医生"),
-    
-    /** 研究员 */
-    RESEARCHER("RESEARCHER", "研究员");
+    /** 双眼 */
+    BOTH("BOTH", "双眼");
     
     @EnumValue
     @JsonValue

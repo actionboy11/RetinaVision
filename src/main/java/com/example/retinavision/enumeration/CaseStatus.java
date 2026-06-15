@@ -6,23 +6,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 用户角色枚举
+ * 病例状态枚举
  */
 @Getter
 @AllArgsConstructor
-public enum UserRole {
+public enum CaseStatus {
     
-    /** 管理员 */
-    ADMIN("ADMIN", "管理员"),
+    /** 活跃 - 正常使用的病例 */
+    ACTIVE("ACTIVE", "活跃"),
     
-    /** 普通用户 */
-    USER("USER", "普通用户"),
+    /** 已归档 - 已归档的病例 */
+    ARCHIVED("ARCHIVED", "已归档"),
     
-    /** 医生 */
-    DOCTOR("DOCTOR", "医生"),
-    
-    /** 研究员 */
-    RESEARCHER("RESEARCHER", "研究员");
+    /** 已删除 - 已删除的病例 */
+    DELETED("DELETED", "已删除");
     
     @EnumValue
     @JsonValue
