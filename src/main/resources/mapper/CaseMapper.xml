@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.retinavision.mapper.CaseMapper">
+    <!--
+      公共筛选条件：
+      1. status 不传时默认排除 DELETED；
+      2. keyword 同时模糊匹配 case_no 和 patient_code；
+      3. status / eyeSide 传了才追加精确筛选。
+    -->
+    <sql id="casePageWhere">
+        WHERE 1 = 1
+        <if test="query.status == null">
+            AND c.status != 'DELETED'
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (
+                c.case_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR c.patient_code LIKE CONCAT('%', #{query.keyword}, '%')
+            )
+        </if>
+        <if test="query.status != null">
+            AND c.status = #{query.status}
+        </if>
+        <if test="query.eyeSide != null">
+            AND c.eye_side = #{query.eyeSide}
+        </if>
+    </sql>
+
+    <!-- 查询符合筛选条件的总数，用于前端分页器显示 total。 -->
+    <select id="countCasePage" resultType="long">
+        SELECT COUNT(*)
+        FROM medical_case c
+        <include refid="casePageWhere" />
+    </select>
+
+    <!-- 查询当前页数据；createdByName 来自 sys_user.real_name，因此这里需要 join 用户表。 -->
+    <select id="selectCasePage" resultType="com.example.retinavision.pojo.VO.CaseListItemVO">
+        SELECT
+            c.id AS id,
+            c.case_no AS caseNo,
+            c.patient_code AS patientCode,
+            c.patient_age AS patientAge,
+            c.patient_gender AS patientGender,
+            c.eye_side AS eyeSide,
+            c.status AS status,
+            c.diagnosis_note AS diagnosisNote,
+            c.created_by AS createdBy,
+            u.real_name AS createdByName,
+            c.created_at AS createdAt,
+            c.updated_at AS updatedAt
+        FROM medical_case c
+        LEFT JOIN sys_user u ON u.id = c.created_by
+        <include refid="casePageWhere" />
+        ORDER BY c.created_at DESC, c.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="getCaseById" resultType="com.example.retinavision.pojo.VO.CaseListItemVO">
+        SELECT
+            c.id AS id,
+            c.case_no AS caseNo,
+            c.patient_code AS patientCode,
+            c.patient_age AS patientAge,
+            c.patient_gender AS patientGender,
+            c.eye_side AS eyeSide,
+            c.status AS status,
+            c.diagnosis_note AS diagnosisNote,
+            c.created_by AS createdBy,
+            u.real_name AS createdByName,
+            c.created_at AS createdAt,
+            c.updated_at AS updatedAt
+        FROM medical_case c
+        LEFT JOIN sys_user u ON u.id = c.created_by
+        WHERE c.id = #{id}
+    </select>
+</mapper>
