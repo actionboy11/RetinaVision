@@ -3,6 +3,8 @@ package com.example.retinavision.pojo.Entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.example.retinavision.enumeration.TaskStatus;
+import com.example.retinavision.enumeration.TaskType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +18,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @TableName("analysis_task")
-public class TaskEntity {
+public class TaskEntity  {
 
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
@@ -27,9 +29,9 @@ public class TaskEntity {
 
     private Long imageFileId;
 
-    private String taskType;
+    private TaskType taskType;
 
-    private String status;
+    private TaskStatus status;
 
     private Integer priority;
 
@@ -38,7 +40,7 @@ public class TaskEntity {
     private Integer maxRetryCount;
 
     private String errorMessage;
-    private Long submittedBy;
+    private Integer submittedBy;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private LocalDateTime submittedAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
@@ -49,4 +51,6 @@ public class TaskEntity {
     private LocalDateTime canceledAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private LocalDateTime updatedAt;
+
+
 }

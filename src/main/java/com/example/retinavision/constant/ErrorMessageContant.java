@@ -32,7 +32,9 @@ public class ErrorMessageContant {
     public static final String IMAGE_TYPE_ERROR = "仅支持 png、jpg、jpeg、tif、tiff 格式图像";
     public static final String IMAGE_SIZE_ERROR = "图像文件不能超过20MB";
     public static final String IMAGE_STORAGE_PATH_ERROR = "图像文件不存在或存储路径无效";
-    
+    // ==================== 任务相关 ====================
+    public static final String TASK_NOT_EXISTS = "任务不存在";
+
     // ==================== 通用错误提示 ====================
     public static final String SUCCESS_MSG = "成功";
     public static final String PARAM_ERROR_MSG = "请求参数错误";

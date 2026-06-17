@@ -2,19 +2,21 @@ package com.example.retinavision.service;
 
 import com.example.retinavision.pojo.DTO.CreateTaskDTO;
 import com.example.retinavision.pojo.DTO.TaskListQueryDTO;
-import com.example.retinavision.pojo.VO.CreateTaskVO;
-import com.example.retinavision.pojo.VO.TaskDetailVO;
-import com.example.retinavision.pojo.VO.TaskListItemVO;
+import com.example.retinavision.pojo.VO.*;
 import com.example.retinavision.result.PageResult;
+
+import java.util.List;
 
 public interface TaskService {
     PageResult<TaskListItemVO> getLTaskList(TaskListQueryDTO taskListQueryDTO);
 
-    CreateTaskVO createTask(CreateTaskDTO createTaskDTO);
+    CreateTaskVO createTask(CreateTaskDTO createTaskDTO,Integer submittedBy);
 
-    TaskDetailVO getTaskDetail(Integer taskId);
+    TaskDetailVO getTaskDetail(Integer taskId, Integer submittedBy);
 
-    void cancelTask(Integer taskId);
+    void cancelTask(Integer taskId, Integer id);
 
-    TaskDetailVO retryTask(Integer taskId);
+    RetryTaskVO retryTask(Integer taskId, Integer id);
+
+    List<TaskLogVO> getTaskLog(Integer taskId, Integer id);
 }

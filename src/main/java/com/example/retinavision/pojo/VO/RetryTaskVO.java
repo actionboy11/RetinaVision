@@ -1,6 +1,7 @@
 package com.example.retinavision.pojo.VO;
 
 import com.example.retinavision.enumeration.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class RetryTaskVO {
     private Long id;
     private String taskNo;
-    private TaskStatus status;
+    @JsonProperty("status")
+    private TaskStatus taskStatus;
     private Integer retryCount;
 }

@@ -2,3 +2,116 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.retinavision.mapper.TaskMapper">
+    <!--
+      任务分页公共筛选条件：
+      1. analysis_task 只保存 case_id，不冗余保存 case_no；
+      2. 病例编号搜索通过 t.case_id join medical_case c 后使用 c.case_no；
+      3. keyword 是搜索框模糊搜索，匹配 task_no 或 case_no；
+      4. caseNo 是预留的精确病例编号筛选，当前前端任务列表暂不传。
+    -->
+    <sql id="taskPageWhere">
+        WHERE 1 = 1
+        <if test="query.status != null">
+            AND t.status = #{query.status}
+        </if>
+        <if test="query.taskType != null">
+            AND t.task_type = #{query.taskType}
+        </if>
+        <if test="query.caseNo != null and query.caseNo != ''">
+            AND c.case_no = #{query.caseNo}
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (
+                t.task_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR c.case_no LIKE CONCAT('%', #{query.keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <!--
+      分页 total 必须和列表 records 使用同一套 join 和筛选条件。
+      因为 keyword 需要匹配 medical_case.case_no，所以 count 查询也必须 join medical_case。
+    -->
+    <select id="countTaskPage" resultType="long">
+        SELECT COUNT(*)
+        FROM analysis_task t
+        LEFT JOIN medical_case c ON c.id = t.case_id
+        LEFT JOIN image_file i ON i.id = t.image_file_id
+        LEFT JOIN sys_user u ON u.id = t.submitted_by
+        <include refid="taskPageWhere" />
+    </select>
+
+    <!--
+      任务列表返回前端 TaskListItemVO：
+      caseNo 来自 medical_case，originalFilename 来自 image_file，submittedByName 来自 sys_user。
+    -->
+    <select id="selectTaskPage" resultType="com.example.retinavision.pojo.VO.TaskListItemVO">
+        SELECT
+            t.id AS id,
+            t.task_no AS taskNo,
+            t.case_id AS caseId,
+            c.case_no AS caseNo,
+            t.image_file_id AS imageFileId,
+            i.original_filename AS originalFilename,
+            t.task_type AS taskType,
+            t.status AS status,
+            t.priority AS priority,
+            t.retry_count AS retryCount,
+            t.max_retry_count AS maxRetryCount,
+            t.error_message AS errorMessage,
+            t.submitted_by AS submittedBy,
+            u.real_name AS submittedByName,
+            t.submitted_at AS submittedAt,
+            t.started_at AS startedAt,
+            t.finished_at AS finishedAt,
+            t.updated_at AS updatedAt
+        FROM analysis_task t
+        LEFT JOIN medical_case c ON c.id = t.case_id
+        LEFT JOIN image_file i ON i.id = t.image_file_id
+        LEFT JOIN sys_user u ON u.id = t.submitted_by
+        <include refid="taskPageWhere" />
+        ORDER BY t.submitted_at DESC, t.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="getTaskById" resultType="com.example.retinavision.pojo.VO.TaskListItemVO">
+        SELECT
+            t.id AS id,
+            t.task_no AS taskNo,
+            t.case_id AS caseId,
+            c.case_no AS caseNo,
+            t.image_file_id AS imageFileId,
+            i.original_filename AS originalFilename,
+            t.task_type AS taskType,
+            t.status AS status,
+            t.priority AS priority,
+            t.retry_count AS retryCount,
+            t.max_retry_count AS maxRetryCount,
+            t.error_message AS errorMessage,
+            t.submitted_by AS submittedBy,
+            u.real_name AS submittedByName,
+            t.submitted_at AS submittedAt,
+            t.started_at AS startedAt,
+            t.finished_at AS finishedAt,
+            t.updated_at AS updatedAt
+        FROM analysis_task t
+        LEFT JOIN medical_case c ON c.id = t.case_id
+        LEFT JOIN image_file i ON i.id = t.image_file_id
+        LEFT JOIN sys_user u ON u.id = t.submitted_by
+        WHERE t.id = #{taskId}
+    </select>
+
+    <!--
+      Codex: 创建任务前判断同一张图像、同一种任务类型是否已经有未结束任务。
+      只拦截 CREATED/WAITING/RUNNING/RETRYING，SUCCESS/FAILED/CANCELED 后续允许重新创建。
+    -->
+    <select id="countUnfinishedTask" resultType="long">
+        SELECT COUNT(*)
+        FROM analysis_task
+        WHERE image_file_id = #{imageFileId}
+          AND task_type = #{taskType}
+          AND status IN ('CREATED', 'WAITING', 'RUNNING', 'RETRYING')
+    </select>
+</mapper>

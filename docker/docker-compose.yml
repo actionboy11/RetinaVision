@@ -14,9 +14,25 @@ services:
     volumes:
       - retina_mysql_data:/var/lib/mysql
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-    command:                          #MySQL 默认字符集和排序规则
+    command:
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: retina_rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: retina
+      RABBITMQ_DEFAULT_PASS: retina123456
+      RABBITMQ_DEFAULT_VHOST: /
+      TZ: Asia/Shanghai
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - retina_rabbitmq_data:/var/lib/rabbitmq
+
 volumes:
-  retina_mysql_data:  #MySQL 数据持久化
+  retina_mysql_data:
+  retina_rabbitmq_data:

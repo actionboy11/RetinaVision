@@ -3,6 +3,7 @@ package com.example.retinavision.pojo.Entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.example.retinavision.common.Deletable;
 import com.example.retinavision.enumeration.ImageStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @TableName("image_file")
-public class ImageFileEntity {
+public class ImageFileEntity implements Deletable {
     
     /** 图像ID */
     @TableId(type = IdType.AUTO)
@@ -70,4 +71,8 @@ public class ImageFileEntity {
     /** 软删除时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private LocalDateTime deletedAt;
+    @Override
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
 }

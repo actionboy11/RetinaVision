@@ -2,6 +2,7 @@ package com.example.retinavision.pojo.VO;
 
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.enumeration.TaskType;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +18,9 @@ public class TaskDetailVO {
     private Long id;
     private String taskNo;
     private Long caseId;
-    private  String caseNo;
+    private  String caseNo;   //
     private Long imageFileId;
-    private String originalFilename;
+    private String originalFilename;  //
     private TaskType taskType;
     private TaskStatus status;
     private  int priority;
@@ -27,10 +28,14 @@ public class TaskDetailVO {
     private int maxRetryCount;
     private String errorMessage;
     private Long submittedBy;
-    private String submittedByName;
+    private String submittedByName;   //
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime submittedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime updatedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime startedAt;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime finishedAt;
-    private  String imagePreviewUrl;
+    private  String imagePreviewUrl;    //
 }
