@@ -8,6 +8,7 @@ import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -128,6 +129,16 @@ public class RabbitMqConfig {
         rabbitTemplate.setMessageConverter(jacksonMessageConverter);
         rabbitTemplate.setMandatory(true);
         return rabbitTemplate;
+    }
+
+    /**
+     * 创建 RabbitAdmin。
+     *
+     * RabbitAdmin 可以声明队列，也可以读取队列的运行态属性；Dashboard 队列统计会用它读取 ready 消息数和消费者数量。
+     */
+    @Bean
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+        return new RabbitAdmin(connectionFactory);
     }
 
     /**

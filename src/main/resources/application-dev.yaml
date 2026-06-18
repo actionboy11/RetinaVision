@@ -21,6 +21,8 @@ spring:
         acknowledge-mode: manual
 
 retina:
+  upload:
+    result-root: uploads/results
   mq:
     analysis-exchange: retina.analysis.exchange
     analysis-routing-key: retina.analysis.task.created

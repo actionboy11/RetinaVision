@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--&lt;!&ndash; 只挑选 status = SUCCESS，并且 started_at、finished_at 都存在的任务；-->
+<!--计算每个任务从开始到完成的耗时，单位毫秒；-->
+<!--对这些耗时取平均值；-->
+<!--四舍五入；-->
+<!--如果没有可统计任务，就返回 0；-->
+<!--字段名叫 averageProcessingTimeMs。 &ndash;&gt;-->
+<mapper namespace="com.example.retinavision.mapper.StatisticsMapper">
+    <select id="selectTaskStatistics" resultType="com.example.retinavision.pojo.VO.TaskStatisticsVO">
+        SELECT
+            COALESCE(SUM(CASE WHEN DATE(submitted_at) = CURRENT_DATE THEN 1 ELSE 0 END), 0) AS todaySubmittedCount,
+            COALESCE(SUM(CASE WHEN DATE(finished_at) = CURRENT_DATE AND status = 'SUCCESS' THEN 1 ELSE 0 END), 0) AS todaySuccessCount,
+            COALESCE(SUM(CASE WHEN DATE(finished_at) = CURRENT_DATE AND status = 'FAILED' THEN 1 ELSE 0 END), 0) AS todayFailedCount,
+            COALESCE(SUM(CASE WHEN status = 'WAITING' THEN 1 ELSE 0 END), 0) AS waitingCount,
+            COALESCE(SUM(CASE WHEN status = 'RUNNING' THEN 1 ELSE 0 END), 0) AS runningCount,
+            COUNT(*) AS totalTaskCount,
+            CASE
+                WHEN COUNT(*) = 0 THEN 0
+                ELSE COALESCE(SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END), 0) / COUNT(*)
+            END AS successRate,
+            COALESCE(ROUND(AVG(
+                CASE
+                    WHEN status = 'SUCCESS' AND started_at IS NOT NULL AND finished_at IS NOT NULL
+                    THEN TIMESTAMPDIFF(MICROSECOND, started_at, finished_at) / 1000
+                    ELSE NULL
+                END
+            )), 0) AS averageProcessingTimeMs
+        FROM analysis_task
+    </select>
+
+    <select id="selectTaskTrend" resultType="com.example.retinavision.pojo.VO.TaskTrendItemVO">
+        SELECT
+            DATE_FORMAT(submittedDate, '%Y-%m-%d') AS date,
+            COUNT(*) AS submittedCount,
+            COALESCE(SUM(CASE WHEN status = 'SUCCESS' THEN 1 ELSE 0 END), 0) AS successCount,
+            COALESCE(SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END), 0) AS failedCount
+        FROM (
+            SELECT
+                DATE(submitted_at) AS submittedDate,
+                status
+            FROM analysis_task
+            WHERE submitted_at >= #{startDate}
+        ) trend
+        GROUP BY submittedDate
+        ORDER BY submittedDate
+    </select>
+</mapper>
