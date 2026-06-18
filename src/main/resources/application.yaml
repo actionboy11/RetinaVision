@@ -20,6 +20,10 @@ mybatis-plus:
 
 
 retina:
+  ai:
+    base-url: http://127.0.0.1:8000
+    connect-timeout: 5s
+    read-timeout: 5m
   jwt:
     secret: retina-vision-dev-secret-retina-vision-dev-secret
     expire-hours: 24

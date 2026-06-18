@@ -1,0 +1,91 @@
+package com.example.retinavision.ai;
+
+import com.example.retinavision.ai.dto.AiInferenceResponse;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class HttpAiInferenceClientTest {
+    private HttpServer server;
+    private String baseUrl;
+    private final AtomicBoolean multipartReceived = new AtomicBoolean(false);
+
+    @BeforeEach
+    void setUp() throws IOException {
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/v1/inference/vessel-segmentation", this::handleInference);
+        server.createContext("/v1/artifacts/abc123/mask", exchange ->
+                respond(exchange, 200, "image/png", "png-mask".getBytes(StandardCharsets.UTF_8)));
+        server.start();
+        baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
+    }
+
+    @AfterEach
+    void tearDown() {
+        server.stop(0);
+    }
+
+    @Test
+    void uploadsImageParsesResponseAndDownloadsMask() throws IOException {
+        Path image = Files.createTempFile("retina", ".png");
+        Files.writeString(image, "image-bytes");
+        AiServiceProperties properties = new AiServiceProperties();
+        properties.setBaseUrl(baseUrl);
+        properties.setConnectTimeout(Duration.ofSeconds(2));
+        properties.setReadTimeout(Duration.ofSeconds(5));
+        HttpAiInferenceClient client = new HttpAiInferenceClient(properties);
+
+        AiInferenceResponse response = client.segment(image, "retina.png", "image/png");
+        byte[] mask = client.downloadMask(response.getMaskUrl());
+
+        assertThat(multipartReceived).isTrue();
+        assertThat(response.getInferenceId()).isEqualTo("abc123");
+        assertThat(response.getResultType()).isEqualTo("VESSEL_SEGMENTATION");
+        assertThat(response.getResultJson()).containsEntry("vesselAreaRatio", 0.25);
+        assertThat(response.getModelName()).isEqualTo("FSCNet_Final_DMI");
+        assertThat(mask).isEqualTo("png-mask".getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void handleInference(HttpExchange exchange) throws IOException {
+        String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+        String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.ISO_8859_1);
+        multipartReceived.set(
+                "POST".equals(exchange.getRequestMethod())
+                        && contentType != null
+                        && contentType.startsWith("multipart/form-data")
+                        && body.contains("filename=\"retina.png\"")
+                        && body.contains("image-bytes")
+        );
+        String json = """
+                {
+                  "inferenceId":"abc123",
+                  "resultType":"VESSEL_SEGMENTATION",
+                  "resultJson":{"vesselAreaRatio":0.25,"processingTimeMs":12,"modelVersion":"v1","conclusion":"ok"},
+                  "modelName":"FSCNet_Final_DMI",
+                  "modelVersion":"v1",
+                  "processingTimeMs":12,
+                  "maskUrl":"/v1/artifacts/abc123/mask"
+                }
+                """;
+        respond(exchange, 200, "application/json", json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void respond(HttpExchange exchange, int status, String contentType, byte[] body) throws IOException {
+        exchange.getResponseHeaders().set("Content-Type", contentType);
+        exchange.sendResponseHeaders(status, body.length);
+        exchange.getResponseBody().write(body);
+        exchange.close();
+    }
+}

@@ -15,12 +15,14 @@ http://localhost:8080/api
 - 眼底图像上传、列表、预览和软删除
 - 分析任务创建、分页、详情、取消和失败重试
 - RabbitMQ 任务投递、手动 ACK/NACK 和死信队列
+- Python FSCNet 血管分割服务调用与结果图回收
+- `VESSEL_SEGMENTATION` 自动推进到 `SUCCESS` 或 `FAILED`
 - 任务状态日志与详情时间线数据
 - 分析结果查询、结果图预览和报告下载
 - 任务数量、处理耗时、趋势和队列统计
 - 统一响应结构、分页结构、错误码与全局异常处理
 
-> 当前 RabbitMQ 消费者会将有效任务从 `WAITING` 推进到 `RUNNING`。真实 AI 推理、结果生成以及自动推进到 `SUCCESS` 或 `FAILED` 的 Worker 仍需接入。
+> 当前真实 AI 链路仅支持 `VESSEL_SEGMENTATION`。`IMAGE_QUALITY_CHECK` 会明确进入 `FAILED`，不会返回伪造结果。
 
 ## 技术栈
 
@@ -89,6 +91,7 @@ RetinaVision/
 - Docker Desktop 与 Docker Compose（推荐）
 - MySQL 8.x
 - RabbitMQ 3.x
+- Python 3.11 与独立的 `retinavision-ai` 推理服务
 
 可检查本机环境：
 
@@ -192,7 +195,31 @@ server:
 
 开发环境默认启用 `dev` Profile。
 
-### 4. 启动后端
+### 4. 启动 Python AI 服务
+
+在 `C:\codexcode\RetinaVision\retinavision-ai` 中执行：
+
+```powershell
+& 'C:\develop\anaconda3\envs\retinavision-ai\python.exe' -m uvicorn retinavision_ai.api:app --app-dir src --host 127.0.0.1 --port 8000
+```
+
+确认模型已加载：
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
+```
+
+后端默认通过以下配置访问 AI 服务：
+
+```yaml
+retina:
+  ai:
+    base-url: http://127.0.0.1:8000
+    connect-timeout: 5s
+    read-timeout: 5m
+```
+
+### 5. 启动后端
 
 ```powershell
 mvn.cmd spring-boot:run
@@ -204,7 +231,7 @@ mvn.cmd spring-boot:run
 http://localhost:8080/api
 ```
 
-### 5. 运行测试与构建
+### 6. 运行测试与构建
 
 ```powershell
 mvn.cmd test
@@ -340,8 +367,8 @@ RETRYING
 当前基础流转：
 
 ```text
-创建任务 -> WAITING -> RabbitMQ -> RUNNING
-FAILED -> 重试 -> WAITING -> RabbitMQ -> RUNNING
+创建任务 -> WAITING -> RabbitMQ -> RUNNING -> Python AI -> SUCCESS
+Python AI 调用或推理失败 -> FAILED -> 重试 -> WAITING
 CREATED/WAITING -> CANCELED
 ```
 
@@ -429,9 +456,9 @@ docker compose -f docker/docker-compose.yml up -d
 
 `down -v` 会永久删除当前 Docker 数据卷中的数据库和 RabbitMQ 数据，请谨慎使用。
 
-### 任务一直停留在 RUNNING
+### 任务进入 FAILED，提示 AI 服务调用失败
 
-当前消费者只实现了任务领取和 `RUNNING` 状态更新。需要接入真实 AI Worker，完成推理、结果入库以及 `SUCCESS`/`FAILED` 状态更新。
+确认 Python 服务已启动，并检查 <http://127.0.0.1:8000/health>。后端会将原图上传到 Python 服务，下载 mask 后保存到 `uploads/results/tasks/{taskId}/mask.png`。
 
 ### Dashboard 队列未确认消息始终为 0
 
@@ -447,7 +474,7 @@ AMQP 被动声明无法提供精确的 unacked 数量，当前该字段返回 `0
 
 ## 当前限制与后续工作
 
-- 接入真实 AI Worker，完成 `RUNNING -> SUCCESS/FAILED`。
+- 为 `IMAGE_QUALITY_CHECK` 接入独立模型；当前仅支持血管分割。
 - 补齐病例和图像删除前的任务关联校验。
 - 增加 RabbitMQ、结果文件、统计 SQL 和完整接口集成测试。
 - 统一部分 Java ID 字段的 `Integer`/`Long` 类型。
