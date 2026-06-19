@@ -33,6 +33,36 @@ services:
     volumes:
       - retina_rabbitmq_data:/var/lib/rabbitmq
 
+  retinavision-ai:
+    build:
+      context: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}
+      dockerfile: Dockerfile
+    container_name: retina_ai
+    restart: unless-stopped
+    environment:
+      RETINAVISION_AI_MODEL_PATH: /app/models/model_new.pth
+      RETINAVISION_AI_STORAGE_ROOT: /app/storage
+      TZ: Asia/Shanghai
+    ports:
+      - "${RETINAVISION_AI_PORT:-8000}:8000"
+    volumes:
+      - type: bind
+        source: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}/models/model_new.pth
+        target: /app/models/model_new.pth
+        read_only: true
+      - type: bind
+        source: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}/storage
+        target: /app/storage
+      - type: bind
+        source: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}/logs
+        target: /app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)); assert data['status']=='UP' and data['ready']"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
 volumes:
   retina_mysql_data:
   retina_rabbitmq_data:

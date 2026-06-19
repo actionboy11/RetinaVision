@@ -1,6 +1,7 @@
 package com.example.retinavision.service.impl;
 
 import com.example.retinavision.ai.AiInferenceClient;
+import com.example.retinavision.ai.AiInferenceException;
 import com.example.retinavision.ai.dto.AiInferenceResponse;
 import com.example.retinavision.enumeration.ImageStatus;
 import com.example.retinavision.enumeration.TaskStatus;
@@ -18,6 +19,8 @@ import com.example.retinavision.service.AnalysisTaskExecutionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +31,11 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionService {
+    private static final Logger log = LoggerFactory.getLogger(AnalysisTaskExecutionServiceImpl.class);
     private static final Set<TaskStatus> CONSUMABLE_STATUSES =
             EnumSet.of(TaskStatus.WAITING, TaskStatus.RETRYING);
     private static final int MAX_ERROR_MESSAGE_LENGTH = 1024;
@@ -82,6 +87,8 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         if (!claimForExecution(task)) {
             return ExecutionDisposition.IGNORED;
         }
+        String requestId = "task-" + task.getId() + "-" + UUID.randomUUID();
+        long attemptStarted = System.nanoTime();
         try {
             if (task.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
                 throw new IllegalStateException("暂不支持任务类型：" + task.getTaskType());
@@ -93,18 +100,32 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
             AiInferenceResponse response = aiInferenceClient.segment(
                     imagePath,
                     image.getOriginalFilename(),
-                    image.getFileType()
+                    image.getFileType(),
+                    requestId
             );
             //response.getMaskUrl() 得到的是 Python AI 服务返回的 HTTP 相对地址，不是 Windows 文件路径
-            byte[] maskBytes = aiInferenceClient.downloadMask(response.getMaskUrl());
+            byte[] maskBytes = aiInferenceClient.downloadMask(response.getMaskUrl(), requestId);
             // 将分割结果图存储到本地文件系统，并返回存储路径
             String maskObjectKey = storeMask(task.getId(), maskBytes);
             // 将分析结果和分割图信息持久化到数据库，更新任务状态为 SUCCESS，并记录完成时间和日志
             persistSuccess(task, response, maskObjectKey);
+            log.info(
+                    "AI task succeeded taskId={} taskNo={} retryCount={} requestId={} durationMs={}",
+                    task.getId(), task.getTaskNo(), task.getRetryCount(), requestId,
+                    elapsedMillis(attemptStarted)
+            );
             return ExecutionDisposition.SUCCESS;
         } catch (Exception exception) {
             // 将任务状态更新为 FAILED，并记录失败时间和日志
             persistFailure(task, exception);
+            String category = exception instanceof AiInferenceException aiException
+                    ? aiException.getCategory().name()
+                    : "UNKNOWN";
+            log.warn(
+                    "AI task failed taskId={} taskNo={} retryCount={} requestId={} category={} durationMs={}",
+                    task.getId(), task.getTaskNo(), task.getRetryCount(), requestId, category,
+                    elapsedMillis(attemptStarted)
+            );
             return ExecutionDisposition.FAILED;
         }
     }
@@ -230,5 +251,9 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
                 .operatorId(null)
                 .createdAt(createdAt)
                 .build());
+    }
+
+    private long elapsedMillis(long startedNanos) {
+        return (System.nanoTime() - startedNanos) / 1_000_000L;
     }
 }

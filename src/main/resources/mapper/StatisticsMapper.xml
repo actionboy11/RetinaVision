@@ -18,6 +18,7 @@
             COALESCE(SUM(CASE WHEN DATE(finished_at) = CURRENT_DATE AND status = 'FAILED' THEN 1 ELSE 0 END), 0) AS todayFailedCount,
             COALESCE(SUM(CASE WHEN status = 'WAITING' THEN 1 ELSE 0 END), 0) AS waitingCount,
             COALESCE(SUM(CASE WHEN status = 'RUNNING' THEN 1 ELSE 0 END), 0) AS runningCount,
+            COALESCE(SUM(CASE WHEN status = 'RETRYING' THEN 1 ELSE 0 END), 0) AS retryingCount,
             COUNT(*) AS totalTaskCount,
             CASE
                 WHEN COUNT(*) = 0 THEN 0

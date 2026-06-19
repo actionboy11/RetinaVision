@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -82,8 +83,8 @@ class AnalysisTaskExecutionServiceImplTest {
         when(taskMapper.selectById(100L)).thenReturn(task);
         when(taskMapper.claimForExecution(org.mockito.ArgumentMatchers.eq(100L), any())).thenReturn(1);
         when(imageMapper.selectById(20L)).thenReturn(imageEntity);
-        when(aiInferenceClient.segment(image, "source.png", "image/png")).thenReturn(response);
-        when(aiInferenceClient.downloadMask(response.getMaskUrl())).thenReturn(new byte[]{9, 8, 7});
+        when(aiInferenceClient.segment(any(), anyString(), anyString(), anyString())).thenReturn(response);
+        when(aiInferenceClient.downloadMask(anyString(), anyString())).thenReturn(new byte[]{9, 8, 7});
 
         ExecutionDisposition disposition = service.process(message(100L, TaskType.VESSEL_SEGMENTATION));
 
@@ -110,7 +111,7 @@ class AnalysisTaskExecutionServiceImplTest {
         assertThat(disposition).isEqualTo(ExecutionDisposition.FAILED);
         assertThat(task.getStatus()).isEqualTo(TaskStatus.FAILED);
         assertThat(task.getErrorMessage()).contains("暂不支持");
-        verify(aiInferenceClient, never()).segment(any(), any(), any());
+        verify(aiInferenceClient, never()).segment(any(), any(), any(), any());
     }
 
     @Test
@@ -127,7 +128,7 @@ class AnalysisTaskExecutionServiceImplTest {
                 .fileType("image/png")
                 .storageObjectKey("source.png")
                 .build());
-        when(aiInferenceClient.segment(image, "source.png", "image/png"))
+        when(aiInferenceClient.segment(any(), anyString(), anyString(), anyString()))
                 .thenThrow(new AiInferenceException("AI unavailable"));
 
         ExecutionDisposition disposition = service.process(message(102L, TaskType.VESSEL_SEGMENTATION));
@@ -146,7 +147,7 @@ class AnalysisTaskExecutionServiceImplTest {
         ExecutionDisposition disposition = service.process(message(103L, TaskType.VESSEL_SEGMENTATION));
 
         assertThat(disposition).isEqualTo(ExecutionDisposition.IGNORED);
-        verify(aiInferenceClient, never()).segment(any(), any(), any());
+        verify(aiInferenceClient, never()).segment(any(), any(), any(), any());
         verify(logMapper, never()).insert(any(LogEntity.class));
     }
 

@@ -14,20 +14,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class HttpAiInferenceClientTest {
     private HttpServer server;
     private String baseUrl;
     private final AtomicBoolean multipartReceived = new AtomicBoolean(false);
+    private final AtomicReference<String> inferenceRequestId = new AtomicReference<>();
+    private final AtomicReference<String> artifactRequestId = new AtomicReference<>();
 
     @BeforeEach
     void setUp() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/v1/inference/vessel-segmentation", this::handleInference);
-        server.createContext("/v1/artifacts/abc123/mask", exchange ->
-                respond(exchange, 200, "image/png", "png-mask".getBytes(StandardCharsets.UTF_8)));
+        server.createContext("/v1/artifacts/abc123/mask", exchange -> {
+            artifactRequestId.set(exchange.getRequestHeaders().getFirst("X-Request-ID"));
+            respond(exchange, 200, "image/png", "png-mask".getBytes(StandardCharsets.UTF_8));
+        });
         server.start();
         baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
     }
@@ -47,8 +53,8 @@ class HttpAiInferenceClientTest {
         properties.setReadTimeout(Duration.ofSeconds(5));
         HttpAiInferenceClient client = new HttpAiInferenceClient(properties);
 
-        AiInferenceResponse response = client.segment(image, "retina.png", "image/png");
-        byte[] mask = client.downloadMask(response.getMaskUrl());
+        AiInferenceResponse response = client.segment(image, "retina.png", "image/png", "task-100-attempt-1");
+        byte[] mask = client.downloadMask(response.getMaskUrl(), "task-100-attempt-1");
 
         assertThat(multipartReceived).isTrue();
         assertThat(response.getInferenceId()).isEqualTo("abc123");
@@ -56,9 +62,24 @@ class HttpAiInferenceClientTest {
         assertThat(response.getResultJson()).containsEntry("vesselAreaRatio", 0.25);
         assertThat(response.getModelName()).isEqualTo("FSCNet_Final_DMI");
         assertThat(mask).isEqualTo("png-mask".getBytes(StandardCharsets.UTF_8));
+        assertThat(inferenceRequestId.get()).isEqualTo("task-100-attempt-1");
+        assertThat(artifactRequestId.get()).isEqualTo("task-100-attempt-1");
+    }
+
+    @Test
+    void rejectsUntrustedArtifactUrlWithStableFailureCategory() {
+        AiServiceProperties properties = new AiServiceProperties();
+        properties.setBaseUrl(baseUrl);
+        HttpAiInferenceClient client = new HttpAiInferenceClient(properties);
+
+        assertThatThrownBy(() -> client.downloadMask("https://evil.example/mask.png", "request-1"))
+                .isInstanceOf(AiInferenceException.class)
+                .extracting("category")
+                .isEqualTo(AiFailureCategory.UNTRUSTED_ARTIFACT_URL);
     }
 
     private void handleInference(HttpExchange exchange) throws IOException {
+        inferenceRequestId.set(exchange.getRequestHeaders().getFirst("X-Request-ID"));
         String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.ISO_8859_1);
         multipartReceived.set(

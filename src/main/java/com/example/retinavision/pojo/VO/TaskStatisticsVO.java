@@ -15,6 +15,7 @@ public class TaskStatisticsVO {
     private Long todayFailedCount;
     private Long waitingCount;
     private Long runningCount;
+    private Long retryingCount;
     private Long totalTaskCount;
     private Double successRate;
     private Long averageProcessingTimeMs;

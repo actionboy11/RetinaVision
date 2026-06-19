@@ -45,6 +45,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                     .todayFailedCount(0L)
                     .waitingCount(0L)
                     .runningCount(0L)
+                    .retryingCount(0L)
                     .totalTaskCount(0L)
                     .successRate(0D)
                     .averageProcessingTimeMs(0L)

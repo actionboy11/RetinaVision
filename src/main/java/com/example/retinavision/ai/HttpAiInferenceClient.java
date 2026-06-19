@@ -6,9 +6,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
+import java.net.SocketTimeoutException;
 import java.nio.file.Path;
 
 @Component
@@ -36,7 +40,7 @@ public class HttpAiInferenceClient implements AiInferenceClient {
 
     // 实现 AiInferenceClient 接口，调用 AI 血管分割服务
     @Override
-    public AiInferenceResponse segment(Path imagePath, String originalFilename, String contentType) {
+    public AiInferenceResponse segment(Path imagePath, String originalFilename, String contentType, String requestId) {
         try {
             //MultipartBodyBuilder 用于构建 multipart/form-data 请求体，传图片二进制
             MultipartBodyBuilder body = new MultipartBodyBuilder();
@@ -51,47 +55,64 @@ public class HttpAiInferenceClient implements AiInferenceClient {
             //body(AiInferenceResponse.class) 表示将响应体转换为 AiInferenceResponse 类型的对象
             AiInferenceResponse response = restClient.post()
                     .uri(SEGMENTATION_PATH)
+                    .header("X-Request-ID", requestId)
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(body.build())
                     .retrieve()
                     .body(AiInferenceResponse.class);
             if (response == null || response.getMaskUrl() == null || response.getResultJson() == null) {
-                throw new AiInferenceException("AI 服务返回了不完整的推理结果");
+                throw new AiInferenceException(
+                        AiFailureCategory.INCOMPLETE_RESPONSE,
+                        "AI 服务返回了不完整的推理结果"
+                );
             }
             return response;
         } catch (AiInferenceException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new AiInferenceException("调用 AI 血管分割服务失败", exception);
+            throw classify(exception, AiFailureCategory.UNKNOWN, "调用 AI 血管分割服务失败");
         }
     }
 
     @Override
-    public byte[] downloadMask(String maskUrl) {
+    public byte[] downloadMask(String maskUrl, String requestId) {
         URI maskUri = validateArtifactUri(maskUrl);
         try {
             //get 方法发送 GET 请求到分割结果图地址，retrieve 方法获取响应体并转换为 byte[] 数组
-            byte[] mask = restClient.get().uri(maskUri).retrieve().body(byte[].class);
+            byte[] mask = restClient.get()
+                    .uri(maskUri)
+                    .header("X-Request-ID", requestId)
+                    .retrieve()
+                    .body(byte[].class);
             if (mask == null || mask.length == 0) {
-                throw new AiInferenceException("AI 服务返回了空的分割结果图");
+                throw new AiInferenceException(
+                        AiFailureCategory.ARTIFACT_DOWNLOAD_FAILED,
+                        "AI 服务返回了空的分割结果图"
+                );
             }
             return mask;
         } catch (AiInferenceException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new AiInferenceException("下载 AI 分割结果图失败", exception);
+            throw classify(exception, AiFailureCategory.ARTIFACT_DOWNLOAD_FAILED, "下载 AI 分割结果图失败");
         }
     }
 
     private URI validateArtifactUri(String maskUrl) {
         if (maskUrl == null || maskUrl.isBlank()) {
-            throw new AiInferenceException("AI 分割结果图地址为空");
+            throw new AiInferenceException(
+                    AiFailureCategory.UNTRUSTED_ARTIFACT_URL,
+                    "AI 分割结果图地址为空"
+            );
         }
         //resolve 方法将 maskUrl 解析为相对于 baseUri 的绝对 URI，如果 maskUrl 是绝对 URI，则直接返回该 URI
         URI resolved = baseUri.resolve(maskUrl);
         if (!baseUri.getScheme().equalsIgnoreCase(resolved.getScheme())
                 || !baseUri.getAuthority().equalsIgnoreCase(resolved.getAuthority())) {
-            throw new AiInferenceException("AI 分割结果图地址不受信任");
+            throw new AiInferenceException(
+                    AiFailureCategory.UNTRUSTED_ARTIFACT_URL,
+                    "AI 分割结果图地址不受信任"
+            );
         }
         return resolved;
     }
@@ -109,6 +130,36 @@ public class HttpAiInferenceClient implements AiInferenceClient {
         } catch (IllegalArgumentException ignored) {
             return MediaType.APPLICATION_OCTET_STREAM;
         }
+    }
+
+    private AiInferenceException classify(
+            Exception exception,
+            AiFailureCategory fallback,
+            String message) {
+        if (exception instanceof HttpClientErrorException) {
+            return new AiInferenceException(AiFailureCategory.AI_4XX, message, exception);
+        }
+        if (exception instanceof HttpServerErrorException) {
+            return new AiInferenceException(AiFailureCategory.AI_5XX, message, exception);
+        }
+        if (exception instanceof ResourceAccessException && hasCause(exception, SocketTimeoutException.class)) {
+            return new AiInferenceException(AiFailureCategory.READ_TIMEOUT, message, exception);
+        }
+        if (exception instanceof ResourceAccessException) {
+            return new AiInferenceException(AiFailureCategory.CONNECTION_FAILED, message, exception);
+        }
+        return new AiInferenceException(fallback, message, exception);
+    }
+
+    private boolean hasCause(Throwable throwable, Class<? extends Throwable> causeType) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (causeType.isInstance(current)) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }
 

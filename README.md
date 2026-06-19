@@ -297,3 +297,31 @@ uploads/
 - 患者数据、原图和推理结果属于敏感医疗数据，不得进入日志、测试夹具或公共仓库。
 - 本地示例密码和 JWT secret 不得用于生产。
 - AI 结果仅供辅助分析，不替代临床诊断。
+
+## AI 健康状态与运行方式
+
+登录后可访问：
+
+```text
+GET /api/system/status
+```
+
+接口聚合 Python AI 实时状态、RabbitMQ 队列状态和数据库长期任务指标。AI 或 RabbitMQ 单独不可用时接口仍返回 HTTP 200，并将总体状态标记为 `DEGRADED`；数据库长期统计失败时由后端返回服务错误，不伪造健康数据。
+
+Java 正式推理使用 5 秒连接超时和 5 分钟读取超时；健康探测独立使用 2 秒连接超时和 3 秒读取超时。每次任务尝试生成 `requestId`，同一个 ID 会传递给 Python 推理和结果图下载请求。
+
+本机运行 AI 时保持：
+
+```yaml
+retina:
+  ai:
+    base-url: http://127.0.0.1:8000
+```
+
+如果 Java 也运行在同一 Docker 网络中，通过环境变量覆盖：
+
+```text
+RETINA_AI_BASE_URL=http://retinavision-ai:8000
+```
+
+AI 的 Windows Conda 启停脚本和 Docker 说明见同级项目 `../retinavision-ai/README.md`。

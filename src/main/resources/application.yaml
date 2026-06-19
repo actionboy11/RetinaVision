@@ -24,6 +24,8 @@ retina:
     base-url: http://127.0.0.1:8000
     connect-timeout: 5s
     read-timeout: 5m
+    health-connect-timeout: 2s
+    health-read-timeout: 3s
   jwt:
     secret: retina-vision-dev-secret-retina-vision-dev-secret
     expire-hours: 24

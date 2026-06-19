@@ -5,8 +5,8 @@ import com.example.retinavision.ai.dto.AiInferenceResponse;
 import java.nio.file.Path;
 
 public interface AiInferenceClient {
-    AiInferenceResponse segment(Path imagePath, String originalFilename, String contentType);
+    AiInferenceResponse segment(Path imagePath, String originalFilename, String contentType, String requestId);
 
-    byte[] downloadMask(String maskUrl);
+    byte[] downloadMask(String maskUrl, String requestId);
 }
 

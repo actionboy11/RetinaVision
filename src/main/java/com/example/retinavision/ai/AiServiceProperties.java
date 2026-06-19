@@ -12,6 +12,8 @@ public class AiServiceProperties {
     private String baseUrl = "http://127.0.0.1:8000";
     private Duration connectTimeout = Duration.ofSeconds(5);
     private Duration readTimeout = Duration.ofMinutes(5);
+    private Duration healthConnectTimeout = Duration.ofSeconds(2);
+    private Duration healthReadTimeout = Duration.ofSeconds(3);
 
     public String getBaseUrl() {
         return baseUrl;
@@ -35,6 +37,22 @@ public class AiServiceProperties {
 
     public void setReadTimeout(Duration readTimeout) {
         this.readTimeout = readTimeout;
+    }
+
+    public Duration getHealthConnectTimeout() {
+        return healthConnectTimeout;
+    }
+
+    public void setHealthConnectTimeout(Duration healthConnectTimeout) {
+        this.healthConnectTimeout = healthConnectTimeout;
+    }
+
+    public Duration getHealthReadTimeout() {
+        return healthReadTimeout;
+    }
+
+    public void setHealthReadTimeout(Duration healthReadTimeout) {
+        this.healthReadTimeout = healthReadTimeout;
     }
 }
 
