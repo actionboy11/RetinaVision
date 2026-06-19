@@ -15,6 +15,16 @@ public class RabbitMqProperties {
 
     private String analysisQueue;
 
+    private String analysisRetryExchange;
+
+    private String analysisRetryRoutingKey;
+
+    private String analysisRetryQueue;
+
+    private Long analysisRetryDelayMs = 10_000L;
+
+    private Integer analysisMaxAutoRetries = 3;
+
     private String analysisDeadLetterExchange;
 
     private String analysisDeadLetterRoutingKey;

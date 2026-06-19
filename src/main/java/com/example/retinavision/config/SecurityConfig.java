@@ -74,6 +74,8 @@ public class SecurityConfig {
                 // 注册和登录属于匿名接口；项目配置了 context-path=/api，这里匹配 servlet 内路径 /auth/**。
                     //匿名接口的作用：用户未登录时，允许访问注册和登录接口，其他接口需要登录后才能访问。
                 .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
+                // 有限重试与死信恢复功能完善：死信恢复会重新执行失败任务，只允许管理员操作。
+                .requestMatchers("/admin/dead-letters/**").hasRole("ADMIN")
                 .anyRequest().authenticated()  // 其他接口需要登录后才能访问
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);   //// ↑ 显式添加到过滤器链，并指定位置
@@ -99,4 +101,3 @@ public class SecurityConfig {
         return source;
     }
 }
-

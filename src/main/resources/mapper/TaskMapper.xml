@@ -114,4 +114,55 @@
           AND task_type = #{taskType}
           AND status IN ('CREATED', 'WAITING', 'RUNNING', 'RETRYING')
     </select>
+
+    <!--
+      原子抢占待执行任务。即使同一条 RabbitMQ 消息被重复投递，也只有一个消费者能把
+      WAITING/RETRYING 更新为 RUNNING；返回 0 表示任务已被其他消费者抢占或状态已变化。
+    -->
+    <update id="claimForExecution">
+        UPDATE analysis_task
+        SET status = 'RUNNING',
+            started_at = #{startedAt},
+            updated_at = #{startedAt},
+            error_message = NULL
+        WHERE id = #{taskId}
+          AND status IN ('WAITING', 'RETRYING')
+    </update>
+
+    <!-- 有限重试与死信恢复功能完善：只允许一个消费者把本次 FAILED 原子转换成 RETRYING。 -->
+    <update id="prepareAutomaticRetry">
+        UPDATE analysis_task
+        SET status = 'RETRYING',
+            retry_count = retry_count + 1,
+            started_at = NULL,
+            finished_at = NULL,
+            updated_at = #{updatedAt}
+        WHERE id = #{taskId}
+          AND status = 'FAILED'
+          AND retry_count = #{expectedRetryCount}
+          AND retry_count &lt; max_retry_count
+    </update>
+
+    <update id="markRetryPublishFailed">
+        UPDATE analysis_task
+        SET status = 'FAILED',
+            error_message = #{reason},
+            finished_at = #{updatedAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{taskId}
+          AND status = 'RETRYING'
+    </update>
+
+    <!-- 有限重试与死信恢复功能完善：仅 FAILED 任务可由管理员从死信恢复，并从零开始新一轮有限重试。 -->
+    <update id="prepareDeadLetterRecovery">
+        UPDATE analysis_task
+        SET status = 'RETRYING',
+            retry_count = 0,
+            error_message = NULL,
+            started_at = NULL,
+            finished_at = NULL,
+            updated_at = #{updatedAt}
+        WHERE id = #{taskId}
+          AND status = 'FAILED'
+    </update>
 </mapper>

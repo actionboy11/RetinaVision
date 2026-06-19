@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 @Component
+//@ConfigurationProperties() 用于将配置文件中的属性映射到类的字段中
 @ConfigurationProperties(prefix = "retina.ai")
 public class AiServiceProperties {
     private String baseUrl = "http://127.0.0.1:8000";

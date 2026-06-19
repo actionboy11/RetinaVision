@@ -80,6 +80,7 @@ class AnalysisTaskExecutionServiceImplTest {
                 .build();
         AiInferenceResponse response = inferenceResponse();
         when(taskMapper.selectById(100L)).thenReturn(task);
+        when(taskMapper.claimForExecution(org.mockito.ArgumentMatchers.eq(100L), any())).thenReturn(1);
         when(imageMapper.selectById(20L)).thenReturn(imageEntity);
         when(aiInferenceClient.segment(image, "source.png", "image/png")).thenReturn(response);
         when(aiInferenceClient.downloadMask(response.getMaskUrl())).thenReturn(new byte[]{9, 8, 7});
@@ -102,6 +103,7 @@ class AnalysisTaskExecutionServiceImplTest {
     void processMarksUnsupportedTaskTypeFailedWithoutCallingAi() {
         TaskEntity task = task(101L, TaskType.IMAGE_QUALITY_CHECK);
         when(taskMapper.selectById(101L)).thenReturn(task);
+        when(taskMapper.claimForExecution(org.mockito.ArgumentMatchers.eq(101L), any())).thenReturn(1);
 
         ExecutionDisposition disposition = service.process(message(101L, TaskType.IMAGE_QUALITY_CHECK));
 
@@ -117,6 +119,7 @@ class AnalysisTaskExecutionServiceImplTest {
         Path image = imageRoot.resolve("source.png");
         Files.write(image, new byte[]{1});
         when(taskMapper.selectById(102L)).thenReturn(task);
+        when(taskMapper.claimForExecution(org.mockito.ArgumentMatchers.eq(102L), any())).thenReturn(1);
         when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder()
                 .id(20L)
                 .status(ImageStatus.UPLOADED)
@@ -133,6 +136,18 @@ class AnalysisTaskExecutionServiceImplTest {
         assertThat(task.getStatus()).isEqualTo(TaskStatus.FAILED);
         assertThat(task.getErrorMessage()).contains("AI unavailable");
         verify(analysisResultMapper, never()).insert(any(AnalysisResultEntity.class));
+    }
+
+    @Test
+    void processIgnoresTaskWhenAtomicClaimLosesRace() {
+        TaskEntity task = task(103L, TaskType.VESSEL_SEGMENTATION);
+        when(taskMapper.selectById(103L)).thenReturn(task);
+
+        ExecutionDisposition disposition = service.process(message(103L, TaskType.VESSEL_SEGMENTATION));
+
+        assertThat(disposition).isEqualTo(ExecutionDisposition.IGNORED);
+        verify(aiInferenceClient, never()).segment(any(), any(), any());
+        verify(logMapper, never()).insert(any(LogEntity.class));
     }
 
     private TaskEntity task(Long id, TaskType taskType) {

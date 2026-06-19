@@ -40,6 +40,14 @@ public class RabbitMqConfig {
     }
 
     /**
+     * 有限重试与死信恢复功能完善：失败消息先进入重试交换机，而不是立即回到主队列形成热循环。
+     */
+    @Bean
+    public DirectExchange analysisRetryExchange(RabbitMqProperties properties) {
+        return new DirectExchange(properties.getAnalysisRetryExchange(), true, false);
+    }
+
+    /**
      * 创建分析任务死信交换机。
      *
      * 当消费者处理消息失败，并且 basicNack(requeue=false) 时，消息不会回到原队列，
@@ -76,6 +84,18 @@ public class RabbitMqConfig {
     }
 
     /**
+     * 有限重试与死信恢复功能完善：消息在该队列等待配置的延迟时间，到期后通过 DLX 回到主交换机。
+     */
+    @Bean
+    public Queue analysisRetryQueue(RabbitMqProperties properties) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-message-ttl", properties.getAnalysisRetryDelayMs());
+        args.put("x-dead-letter-exchange", properties.getAnalysisExchange());
+        args.put("x-dead-letter-routing-key", properties.getAnalysisRoutingKey());
+        return new Queue(properties.getAnalysisRetryQueue(), true, false, false, args);
+    }
+
+    /**
      * 绑定分析任务交换机和主队列。
      *
      * 只有 routing key 等于 analysisRoutingKey 的消息，才会从 analysisExchange 路由到 analysisQueue。
@@ -102,6 +122,18 @@ public class RabbitMqConfig {
         return BindingBuilder.bind(analysisDeadLetterQueue)
                 .to(analysisDeadLetterExchange)
                 .with(properties.getAnalysisDeadLetterRoutingKey());
+    }
+
+    /**
+     * 有限重试与死信恢复功能完善：把重试交换机按专用 routing key 绑定到延迟重试队列。
+     */
+    @Bean
+    public Binding analysisRetryBinding(Queue analysisRetryQueue,
+                                        DirectExchange analysisRetryExchange,
+                                        RabbitMqProperties properties) {
+        return BindingBuilder.bind(analysisRetryQueue)
+                .to(analysisRetryExchange)
+                .with(properties.getAnalysisRetryRoutingKey());
     }
 
     /**

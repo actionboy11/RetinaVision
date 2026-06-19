@@ -24,16 +24,41 @@ public class AnalysisTaskMessagePublisher {
     }
 
     public void publish(AnalysisTaskMessage message) {
+        publishConfirmed(properties.getAnalysisExchange(), properties.getAnalysisRoutingKey(), message, null);
+    }
+
+    public void publishForRetry(AnalysisTaskMessage message, int retryCount) {
+        // 有限重试与死信恢复功能完善：失败任务进入 TTL 重试队列，固定等待 10 秒后再回到主队列。
+        publishConfirmed(
+                properties.getAnalysisRetryExchange(),
+                properties.getAnalysisRetryRoutingKey(),
+                message,
+                retryCount
+        );
+    }
+
+    private void publishConfirmed(String exchange,
+                                  String routingKey,
+                                  AnalysisTaskMessage message,
+                                  Integer retryCount) {
         //CorrelationData: 用于关联消息和确认回调，确保消息被正确处理。给这次消息投递一个编号
         CorrelationData correlationData = new CorrelationData(String.valueOf(message.getTaskId()));
         try {
             // Codex: convertAndSend 只代表客户端已发出消息；后面的 confirm 才能证明 RabbitMQ Broker 已确认收到。
-            rabbitTemplate.convertAndSend(
-                    properties.getAnalysisExchange(),
-                    properties.getAnalysisRoutingKey(),
-                    message,
-                    correlationData
-            );
+            if (retryCount == null) {
+                rabbitTemplate.convertAndSend(exchange, routingKey, message, correlationData);
+            } else {
+                rabbitTemplate.convertAndSend(
+                        exchange,
+                        routingKey,
+                        message,
+                        rabbitMessage -> {
+                            rabbitMessage.getMessageProperties().setHeader("x-retry-count", retryCount);
+                            return rabbitMessage;
+                        },
+                        correlationData
+                );
+            }
 
             //getFuture() 方法用于获取确认回调，确保消息被正确处理。
             CorrelationData.Confirm confirm = correlationData.getFuture()

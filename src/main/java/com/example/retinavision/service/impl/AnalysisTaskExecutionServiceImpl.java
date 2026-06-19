@@ -69,6 +69,7 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         if (message == null || message.getTaskId() == null) {
             return ExecutionDisposition.IGNORED;
         }
+        // 查询任务实体，检查任务状态是否可处理，是否失败，是否已取消
         TaskEntity task = taskMapper.selectById(message.getTaskId());
         if (task == null || task.getStatus() == TaskStatus.FAILED) {
             return ExecutionDisposition.REQUEUE;
@@ -76,38 +77,50 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         if (!CONSUMABLE_STATUSES.contains(task.getStatus())) {
             return ExecutionDisposition.IGNORED;
         }
-
-        transitionToRunning(task);
+        // 通过条件更新原子抢占任务；返回 0 表示其他消费者已经抢先处理(任务幂等抢占)
+        //幂等可以简单理解为：同一个操作执行一次或重复执行多次，最终业务结果一致。
+        if (!claimForExecution(task)) {
+            return ExecutionDisposition.IGNORED;
+        }
         try {
             if (task.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
                 throw new IllegalStateException("暂不支持任务类型：" + task.getTaskType());
             }
             ImageFileEntity image = getAvailableImage(task.getImageFileId());
+            // 解析图像文件路径(后端服务器上的原图实际路径)
             Path imagePath = resolveImagePath(image.getStorageObjectKey());
+            // 调用 AI 血管分割服务
             AiInferenceResponse response = aiInferenceClient.segment(
                     imagePath,
                     image.getOriginalFilename(),
                     image.getFileType()
             );
+            //response.getMaskUrl() 得到的是 Python AI 服务返回的 HTTP 相对地址，不是 Windows 文件路径
             byte[] maskBytes = aiInferenceClient.downloadMask(response.getMaskUrl());
+            // 将分割结果图存储到本地文件系统，并返回存储路径
             String maskObjectKey = storeMask(task.getId(), maskBytes);
+            // 将分析结果和分割图信息持久化到数据库，更新任务状态为 SUCCESS，并记录完成时间和日志
             persistSuccess(task, response, maskObjectKey);
             return ExecutionDisposition.SUCCESS;
         } catch (Exception exception) {
+            // 将任务状态更新为 FAILED，并记录失败时间和日志
             persistFailure(task, exception);
             return ExecutionDisposition.FAILED;
         }
     }
 
-    private void transitionToRunning(TaskEntity task) {
+    private boolean claimForExecution(TaskEntity task) {
         TaskStatus fromStatus = task.getStatus();
         LocalDateTime now = LocalDateTime.now();
+        if (taskMapper.claimForExecution(task.getId(), now) != 1) {
+            return false;
+        }
         task.setStatus(TaskStatus.RUNNING);
         task.setStartedAt(now);
         task.setUpdatedAt(now);
         task.setErrorMessage(null);
-        taskMapper.updateById(task);
         insertLog(task.getId(), fromStatus, TaskStatus.RUNNING, "AI Worker 已接收任务，开始处理", now);
+        return true;
     }
 
     private ImageFileEntity getAvailableImage(Long imageFileId) {
@@ -136,12 +149,16 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         if (maskBytes == null || maskBytes.length == 0) {
             throw new IllegalStateException("AI 服务返回了空的分割结果图");
         }
+        // 生成分割结果图的存储路径，格式为 tasks/{taskId}/mask.png
         String objectKey = "tasks/" + taskId + "/mask.png";
         Path target = resultRootPath.resolve(objectKey).normalize();
         if (!target.startsWith(resultRootPath)) {
             throw new IllegalStateException("分割结果图存储路径无效");
         }
+        // 创建必要的目录结构，并将分割结果图写入文件系统
         Files.createDirectories(target.getParent());
+        // 将分割结果图写入文件系统，
+        // Files.write 方法会将 byte[] 数组写入指定路径的文件，如果文件不存在则创建，如果文件已存在则覆盖
         Files.write(target, maskBytes);
         return objectKey;
     }
@@ -191,6 +208,7 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         if (message == null || message.isBlank()) {
             message = exception.getClass().getSimpleName();
         }
+        // 对错误消息进行归一化处理，将换行符替换为空空格，避免数据库存储过长的错误消息
         String normalized = "AI 任务执行失败：" + message.replaceAll("[\\r\\n]+", " ");
         return normalized.length() <= MAX_ERROR_MESSAGE_LENGTH
                 ? normalized

@@ -117,7 +117,6 @@ public class TaskServiceImpl implements TaskService {
                 .updatedAt(now)
                 .build();
         taskMapper.insert(taskEntity);
-
         analysisTaskMessagePublisher.publish(buildTaskMessage(taskEntity));
         insertTaskLog(taskEntity.getId(), null, TaskStatus.WAITING, "任务已创建并投递 MQ，等待 Worker 处理", "USER", submittedBy, now);
 

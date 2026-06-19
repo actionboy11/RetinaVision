@@ -7,6 +7,7 @@ import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.TaskListItemVO;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TaskMapper extends BaseMapper<TaskEntity> {
@@ -23,4 +24,19 @@ public interface TaskMapper extends BaseMapper<TaskEntity> {
 
     Long countUnfinishedTask(@Param("imageFileId") Long imageFileId,
                              @Param("taskType") TaskType taskType);
+
+    int claimForExecution(@Param("taskId") Long taskId,
+                          @Param("startedAt") LocalDateTime startedAt);
+
+    int prepareAutomaticRetry(@Param("taskId") Long taskId,
+                              @Param("expectedRetryCount") Integer expectedRetryCount,
+                              @Param("updatedAt") LocalDateTime updatedAt);
+
+    int markRetryPublishFailed(@Param("taskId") Long taskId,
+                               @Param("reason") String reason,
+                               @Param("updatedAt") LocalDateTime updatedAt);
+
+    int prepareDeadLetterRecovery(@Param("taskId") Long taskId,
+                                  @Param("operatorId") Integer operatorId,
+                                  @Param("updatedAt") LocalDateTime updatedAt);
 }
