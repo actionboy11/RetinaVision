@@ -24,14 +24,15 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-//SecurityConfig 获取 Filter 引用 ，
+//SecurityConfig 获取 Filter 引用
 // Spring 容器扫描并创建 Bean--> Spring Security 自动检测所有 Filter 类型的 Bean-->自动注册到过滤器链中
-//OncePerRequestFilter 的作用是确保每个请求只执行一次过滤，而不是控制是否加入过滤器链。
+//OncePerRequestFilter 是 Spring Security 提供的一个抽象类，用于实现自定义的过滤器逻辑。
+// 它确保每个请求只会被过滤器处理一次，避免重复处理同一个请求。
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;   //ObjectMapper 是 Spring Boot 提供的 JSON 处理工具类
-    private final JwtBlacklistService jwtBlacklistService;
+    private final JwtBlacklistService jwtBlacklistService;  // 用于检查和管理 JWT 黑名单的服务
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil, ObjectMapper objectMapper,
                                    JwtBlacklistService jwtBlacklistService) {
@@ -66,6 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jti = claims.getId();
             boolean blacklisted = StringUtils.hasText(jti) && jwtBlacklistService.isBlacklisted(jti);
             boolean logoutRequest = "/auth/logout".equals(request.getServletPath());
+            // 如果 jti 不存在，或者 JWT 在黑名单中且不是注销请求，则返回 401 未授权错误。
             if (!StringUtils.hasText(jti) || (blacklisted && !logoutRequest)) {
                 writeUnauthorized(response);
                 return;
@@ -78,17 +80,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 创建 CurrentUserVO 对象
             CurrentUserVO currentUser = new CurrentUserVO(userId, username, null, role);
             // 封装成 Authentication 对象
-            //Authentication 对象是Spring Security 的核心对象，用于表示用户身份和权限。保存在ThreadLocal中，用于后续的权限验证和授权。
+            //Authentication 对象是Spring Security 的核心对象，用于表示用户身份和权限。
+            // 保存在ThreadLocal中，用于后续的权限验证和授权。
+            //credentials 参数设置为 null，因为我们不需要在后续的安全流程中使用密码进行验证。
+            // List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))
+            // 创建一个包含用户角色的权限列表，Spring Security 使用这个列表来进行权限检查。
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             currentUser,
                             null,
                             List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))
                     );
-            // 存入 SecurityContext（ThreadLocal）
+            // SecurityContext 是 Spring Security 用于存储当前用户身份和权限信息的上下文对象。
+            // SecurityContextHolder.getContext() 方法返回当前线程的 SecurityContext 对象，用于存储用户身份和权限信息。
             SecurityContextHolder.getContext().setAuthentication(authentication);
             // 继续处理请求
             filterChain.doFilter(request, response);
+            // 如果请求路径是注销路径，则将 JWT 添加到黑名单中，禁止其继续使用。
         } catch (RedisUnavailableException exception) {
             SecurityContextHolder.clearContext();
             writeServiceUnavailable(response);
@@ -117,6 +125,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
+        // objectMapper.writeValue() 方法将一个 Java 对象转换为 JSON 格式，并写入到响应的输出流中。
+        // 这里我们创建了一个 Map 对象，包含了错误码、错误信息和数据字段，然后将其转换为 JSON 格式返回给前端。
         objectMapper.writeValue(response.getWriter(), Map.of(
                 "code", 40100,
                 "message", "登录已过期，请重新登录",

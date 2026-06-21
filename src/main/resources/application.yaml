@@ -34,8 +34,8 @@ retina:
       username-max-failures: 5
       ip-max-failures: 20
     ai:
-      minute-limit: 10
-      daily-limit: 500
+      minute-limit: 10  # 每分钟最多提交 10 个任务
+      daily-limit: 500  # 每天最多提交 500 个任务
       zone-id: Asia/Shanghai
   ai:
     base-url: http://127.0.0.1:8000

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 @Component
+// 配置类，用于加载 Redis 相关的配置属性。
 @ConfigurationProperties(prefix = "retina.redis")
 public class RedisFeatureProperties {
 

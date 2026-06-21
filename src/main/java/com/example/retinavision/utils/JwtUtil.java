@@ -30,7 +30,7 @@ public class JwtUtil {
         Date expireAt = new Date(now.getTime() + expireHours * 60 * 60 * 1000);
 
         return Jwts.builder()
-                .id(UUID.randomUUID().toString())
+                .id(UUID.randomUUID().toString())    // 设置 JWT 的唯一标识符
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("roleCode", roleCode)
@@ -49,6 +49,8 @@ public class JwtUtil {
     }
 
     public long remainingLifetimeSeconds(Claims claims) {
+        // 获取 JWT 的过期时间，并计算剩余的有效时间（以秒为单位）。如果 JWT 已经过期，则返回 0。
+        //toInstant() 将 Date 转换为 Instant 对象，方便进行时间计算
         Instant expiration = claims.getExpiration().toInstant();
         return Math.max(0, Duration.between(Instant.now(), expiration).getSeconds());
     }

@@ -23,6 +23,7 @@ public class RedisAiTaskQuotaService implements AiTaskQuotaService {
 
     private static final DateTimeFormatter MINUTE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
     private static final DateTimeFormatter DAY_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    // Redis 脚本用于检查和预留 AI 任务配额，返回是否成功预留和剩余时间（秒）的列表
     private static final DefaultRedisScript<List> RESERVE_SCRIPT = new DefaultRedisScript<>("""
             local minuteCount = tonumber(redis.call('GET', KEYS[1]) or '0')
             local dayCount = tonumber(redis.call('GET', KEYS[2]) or '0')
@@ -34,6 +35,7 @@ public class RedisAiTaskQuotaService implements AiTaskQuotaService {
             if dayCount == 1 then redis.call('EXPIRE', KEYS[2], ARGV[4]) end
             return {1, 0}
             """, List.class);
+    // Redis 脚本用于释放 AI 任务配额，减少分钟和日计数，如果计数为 0，则删除键，否则减少计数并返回 1 表示成功
     private static final DefaultRedisScript<Long> RELEASE_SCRIPT = new DefaultRedisScript<>("""
             for i = 1, 2 do
                 local value = tonumber(redis.call('GET', KEYS[i]) or '0')
@@ -58,9 +60,14 @@ public class RedisAiTaskQuotaService implements AiTaskQuotaService {
         this.properties = properties;
     }
 
+    // 预留 AI 任务配额，返回预留的分钟和日配额键
     @Override
     public AiQuotaReservation reserve(Integer userId) {
+        //ZoneId.of() 方法根据配置的时区 ID 获取对应的 ZoneId 对象，ZonedDateTime.now() 方法获取当前时间，并使用指定的时区进行计算。
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of(properties.getAi().getZoneId()));
+        // 计算预留的分钟和日配额的过期时间（秒），确保在过期时间内可以提交任务。
+        //now.truncatedTo(ChronoUnit.MINUTES) 将当前时间截断到分钟级别，
+        // plusMinutes(1) 表示加上 1 分钟，Duration.between() 方法计算两个时间点之间的持续时间.
         long minuteTtl = Math.max(1, Duration.between(now, now.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1)).getSeconds());
         long dayTtl = Math.max(1, Duration.between(now, now.toLocalDate().plusDays(1).atStartOfDay(now.getZone())).getSeconds());
         AiQuotaReservation reservation = new AiQuotaReservation(
@@ -90,6 +97,7 @@ public class RedisAiTaskQuotaService implements AiTaskQuotaService {
         }
     }
 
+    // 释放 AI 任务配额，减少分钟和日计数，如果计数为 0，则删除键，否则减少计数并返回 1 表示成功
     @Override
     public void release(AiQuotaReservation reservation) {
         try {

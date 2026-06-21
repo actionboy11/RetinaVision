@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 @RestControllerAdvice // 全局异常处理
 public class GlobalExceptionHandler {
 
+    // 处理自定义的 RateLimitException，返回 429 状态码和重试时间间隔
+    //ResponseEntity 可以灵活设置 HTTP 状态码和响应头，适合需要返回特定状态码的异常处理。
     @ExceptionHandler(RateLimitException.class)
     public ResponseEntity<Result<Boolean>> handleRateLimitException(RateLimitException exception) {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
@@ -19,6 +21,7 @@ public class GlobalExceptionHandler {
                 .body(Result.error(exception.getCode(), exception.getMessage()));
     }
 
+    // 处理自定义的 RedisUnavailableException，返回 503 状态码
     @ExceptionHandler(RedisUnavailableException.class)
     public ResponseEntity<Result<Boolean>> handleRedisUnavailableException(RedisUnavailableException exception) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)

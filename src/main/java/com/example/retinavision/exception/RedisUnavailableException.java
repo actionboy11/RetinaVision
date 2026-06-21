@@ -9,6 +9,7 @@ public class RedisUnavailableException extends BaseException {
 
     public RedisUnavailableException(String message, Throwable cause) {
         this(message);
+        // 初始化异常链
         initCause(cause);
     }
 }

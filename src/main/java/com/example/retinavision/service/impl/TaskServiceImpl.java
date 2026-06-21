@@ -97,22 +97,23 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public CreateTaskVO createTask(CreateTaskDTO createTaskDTO, Integer submittedBy) {
-        // TODO 后续通过 active_key + unique index 解决并发重复创建。
+        // 参数校验
         validateCreateTaskRequest(createTaskDTO);
-
         Long caseId = createTaskDTO.getCaseId();
         Long imageFileId = createTaskDTO.getImageFileId();
         CaseEntity caseEntity = caseMapper.selectById(caseId);
         ImageFileEntity imageFileEntity = imageMapper.selectById(imageFileId);
-
+        // 校验病例和图像的有效性和关联性，确保它们存在且未被删除，并且图像确实属于该病例。同时还检查病例状态是否允许创建任务。
         validateCaseAndImageForTask(caseEntity, imageFileEntity, caseId);
 
+        // 同一图像同一任务类型的任务只能有一个未完成的，避免重复提交导致资源浪费和结果冲突。
         Long unfinishedTaskCount = taskMapper.countUnfinishedTask(imageFileId, createTaskDTO.getTaskType());
         if (unfinishedTaskCount != null && unfinishedTaskCount > 0) {
             throw new BaseException(ErrorMessageSignal.CONFLICT, ErrorMessageContant.CONFLICT_MSG);
         }
-
+        // 预留 AI 任务配额，确保用户在提交任务时不会超过系统设定的配额限制。
         AiQuotaReservation reservation = aiTaskQuotaService.reserve(submittedBy);
+        // 注册回滚回调，确保在任务创建失败时释放预留的配额。
         boolean rollbackCallbackRegistered = registerQuotaRollback(reservation);
         try {
         LocalDateTime now = LocalDateTime.now();
@@ -197,7 +198,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Transactional
+    @Transactional  // 确保在重试任务时，数据库操作和 AI 配额操作是原子性的。
     public RetryTaskVO retryTask(Integer taskId, Integer id) {
         TaskEntity taskEntity = getTaskOrThrow(taskId);
         if (taskEntity.getStatus() != TaskStatus.FAILED) {
@@ -212,6 +213,9 @@ public class TaskServiceImpl implements TaskService {
         validateCaseAndImageForRetry(caseEntity, imageFileEntity);
 
         AiQuotaReservation reservation = aiTaskQuotaService.reserve(id);
+        //如果 Redis 已经把 AI 配额加了 1，但数据库任务创建或 MQ 投递失败，需要把刚才占用的配额退回去，
+        // 否则用户会损失一次宝贵的配额机会。registerQuotaRollback() 方法注册了一个事务回滚回调，
+        // 在事务完成后检查事务状态，如果不是提交成功，则调用 releaseQuotaSafely() 方法释放配额。
         boolean rollbackCallbackRegistered = registerQuotaRollback(reservation);
         try {
         LocalDateTime now = LocalDateTime.now();
@@ -293,15 +297,18 @@ public class TaskServiceImpl implements TaskService {
         }
         return taskEntity;
     }
-
     private boolean registerQuotaRollback(AiQuotaReservation reservation) {
+        // 注册事务回滚回调，确保在任务创建失败时释放预留的配额。
+        // TransactionSynchronizationManager.isSynchronizationActive() 方法检查当前线程是否处于事务同步状态，
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             return false;
         }
+        //注册事务回调
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {
                 if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    // 如果事务没有提交成功，则调用 releaseQuotaSafely() 方法释放预留的配额。
                     releaseQuotaSafely(reservation);
                 }
             }
@@ -311,6 +318,7 @@ public class TaskServiceImpl implements TaskService {
 
     private void releaseQuotaSafely(AiQuotaReservation reservation) {
         try {
+            // 释放 AI 任务配额，减少分钟和日计数，如果计数为 0，则删除键，否则减少计数并返回 1 表示成功
             aiTaskQuotaService.release(reservation);
         } catch (RuntimeException compensationFailure) {
             // 配额补偿失败只能记录，不能覆盖任务创建或 MQ 投递的原始异常。

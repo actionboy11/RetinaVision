@@ -88,10 +88,12 @@ public class UserLoginServiceImpl implements UserLoginService {
             throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
         String username = userLoginDTO.getUsername().trim();
+        // 检查登录尝试次数是否超过限制
         loginAttemptService.assertAllowed(username, clientIp);
         UserEntity user=userRegisterMapper.selectOne(
                 new QueryWrapper<UserEntity>().eq("username", username));
         if (user == null){
+            // 记录登录失败次数，并抛出登录错误异常
             loginAttemptService.recordFailure(username, clientIp);
             throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
@@ -102,7 +104,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         if(user.getStatus()==0){
             throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_ACTIVE);
         }
-
+        //
         loginAttemptService.recordSuccess(username);
         String token = jwtUtil.generateToken(user.getId(),user.getUsername(),user.getRoleCode().name());
         return new UserLoginVO(token, new CurrentUserVO(user.getId(),user.getUsername(),user.getRealName(),user.getRoleCode()));
@@ -118,8 +120,12 @@ public class UserLoginServiceImpl implements UserLoginService {
         if (!StringUtils.hasText(claims.getId())) {
             throw new BaseException(ErrorMessageSignal.UNAUTHORIZED, "Token 无效");
         }
+
         long remainingSeconds = jwtUtil.remainingLifetimeSeconds(claims);
+        //Duration对象表示一段时间的长度，这里用于表示剩余的有效时间。
         if (remainingSeconds > 0) {
+            // 将 JWT 的唯一标识符（claims.getId()）加入黑名单，并设置过期时间为剩余的有效时间。
+            // 这样可以确保在 JWT 过期之前，用户无法再使用该 JWT 进行认证。
             jwtBlacklistService.blacklist(claims.getId(), Duration.ofSeconds(remainingSeconds));
         }
     }
