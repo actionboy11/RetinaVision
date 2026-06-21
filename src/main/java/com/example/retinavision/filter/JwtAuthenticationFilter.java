@@ -3,6 +3,8 @@ package com.example.retinavision.filter;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.utils.JwtUtil;
+import com.example.retinavision.service.JwtBlacklistService;
+import com.example.retinavision.exception.RedisUnavailableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
@@ -29,10 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;   //ObjectMapper 是 Spring Boot 提供的 JSON 处理工具类
+    private final JwtBlacklistService jwtBlacklistService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, ObjectMapper objectMapper) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, ObjectMapper objectMapper,
+                                   JwtBlacklistService jwtBlacklistService) {
         this.jwtUtil = jwtUtil;
         this.objectMapper = objectMapper;
+        this.jwtBlacklistService = jwtBlacklistService;
     }
 
     //前端请求 → HTTP Header (携带 JWT) → Spring Security 过滤器 → Authentication 对象
@@ -58,6 +63,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = authorization.substring(7); // ← 去掉 "Bearer " 前缀
             Claims claims = jwtUtil.parseToken(token);    // ← 解析 Token
+            String jti = claims.getId();
+            boolean blacklisted = StringUtils.hasText(jti) && jwtBlacklistService.isBlacklisted(jti);
+            boolean logoutRequest = "/auth/logout".equals(request.getServletPath());
+            if (!StringUtils.hasText(jti) || (blacklisted && !logoutRequest)) {
+                writeUnauthorized(response);
+                return;
+            }
             // 从 Token 中提取用户信息
             Integer userId = Integer.valueOf(claims.getSubject());
             String username = claims.get("username", String.class);
@@ -77,12 +89,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             // 继续处理请求
             filterChain.doFilter(request, response);
+        } catch (RedisUnavailableException exception) {
+            SecurityContextHolder.clearContext();
+            writeServiceUnavailable(response);
         } catch (Exception exception) {
             //清空 SecurityContext
             SecurityContextHolder.clearContext();
             //writeUnauthorized(response)的作用是将响应状态码设置为 401（未授权），并返回错误信息给前端。
             writeUnauthorized(response);
         }
+    }
+
+    private void writeServiceUnavailable(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), Map.of(
+                "code", 50300,
+                "message", "认证服务暂时不可用，请稍后重试",
+                "data", false
+        ));
+        response.getWriter().flush();
     }
 
 

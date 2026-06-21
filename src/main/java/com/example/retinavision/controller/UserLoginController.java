@@ -12,15 +12,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
+import jakarta.servlet.http.HttpServletRequest;
+import com.example.retinavision.utils.ClientIpResolver;
 
 @RestController
 @RequestMapping("/auth")
 public class UserLoginController {
 
     private final UserLoginService userLoginService;
+    private final ClientIpResolver clientIpResolver;
 
-    public UserLoginController(UserLoginService userLoginService) {
+    public UserLoginController(UserLoginService userLoginService, ClientIpResolver clientIpResolver) {
         this.userLoginService = userLoginService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @PostMapping("/register")
@@ -33,8 +38,8 @@ public class UserLoginController {
     }
 
     @PostMapping("/login")
-    public Result<UserLoginVO> userLogin(@RequestBody UserLoginDTO userLoginDTO) {
-        UserLoginVO userLoginVO = userLoginService.UserLogin(userLoginDTO);
+    public Result<UserLoginVO> userLogin(@RequestBody UserLoginDTO userLoginDTO, HttpServletRequest request) {
+        UserLoginVO userLoginVO = userLoginService.UserLogin(userLoginDTO, clientIpResolver.resolve(request));
         return Result.success(userLoginVO);
     }
 
@@ -49,7 +54,8 @@ public class UserLoginController {
     }
 
     @PostMapping("/logout")
-    public Result<Boolean> logout() {
+    public Result<Boolean> logout(@RequestHeader("Authorization") String authorizationHeader) {
+        userLoginService.logout(authorizationHeader);
         return Result.success(true);
     }
 }

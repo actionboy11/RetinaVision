@@ -6,6 +6,13 @@ spring:
   application:
     name: retina-vision-backend
 
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+
   servlet:
     multipart:
       max-file-size: 20MB
@@ -20,6 +27,16 @@ mybatis-plus:
 
 
 retina:
+  redis:
+    key-prefix: rv
+    login:
+      window: 15m
+      username-max-failures: 5
+      ip-max-failures: 20
+    ai:
+      minute-limit: 10
+      daily-limit: 500
+      zone-id: Asia/Shanghai
   ai:
     base-url: http://127.0.0.1:8000
     connect-timeout: 5s

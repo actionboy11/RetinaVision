@@ -33,6 +33,21 @@ services:
     volumes:
       - retina_rabbitmq_data:/var/lib/rabbitmq
 
+  redis:
+    image: redis:7.4-alpine
+    container_name: retina_redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - retina_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
   retinavision-ai:
     build:
       context: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}
@@ -66,3 +81,4 @@ services:
 volumes:
   retina_mysql_data:
   retina_rabbitmq_data:
+  retina_redis_data:

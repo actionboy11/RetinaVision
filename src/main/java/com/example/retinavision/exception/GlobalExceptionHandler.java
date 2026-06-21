@@ -5,9 +5,25 @@ import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.result.Result;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 @RestControllerAdvice // 全局异常处理
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<Result<Boolean>> handleRateLimitException(RateLimitException exception) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(exception.getRetryAfterSeconds()))
+                .body(Result.error(exception.getCode(), exception.getMessage()));
+    }
+
+    @ExceptionHandler(RedisUnavailableException.class)
+    public ResponseEntity<Result<Boolean>> handleRedisUnavailableException(RedisUnavailableException exception) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Result.error(exception.getCode(), exception.getMessage()));
+    }
 
     @ExceptionHandler(BaseException.class)   // 处理 BaseException 及其子类
     // 优先级高：精确匹配 BaseException 及其子类

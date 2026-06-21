@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.time.Instant;
+import java.time.Duration;
+import java.util.UUID;
 @Component
 public class JwtUtil {
 
@@ -27,6 +30,7 @@ public class JwtUtil {
         Date expireAt = new Date(now.getTime() + expireHours * 60 * 60 * 1000);
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(userId))
                 .claim("username", username)
                 .claim("roleCode", roleCode)
@@ -42,5 +46,10 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public long remainingLifetimeSeconds(Claims claims) {
+        Instant expiration = claims.getExpiration().toInstant();
+        return Math.max(0, Duration.between(Instant.now(), expiration).getSeconds());
     }
 }

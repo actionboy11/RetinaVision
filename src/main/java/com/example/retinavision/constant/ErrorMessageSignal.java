@@ -24,9 +24,15 @@ public class ErrorMessageSignal {
     
     /** 重复提交或状态冲突 */
     public static final int CONFLICT = 40900;
+
+    /** 请求过于频繁 */
+    public static final int TOO_MANY_REQUESTS = 42900;
     
     /** 服务端内部错误 */
     public static final int SERVER_ERROR = 50000;
+
+    /** 依赖服务暂时不可用 */
+    public static final int SERVICE_UNAVAILABLE = 50300;
     
     /** 文件存储异常 */
     public static final int FILE_STORAGE_ERROR = 50001;

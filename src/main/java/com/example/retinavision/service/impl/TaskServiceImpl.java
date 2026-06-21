@@ -29,9 +29,15 @@ import com.example.retinavision.pojo.VO.TaskListItemVO;
 import com.example.retinavision.pojo.VO.TaskLogVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.TaskService;
+import com.example.retinavision.service.AiTaskQuotaService;
+import com.example.retinavision.service.AiQuotaReservation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -41,6 +47,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class TaskServiceImpl implements TaskService {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private static final int DEFAULT_PAGE_NO = 1;
     private static final int DEFAULT_PAGE_SIZE = 10;
@@ -53,19 +61,22 @@ public class TaskServiceImpl implements TaskService {
     private final UserRegisterMapper userRegisterMapper;
     private final LogMapper logMapper;
     private final AnalysisTaskMessagePublisher analysisTaskMessagePublisher;
+    private final AiTaskQuotaService aiTaskQuotaService;
 
     public TaskServiceImpl(TaskMapper taskMapper,
                            ImageMapper imageMapper,
                            CaseMapper caseMapper,
                            UserRegisterMapper userRegisterMapper,
                            LogMapper logMapper,
-                           AnalysisTaskMessagePublisher analysisTaskMessagePublisher) {
+                           AnalysisTaskMessagePublisher analysisTaskMessagePublisher,
+                           AiTaskQuotaService aiTaskQuotaService) {
         this.taskMapper = taskMapper;
         this.imageMapper = imageMapper;
         this.caseMapper = caseMapper;
         this.userRegisterMapper = userRegisterMapper;
         this.logMapper = logMapper;
         this.analysisTaskMessagePublisher = analysisTaskMessagePublisher;
+        this.aiTaskQuotaService = aiTaskQuotaService;
     }
 
     @Override
@@ -101,6 +112,9 @@ public class TaskServiceImpl implements TaskService {
             throw new BaseException(ErrorMessageSignal.CONFLICT, ErrorMessageContant.CONFLICT_MSG);
         }
 
+        AiQuotaReservation reservation = aiTaskQuotaService.reserve(submittedBy);
+        boolean rollbackCallbackRegistered = registerQuotaRollback(reservation);
+        try {
         LocalDateTime now = LocalDateTime.now();
         TaskEntity taskEntity = TaskEntity.builder()
                 .taskNo(generateTaskNo())
@@ -126,6 +140,12 @@ public class TaskServiceImpl implements TaskService {
                 .taskStatus(TaskStatus.WAITING)
                 .errorMessage(null)
                 .build();
+        } catch (RuntimeException exception) {
+            if (!rollbackCallbackRegistered) {
+                releaseQuotaSafely(reservation);
+            }
+            throw exception;
+        }
     }
 
     @Override
@@ -191,6 +211,9 @@ public class TaskServiceImpl implements TaskService {
         ImageFileEntity imageFileEntity = imageMapper.selectById(taskEntity.getImageFileId());
         validateCaseAndImageForRetry(caseEntity, imageFileEntity);
 
+        AiQuotaReservation reservation = aiTaskQuotaService.reserve(id);
+        boolean rollbackCallbackRegistered = registerQuotaRollback(reservation);
+        try {
         LocalDateTime now = LocalDateTime.now();
         int nextRetryCount = taskEntity.getRetryCount() + 1;
         taskMapper.update(null, new LambdaUpdateWrapper<TaskEntity>()
@@ -217,6 +240,12 @@ public class TaskServiceImpl implements TaskService {
                 .taskStatus(taskEntity.getStatus())
                 .retryCount(taskEntity.getRetryCount())
                 .build();
+        } catch (RuntimeException exception) {
+            if (!rollbackCallbackRegistered) {
+                releaseQuotaSafely(reservation);
+            }
+            throw exception;
+        }
     }
 
     @Override
@@ -263,6 +292,31 @@ public class TaskServiceImpl implements TaskService {
             throw new BaseException(ErrorMessageSignal.NOT_FOUND, ErrorMessageContant.TASK_NOT_EXISTS);
         }
         return taskEntity;
+    }
+
+    private boolean registerQuotaRollback(AiQuotaReservation reservation) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            return false;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    releaseQuotaSafely(reservation);
+                }
+            }
+        });
+        return true;
+    }
+
+    private void releaseQuotaSafely(AiQuotaReservation reservation) {
+        try {
+            aiTaskQuotaService.release(reservation);
+        } catch (RuntimeException compensationFailure) {
+            // 配额补偿失败只能记录，不能覆盖任务创建或 MQ 投递的原始异常。
+            log.error("AI quota compensation failed minuteKey={} dayKey={}",
+                    reservation.minuteKey(), reservation.dayKey(), compensationFailure);
+        }
     }
 
     private AnalysisTaskMessage buildTaskMessage(TaskEntity taskEntity) {

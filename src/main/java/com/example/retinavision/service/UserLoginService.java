@@ -11,7 +11,9 @@ public interface UserLoginService {
 
     public void UserRegister( UserRegisterDTO userRegisterDTO);
 
-    UserLoginVO UserLogin(UserLoginDTO userLoginDTO);
+    UserLoginVO UserLogin(UserLoginDTO userLoginDTO, String clientIp);
+
+    void logout(String authorizationHeader);
 
     CurrentUserVO getCurrentUser(Integer userId);
 }

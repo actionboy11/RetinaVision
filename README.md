@@ -28,14 +28,14 @@ RetinaVision Backend 是系统的业务核心和浏览器 API 入口。它负责
 - JJWT
 - 本地文件系统（当前主流程）
 
-POM 中包含 Redis 和 MinIO 客户端，但当前核心业务链路未使用它们。
+Redis 已用于登录失败限流、JWT 登出黑名单和 AI 任务限流/配额。MinIO 客户端仍未进入核心业务链路。
 
 ## 目录
 
 ```text
 RetinaVision/
 ├─ docker/
-│  ├─ docker-compose.yml       # MySQL + RabbitMQ
+│  ├─ docker-compose.yml       # MySQL + RabbitMQ + Redis + AI
 │  └─ mysql/init.sql           # 首次建库
 ├─ src/main/java/com/example/retinavision/
 │  ├─ ai/                      # Python AI HTTP 客户端
@@ -89,6 +89,7 @@ Set-Location ..
 | MySQL | `localhost:3307/retina_vision` | `retina` / `retina123456` |
 | RabbitMQ AMQP | `localhost:5672` | `retina` / `retina123456` |
 | RabbitMQ 管理台 | `http://localhost:15672` | `retina` / `retina123456` |
+| Redis | `localhost:6379` | 本地开发默认无密码 |
 
 这些凭据仅用于本机开发。
 
@@ -161,11 +162,27 @@ retina:
 
 ## 启动与验证
 
-先启动 MySQL、RabbitMQ 和 Python AI，再执行：
+先启动 MySQL、RabbitMQ、Redis 和 Python AI，再执行：
 
 ```powershell
 mvn spring-boot:run
 ```
+
+### Redis 限流、黑名单与配额
+
+默认规则为：用户名登录失败 5 次/15 分钟、来源 IP 失败 20 次/15 分钟；AI 每用户 10 次/分钟、500 次/上海自然日。创建任务和人工重试成功投递都会消耗配额，RabbitMQ 自动重试不会重复计数。
+
+观察 Redis 数据时使用 `SCAN`，避免在共享环境执行阻塞式 `KEYS *`：
+
+```powershell
+docker exec retina_redis redis-cli PING
+docker exec retina_redis redis-cli --scan --pattern "rv:*"
+docker exec retina_redis redis-cli TTL "<上一步返回的key>"
+```
+
+Key 仅保存用户名/IP 的 SHA-256 摘要、JWT `jti` 或用户 ID，不保存密码、JWT 原文和患者数据。停止 Redis 后，登录密码校验保持可用；JWT 鉴权以及 AI 创建/人工重试会返回 HTTP 503。
+
+生产环境通过 `REDIS_HOST`、`REDIS_PORT`、`REDIS_PASSWORD` 覆盖连接参数，不应把 Redis 端口暴露到公网。
 
 API 基础地址：
 

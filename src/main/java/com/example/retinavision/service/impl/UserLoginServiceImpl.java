@@ -12,12 +12,17 @@ import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.pojo.VO.UserLoginVO;
 import com.example.retinavision.service.UserLoginService;
+import com.example.retinavision.service.LoginAttemptService;
+import com.example.retinavision.service.JwtBlacklistService;
 import com.example.retinavision.utils.JwtUtil;
+import com.example.retinavision.exception.BaseException;
+import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Service
 public class UserLoginServiceImpl implements UserLoginService {
@@ -25,14 +30,20 @@ public class UserLoginServiceImpl implements UserLoginService {
     private UserRegisterMapper userRegisterMapper;
     private PasswordEncoder passwordEncoder;
     private JwtUtil jwtUtil;
+    private final LoginAttemptService loginAttemptService;
+    private final JwtBlacklistService jwtBlacklistService;
 
     public UserLoginServiceImpl(UserRegisterMapper userRegisterMapper,
                                 PasswordEncoder passwordEncoder,
-                                JwtUtil jwtUtil
+                                JwtUtil jwtUtil,
+                                LoginAttemptService loginAttemptService,
+                                JwtBlacklistService jwtBlacklistService
     ) {
         this.userRegisterMapper = userRegisterMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.loginAttemptService = loginAttemptService;
+        this.jwtBlacklistService = jwtBlacklistService;
     }
 
 
@@ -72,25 +83,45 @@ public class UserLoginServiceImpl implements UserLoginService {
     }
 
     @Override
-    public UserLoginVO UserLogin(UserLoginDTO userLoginDTO) {
+    public UserLoginVO UserLogin(UserLoginDTO userLoginDTO, String clientIp) {
         if (userLoginDTO.getUsername() == null || userLoginDTO.getPassword() == null){
             throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
+        String username = userLoginDTO.getUsername().trim();
+        loginAttemptService.assertAllowed(username, clientIp);
         UserEntity user=userRegisterMapper.selectOne(
-                new QueryWrapper<UserEntity>().eq("username",userLoginDTO.getUsername()));
+                new QueryWrapper<UserEntity>().eq("username", username));
         if (user == null){
+            loginAttemptService.recordFailure(username, clientIp);
             throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
         if (!passwordEncoder.matches(userLoginDTO.getPassword(),user.getPasswordHash())){
+            loginAttemptService.recordFailure(username, clientIp);
             throw new AccountNotFoundException(ErrorMessageSignal.LOGIN_ERROR, ErrorMessageContant.USER_PASSWORD_ERROR);
         }
         if(user.getStatus()==0){
             throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_ACTIVE);
         }
 
+        loginAttemptService.recordSuccess(username);
         String token = jwtUtil.generateToken(user.getId(),user.getUsername(),user.getRoleCode().name());
         return new UserLoginVO(token, new CurrentUserVO(user.getId(),user.getUsername(),user.getRealName(),user.getRoleCode()));
 
+    }
+
+    @Override
+    public void logout(String authorizationHeader) {
+        if (!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
+            throw new BaseException(ErrorMessageSignal.UNAUTHORIZED, "Token 无效");
+        }
+        Claims claims = jwtUtil.parseToken(authorizationHeader.substring(7));
+        if (!StringUtils.hasText(claims.getId())) {
+            throw new BaseException(ErrorMessageSignal.UNAUTHORIZED, "Token 无效");
+        }
+        long remainingSeconds = jwtUtil.remainingLifetimeSeconds(claims);
+        if (remainingSeconds > 0) {
+            jwtBlacklistService.blacklist(claims.getId(), Duration.ofSeconds(remainingSeconds));
+        }
     }
 
     @Override

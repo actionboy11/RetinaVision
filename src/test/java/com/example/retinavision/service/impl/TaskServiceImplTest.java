@@ -18,12 +18,17 @@ import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.LogEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.CreateTaskVO;
+import com.example.retinavision.service.AiQuotaReservation;
+import com.example.retinavision.service.AiTaskQuotaService;
+import com.example.retinavision.exception.RateLimitException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,6 +38,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceImplTest {
@@ -49,6 +55,10 @@ class TaskServiceImplTest {
     private LogMapper logMapper;
     @Mock
     private AnalysisTaskMessagePublisher analysisTaskMessagePublisher;
+    @Mock
+    private AiTaskQuotaService aiTaskQuotaService;
+
+    private final AiQuotaReservation reservation = new AiQuotaReservation("minute-key", "day-key");
 
     private TaskServiceImpl taskService;
 
@@ -60,8 +70,10 @@ class TaskServiceImplTest {
                 caseMapper,
                 userRegisterMapper,
                 logMapper,
-                analysisTaskMessagePublisher
+                analysisTaskMessagePublisher,
+                aiTaskQuotaService
         );
+        lenient().when(aiTaskQuotaService.reserve(7)).thenReturn(reservation);
     }
 
     @Test
@@ -106,6 +118,7 @@ class TaskServiceImplTest {
 
         verify(taskMapper, never()).insert(any(TaskEntity.class));
         verify(analysisTaskMessagePublisher, never()).publish(any());
+        verify(aiTaskQuotaService, never()).reserve(any());
     }
 
     @Test
@@ -128,5 +141,57 @@ class TaskServiceImplTest {
                 .isEqualTo(ErrorMessageSignal.MQ_DELIVERY_ERROR);
 
         verify(taskMapper, never()).updateById(any(TaskEntity.class));
+        verify(aiTaskQuotaService).release(reservation);
+    }
+
+    @Test
+    void retryTaskIsRejectedWhenAiQuotaIsExhausted() {
+        TaskEntity task = TaskEntity.builder()
+                .id(100L)
+                .taskNo("TASK-100")
+                .caseId(10L)
+                .imageFileId(20L)
+                .taskType(TaskType.VESSEL_SEGMENTATION)
+                .status(TaskStatus.FAILED)
+                .priority(5)
+                .retryCount(0)
+                .maxRetryCount(3)
+                .submittedBy(7)
+                .build();
+        when(taskMapper.selectById(100)).thenReturn(task);
+        when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(aiTaskQuotaService.reserve(7)).thenThrow(new RateLimitException("quota", 10));
+
+        assertThatThrownBy(() -> taskService.retryTask(100, 7))
+                .isInstanceOf(RateLimitException.class);
+
+        verify(aiTaskQuotaService).reserve(7);
+        verify(analysisTaskMessagePublisher, never()).publish(any());
+    }
+
+    @Test
+    void transactionRollbackReleasesReservedQuota() {
+        CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
+        when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
+        doAnswer(invocation -> {
+            TaskEntity entity = invocation.getArgument(0);
+            entity.setId(100L);
+            return 1;
+        }).when(taskMapper).insert(any(TaskEntity.class));
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            taskService.createTask(dto, 7);
+            TransactionSynchronizationManager.getSynchronizations().forEach(
+                    synchronization -> synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK)
+            );
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+
+        verify(aiTaskQuotaService).release(reservation);
     }
 }
