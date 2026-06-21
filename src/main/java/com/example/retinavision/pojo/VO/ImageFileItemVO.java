@@ -54,6 +54,7 @@ public class ImageFileItemVO {
     private ImageQualityStatus qualityStatus;
     private Double qualityScore;
     private Long qualityResultId;
+    private Long qualityTaskId;
     private LocalDateTime qualityCheckedAt;
     
     /** 上传用户ID */

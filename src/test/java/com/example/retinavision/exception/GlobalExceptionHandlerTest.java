@@ -30,4 +30,15 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode().value()).isEqualTo(503);
         assertThat(response.getBody()).hasFieldOrPropertyWithValue("code", ErrorMessageSignal.SERVICE_UNAVAILABLE);
     }
+
+    @Test
+    void objectAuthorizationErrorsUseRealHttpStatus() {
+        ResponseEntity<?> forbidden = handler.handleBaseException(
+                new BaseException(ErrorMessageSignal.FORBIDDEN, "权限不足"));
+        ResponseEntity<?> notFound = handler.handleBaseException(
+                new BaseException(ErrorMessageSignal.NOT_FOUND, "资源不存在"));
+
+        assertThat(forbidden.getStatusCode().value()).isEqualTo(403);
+        assertThat(notFound.getStatusCode().value()).isEqualTo(404);
+    }
 }

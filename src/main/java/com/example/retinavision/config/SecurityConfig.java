@@ -89,9 +89,16 @@ public class SecurityConfig {
                 .requestMatchers("/admin/dead-letters/**").hasRole("ADMIN")
                 .requestMatchers("/admin/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/review").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/analysis-results/*/review").hasRole("DOCTOR")
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/corrections").hasAnyRole("RESEARCHER", "DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/analysis-results/*/corrections/**").hasAnyRole("RESEARCHER", "DOCTOR")
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/report-sign").hasRole("DOCTOR")
                 .requestMatchers(HttpMethod.PUT, "/analysis-results/*/report-draft").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/analysis-results/*/report-draft").hasRole("DOCTOR")
+                .requestMatchers("/doctor/**").hasRole("DOCTOR")
+                .requestMatchers("/cases/**", "/images/**", "/analysis-tasks/**", "/analysis-results/**", "/results/**")
+                    .hasAnyRole("USER", "DOCTOR", "RESEARCHER")
+                .requestMatchers("/statistics/**").hasAnyRole("USER", "DOCTOR", "RESEARCHER")
                 .anyRequest().authenticated()  // 其他接口需要登录后才能访问
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);   //// ↑ 显式添加到过滤器链，并指定位置

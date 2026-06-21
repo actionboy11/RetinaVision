@@ -4,11 +4,14 @@ import com.example.retinavision.pojo.VO.AnalysisResultVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.AnalysisResultService;
 import com.example.retinavision.service.AnalysisReportService;
+import com.example.retinavision.service.ClinicalAccessService;
+import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.enumeration.ReportStatus;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,15 +27,19 @@ import java.util.Locale;
 public class ResultAnalysisController {
     private final AnalysisResultService analysisResultService;
     private final AnalysisReportService analysisReportService;
+    private final ClinicalAccessService accessService;
 
-    public ResultAnalysisController(AnalysisResultService analysisResultService, AnalysisReportService analysisReportService) {
+    public ResultAnalysisController(AnalysisResultService analysisResultService, AnalysisReportService analysisReportService,
+                                    ClinicalAccessService accessService) {
         this.analysisResultService = analysisResultService;
         this.analysisReportService = analysisReportService;
+        this.accessService = accessService;
     }
 
     // 查询任务分析结果，JSON 业务接口仍然使用统一 Result<T> 包装。
     @GetMapping("/analysis-tasks/{taskId}/result")
-    public Result<AnalysisResultVO> getAnalysisResult(@PathVariable Long taskId) {
+    public Result<AnalysisResultVO> getAnalysisResult(@PathVariable Long taskId, Authentication authentication) {
+        accessService.assertCanAccessTask(user(authentication), taskId);
         return Result.success(analysisResultService.getAnalysisResult(taskId));
     }
 
@@ -40,7 +47,8 @@ public class ResultAnalysisController {
     //ResponseEntity 用于封装 HTTP 响应头和响应体。
     //contentType 根据文件类型设置响应头 Content-Type，InputStreamResource 用于将文件流返回给客户端。
     @GetMapping("/results/{resultId}/mask")
-    public ResponseEntity<InputStreamResource> getMaskPreview(@PathVariable Long resultId) throws IOException {
+    public ResponseEntity<InputStreamResource> getMaskPreview(@PathVariable Long resultId, Authentication authentication) throws IOException {
+        accessService.assertCanAccessResult(user(authentication), resultId);
         Path maskPath = analysisResultService.getResultMaskPath(resultId);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(getMediaType(maskPath)))
@@ -49,18 +57,23 @@ public class ResultAnalysisController {
 
     // 下载分析报告，Content-Disposition 会提示浏览器按文件下载。
     @GetMapping("/results/{resultId}/report")
-    public ResponseEntity<InputStreamResource> downloadReport(@PathVariable Long resultId) throws IOException {
+    public ResponseEntity<InputStreamResource> downloadReport(@PathVariable Long resultId, Authentication authentication) throws IOException {
+        accessService.assertCanAccessResult(user(authentication), resultId);
         Path reportPath = analysisReportService.list(resultId).stream()
                 .filter(report -> report.getStatus() == ReportStatus.SIGNED || report.getStatus() == ReportStatus.SUPERSEDED)
                 .max(java.util.Comparator.comparingInt(com.example.retinavision.pojo.Entity.AnalysisReportEntity::getVersion))
                 .map(report -> analysisReportService.getFile(resultId, report.getVersion()))
-                .orElseGet(() -> analysisResultService.getResultReportPath(resultId));
+                .orElseThrow(() -> new com.example.retinavision.exception.ConflictException("报告尚未由医生签发"));
         String filename = "report-" + resultId + getExtension(reportPath);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType(getMediaType(reportPath)))
                 .body(new InputStreamResource(Files.newInputStream(reportPath)));
+    }
+
+    private CurrentUserVO user(Authentication authentication) {
+        return (CurrentUserVO) authentication.getPrincipal();
     }
 
     private String getMediaType(Path filePath) {

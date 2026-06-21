@@ -23,6 +23,7 @@ public class AnalysisResultVO {
     private String reportDownloadUrl;
     private String modelName;
     private String modelVersion;
+    private ImageQualitySummaryVO qualitySummary;
     private  Integer processingTimeMs;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createdAt;

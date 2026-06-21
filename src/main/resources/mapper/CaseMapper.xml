@@ -12,6 +12,9 @@
     -->
     <sql id="casePageWhere">
         WHERE 1 = 1
+        <if test="ownerId != null">
+            AND c.created_by = #{ownerId}
+        </if>
         <if test="query.status == null">
             AND c.status != 'DELETED'
         </if>

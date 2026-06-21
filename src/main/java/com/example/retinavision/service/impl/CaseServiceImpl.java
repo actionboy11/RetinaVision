@@ -4,13 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
+import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.CaseMapper;
+import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.pojo.DTO.CaseInsertDTO;
 import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
 import com.example.retinavision.pojo.DTO.CaseUpdateDTO;
 import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.VO.CaseListItemVO;
+import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.CaseService;
 import org.springframework.stereotype.Service;
@@ -29,13 +34,15 @@ public class CaseServiceImpl implements CaseService {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final CaseMapper caseMapper;
+    private final TaskMapper taskMapper;
 
-    public CaseServiceImpl(CaseMapper caseMapper) {
+    public CaseServiceImpl(CaseMapper caseMapper, TaskMapper taskMapper) {
         this.caseMapper = caseMapper;
+        this.taskMapper = taskMapper;
     }
 
     @Override
-    public PageResult<CaseListItemVO> getCaseList(CaseListQueryDTO queryDTO) {
+    public PageResult<CaseListItemVO> getCaseList(CaseListQueryDTO queryDTO, CurrentUserVO user) {
         // 1. Controller 只负责接收请求；分页默认值和边界保护统一放在 Service 层处理。
         CaseListQueryDTO safeQuery = queryDTO == null ? new CaseListQueryDTO() : queryDTO;
 
@@ -47,8 +54,9 @@ public class CaseServiceImpl implements CaseService {
         safeQuery.setKeyword(normalizeKeyword(safeQuery.getKeyword()));
 
         // 3. 分页查询通常需要两条 SQL：total 用于分页器，records 用于当前页表格。
-        long total = caseMapper.countCasePage(safeQuery);
-        List<CaseListItemVO> records = caseMapper.selectCasePage(safeQuery, offset, pageSize);
+        Integer ownerId = user.getRoleCode() == UserRole.USER ? user.getId() : null;
+        long total = caseMapper.countCasePage(safeQuery, ownerId);
+        List<CaseListItemVO> records = caseMapper.selectCasePage(safeQuery, ownerId, offset, pageSize);
 
         // 4. PageResult 的字段要和前端 src/types/common.ts 保持一致：records/total/pageNo/pageSize。
         return new PageResult<>(records, total, pageNo, pageSize);
@@ -177,6 +185,13 @@ public class CaseServiceImpl implements CaseService {
             throw new BaseException(ErrorMessageSignal.NOT_FOUND, ErrorMessageContant.CASE_DELETED_MSG);
         }
         // TODO 任务表完成后：删除前查询该病例是否存在 CREATED/WAITING/RUNNING/RETRYING 等未结束任务；存在则返回 40900。
+        long activeTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
+                .eq(TaskEntity::getCaseId, caseId.longValue())
+                .in(TaskEntity::getStatus, TaskStatus.CREATED, TaskStatus.WAITING, TaskStatus.RUNNING, TaskStatus.RETRYING));
+        if (activeTasks > 0) throw new com.example.retinavision.exception.ConflictException("病例存在运行中任务，不能删除");
+        long successfulTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
+                .eq(TaskEntity::getCaseId, caseId.longValue()).eq(TaskEntity::getStatus, TaskStatus.SUCCESS));
+        if (successfulTasks > 0) throw new com.example.retinavision.exception.ConflictException("病例已有分析结果，请改为归档");
         caseEntity.setStatus(CaseStatus.DELETED);
         caseEntity.setDeletedAt(LocalDateTime.now());
         caseEntity.setUpdatedAt(LocalDateTime.now());

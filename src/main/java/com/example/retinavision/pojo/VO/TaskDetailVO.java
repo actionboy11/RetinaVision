@@ -38,4 +38,5 @@ public class TaskDetailVO {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime finishedAt;
     private  String imagePreviewUrl;    //
+    private ImageQualitySummaryVO qualitySummary;
 }

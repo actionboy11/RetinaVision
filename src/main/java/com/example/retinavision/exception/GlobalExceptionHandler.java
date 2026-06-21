@@ -36,9 +36,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BaseException.class)   // 处理 BaseException 及其子类
     // 优先级高：精确匹配 BaseException 及其子类
-    public Result<Boolean> handleBaseException(BaseException exception) {
+    public ResponseEntity<Result<Boolean>> handleBaseException(BaseException exception) {
         // 业务异常统一返回前端约定的 JSON，避免注册页直接显示 HTTP 500。
-        return Result.error(exception.getCode(), exception.getMessage());
+        HttpStatus status = switch (exception.getCode()) {
+            case ErrorMessageSignal.PARAM_ERROR -> HttpStatus.BAD_REQUEST;
+            case ErrorMessageSignal.UNAUTHORIZED -> HttpStatus.UNAUTHORIZED;
+            case ErrorMessageSignal.FORBIDDEN -> HttpStatus.FORBIDDEN;
+            case ErrorMessageSignal.NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case ErrorMessageSignal.CONFLICT -> HttpStatus.CONFLICT;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+        return ResponseEntity.status(status).body(Result.error(exception.getCode(), exception.getMessage()));
     }
 
     // 优先级低：兜底处理所有其他异常

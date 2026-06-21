@@ -139,7 +139,7 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
             // 将任务状态更新为 FAILED，并记录失败时间和日志
             persistFailure(task, exception);
             if (task.getTaskType() == TaskType.IMAGE_QUALITY_CHECK) {
-                markQualityError(task.getImageFileId());
+                markQualityError(task.getImageFileId(), task.getId());
             }
             String category = exception instanceof AiInferenceException aiException
                     ? aiException.getCategory().name()
@@ -163,6 +163,15 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
                 .processingTimeMs(response.getProcessingTimeMs())
                 .createdAt(now).updatedAt(now).build();
         analysisResultMapper.insert(result);
+        if (!task.getId().equals(image.getQualityTaskId())) {
+            task.setStatus(TaskStatus.SUCCESS);
+            task.setFinishedAt(now);
+            task.setUpdatedAt(now);
+            taskMapper.updateById(task);
+            insertLog(task.getId(), TaskStatus.RUNNING, TaskStatus.SUCCESS,
+                    "质量任务已被更新任务替代，结果不再投影到图像", now);
+            return;
+        }
         image.setQualityStatus(ImageQualityStatus.valueOf(String.valueOf(response.getResultJson().get("grade"))));
         Object score = response.getResultJson().get("score");
         image.setQualityScore(score instanceof Number number ? number.doubleValue() : null);
@@ -178,9 +187,9 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         insertLog(task.getId(), TaskStatus.RUNNING, TaskStatus.SUCCESS, "图像质量检测完成", now);
     }
 
-    private void markQualityError(Long imageId) {
+    private void markQualityError(Long imageId, Long taskId) {
         ImageFileEntity image = imageMapper.selectById(imageId);
-        if (image != null) {
+        if (image != null && taskId.equals(image.getQualityTaskId())) {
             image.setQualityStatus(ImageQualityStatus.ERROR);
             image.setUpdatedAt(LocalDateTime.now());
             imageMapper.updateById(image);

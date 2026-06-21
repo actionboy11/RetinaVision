@@ -112,6 +112,23 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>flyway-runtime</id>
+			<activation><activeByDefault>true</activeByDefault></activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-core</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-mysql</artifactId>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<plugin>

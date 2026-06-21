@@ -7,6 +7,9 @@ import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.AnalysisResultMapper;
 import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mapper.ImageMapper;
+import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.pojo.VO.ImageQualitySummaryVO;
 import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.AnalysisResultVO;
@@ -28,16 +31,19 @@ public class AnalysisResultServiceImpl implements AnalysisResultService {
     private final TaskMapper taskMapper;
     private final AnalysisResultMapper analysisResultMapper;
     private final ObjectMapper objectMapper;
+    private final ImageMapper imageMapper;
     private final Path resultRootPath;
 
     public AnalysisResultServiceImpl(
             TaskMapper taskMapper,
             AnalysisResultMapper analysisResultMapper,
+            ImageMapper imageMapper,
             ObjectMapper objectMapper,
             // 读取配置文件中的分析结果存储根路径，默认值为 "uploads/results"
             @Value("${retina.upload.result-root:uploads/results}") String resultRoot) {
         this.taskMapper = taskMapper;
         this.analysisResultMapper = analysisResultMapper;
+        this.imageMapper = imageMapper;
         this.objectMapper = objectMapper;
         this.resultRootPath = Paths.get(resultRoot).toAbsolutePath().normalize();
     }
@@ -72,6 +78,10 @@ public class AnalysisResultServiceImpl implements AnalysisResultService {
             );
         }
         // 转换为VO
+        ImageFileEntity image = imageMapper.selectById(taskEntity.getImageFileId());
+        ImageQualitySummaryVO qualitySummary = image == null ? null : new ImageQualitySummaryVO(
+                image.getQualityStatus(), image.getQualityScore(), image.getQualityResultId(),
+                image.getQualityTaskId(), image.getQualityCheckedAt());
         return AnalysisResultVO.builder()
                 .id(resultEntity.getId())
                 .taskId(resultEntity.getTaskId())
@@ -81,6 +91,7 @@ public class AnalysisResultServiceImpl implements AnalysisResultService {
                 .reportDownloadUrl(resultEntity.getReportDownloadUrl())
                 .modelName(resultEntity.getModelName())
                 .modelVersion(resultEntity.getModelVersion())
+                .qualitySummary(qualitySummary)
                 .processingTimeMs(resultEntity.getProcessingTimeMs())
                 .createdAt(resultEntity.getCreatedAt())
                 .updatedAt(resultEntity.getUpdatedAt())

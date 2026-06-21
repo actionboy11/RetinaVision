@@ -27,10 +27,12 @@ import com.example.retinavision.pojo.Entity.LogEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.pojo.VO.CreateTaskVO;
+import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.pojo.VO.RetryTaskVO;
 import com.example.retinavision.pojo.VO.TaskDetailVO;
 import com.example.retinavision.pojo.VO.TaskListItemVO;
 import com.example.retinavision.pojo.VO.TaskLogVO;
+import com.example.retinavision.pojo.VO.ImageQualitySummaryVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.TaskService;
 import com.example.retinavision.service.AiTaskQuotaService;
@@ -84,7 +86,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public PageResult<TaskListItemVO> getLTaskList(TaskListQueryDTO taskListQueryDTO) {
+    public PageResult<TaskListItemVO> getLTaskList(TaskListQueryDTO taskListQueryDTO, CurrentUserVO user) {
         TaskListQueryDTO safeQuery = taskListQueryDTO == null ? new TaskListQueryDTO() : taskListQueryDTO;
         int pageNo = normalizePageNo(safeQuery.getPageNo());
         int pageSize = normalizePageSize(safeQuery.getPageSize());
@@ -93,8 +95,9 @@ public class TaskServiceImpl implements TaskService {
         safeQuery.setKeyword(normalizeKeyword(safeQuery.getKeyword()));
         safeQuery.setCaseNo(normalizeKeyword(safeQuery.getCaseNo()));
 
-        Long total = taskMapper.countTaskPage(safeQuery);
-        List<TaskListItemVO> list = taskMapper.selectTaskPage(safeQuery, offset, pageSize);
+        Integer ownerId = user.getRoleCode() == UserRole.USER ? user.getId() : null;
+        Long total = taskMapper.countTaskPage(safeQuery, ownerId);
+        List<TaskListItemVO> list = taskMapper.selectTaskPage(safeQuery, ownerId, offset, pageSize);
         return new PageResult<>(list, total, pageNo, pageSize);
     }
 
@@ -141,6 +144,12 @@ public class TaskServiceImpl implements TaskService {
                 .updatedAt(now)
                 .build();
         taskMapper.insert(taskEntity);
+        if (taskEntity.getTaskType() == TaskType.IMAGE_QUALITY_CHECK) {
+            imageFileEntity.setQualityStatus(ImageQualityStatus.CHECKING);
+            imageFileEntity.setQualityTaskId(taskEntity.getId());
+            imageFileEntity.setUpdatedAt(now);
+            imageMapper.updateById(imageFileEntity);
+        }
         analysisTaskMessagePublisher.publish(buildTaskMessage(taskEntity));
         String creationLog = Boolean.TRUE.equals(taskEntity.getQualityOverride())
                 ? "医生覆盖图像质量门控并创建任务，原因：" + taskEntity.getQualityOverrideReason()
@@ -178,6 +187,9 @@ public class TaskServiceImpl implements TaskService {
         if (imageFileEntity != null) {
             taskDetailVO.setImagePreviewUrl(imageFileEntity.getPreviewUrl());
             taskDetailVO.setOriginalFilename(imageFileEntity.getOriginalFilename());
+            taskDetailVO.setQualitySummary(new ImageQualitySummaryVO(imageFileEntity.getQualityStatus(),
+                    imageFileEntity.getQualityScore(), imageFileEntity.getQualityResultId(),
+                    imageFileEntity.getQualityTaskId(), imageFileEntity.getQualityCheckedAt()));
         }
         if (userEntity != null) {
             taskDetailVO.setSubmittedByName(userEntity.getRealName());
@@ -224,11 +236,13 @@ public class TaskServiceImpl implements TaskService {
         ImageFileEntity imageFileEntity = imageMapper.selectById(taskEntity.getImageFileId());
         validateCaseAndImageForRetry(caseEntity, imageFileEntity);
 
-        AiQuotaReservation reservation = aiTaskQuotaService.reserve(id);
+        AiQuotaReservation reservation = taskEntity.getTaskType() == TaskType.VESSEL_SEGMENTATION
+                ? aiTaskQuotaService.reserve(id)
+                : null;
         //如果 Redis 已经把 AI 配额加了 1，但数据库任务创建或 MQ 投递失败，需要把刚才占用的配额退回去，
         // 否则用户会损失一次宝贵的配额机会。registerQuotaRollback() 方法注册了一个事务回滚回调，
         // 在事务完成后检查事务状态，如果不是提交成功，则调用 releaseQuotaSafely() 方法释放配额。
-        boolean rollbackCallbackRegistered = registerQuotaRollback(reservation);
+        boolean rollbackCallbackRegistered = reservation != null && registerQuotaRollback(reservation);
         try {
         LocalDateTime now = LocalDateTime.now();
         int nextRetryCount = taskEntity.getRetryCount() + 1;
@@ -257,7 +271,7 @@ public class TaskServiceImpl implements TaskService {
                 .retryCount(taskEntity.getRetryCount())
                 .build();
         } catch (RuntimeException exception) {
-            if (!rollbackCallbackRegistered) {
+            if (reservation != null && !rollbackCallbackRegistered) {
                 releaseQuotaSafely(reservation);
             }
             throw exception;

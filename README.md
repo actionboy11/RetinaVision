@@ -102,7 +102,7 @@ Set-Location ..
 - `analysis_result`
 - `task_log`
 
-初始化 SQL 只在空数据卷首次启动时执行。修改表结构后，已有数据卷需要单独迁移。
+初始化 SQL 只负责创建数据库，业务表由 `src/main/resources/db/migration` 中的 Flyway 脚本维护；已有数据库首次接入会 baseline 到 V1，再执行 V2 及后续迁移。
 
 ## 本地配置
 
@@ -274,7 +274,7 @@ uploads/
 
 读取和写入路径都会归一化并检查是否仍位于配置根目录。不要将绝对主机路径保存为公共 URL。
 
-当前推理不生成报告，所以 `/results/{resultId}/report` 通常返回不存在；该接口是后续报告能力的预留入口。
+`/results/{resultId}/report` 只下载最新的医生签发报告；未审核、未签发或只有草稿时返回冲突，不再回退旧结果字段。
 
 ## 已知契约差异
 
@@ -344,7 +344,7 @@ RETINA_AI_BASE_URL=http://retinavision-ai:8000
 AI 的 Windows Conda 启停脚本和 Docker 说明见同级项目 `../retinavision-ai/README.md`。
 # 核心医疗闭环配置
 
-已有数据库升级执行 `docker/mysql/migration/V20260621__medical_loop_phase_one.sql`；全新环境由 `docker/mysql/init.sql` 自动建表。升级前请备份数据库，迁移脚本只执行一次。
+数据库升级统一由 Flyway 自动执行。部署前备份数据库；不要重复手工执行旧的 `docker/mysql/migration` 脚本。
 
 PDF 报告由 Java 服务生成。Windows 默认读取 `C:/Windows/Fonts/simhei.ttf`，其他环境必须配置具有合法使用授权的中文 TrueType 字体：
 

@@ -8,7 +8,7 @@ import com.example.retinavision.result.PageResult;
 import java.util.List;
 
 public interface TaskService {
-    PageResult<TaskListItemVO> getLTaskList(TaskListQueryDTO taskListQueryDTO);
+    PageResult<TaskListItemVO> getLTaskList(TaskListQueryDTO taskListQueryDTO, CurrentUserVO user);
 
     CreateTaskVO createTask(CreateTaskDTO createTaskDTO,Integer submittedBy);
 
