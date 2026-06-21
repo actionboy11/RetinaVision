@@ -23,6 +23,9 @@ public class UserEntity {
     private String passwordHash;
     private String realName;
     private UserRole roleCode;
+    private String professionalNo;
+    private Integer roleAssignedBy;
+    private LocalDateTime roleAssignedAt;
     private Integer status;
     //统一格式 yyyy-MM-dd HH:mm:ss
     //数据库中存储格式为 yyyy-MM-dd HH:mm:ss

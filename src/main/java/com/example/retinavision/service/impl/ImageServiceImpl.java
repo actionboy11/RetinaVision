@@ -5,6 +5,8 @@ import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
+import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.CaseMapper;
 import com.example.retinavision.mapper.ImageMapper;
@@ -12,10 +14,14 @@ import com.example.retinavision.mapper.UserRegisterMapper;
 import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.pojo.DTO.CreateTaskDTO;
 import com.example.retinavision.pojo.VO.ImageFileItemVO;
 import com.example.retinavision.service.ImageService;
+import com.example.retinavision.service.TaskService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +41,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class ImageServiceImpl implements ImageService {
+    private static final Logger log = LoggerFactory.getLogger(ImageServiceImpl.class);
 
     private static final long MAX_FILE_SIZE = 20L * 1024 * 1024;
     private static final String LOCAL_STORAGE_BUCKET = "local";
@@ -50,16 +57,19 @@ public class ImageServiceImpl implements ImageService {
     private final ImageMapper imageMapper;
     private final UserRegisterMapper userMapper;
     private final CaseMapper caseMapper;
+    private final TaskService taskService;
     private final Path imageRootPath;
 
     public ImageServiceImpl(
             ImageMapper imageMapper,
             CaseMapper caseMapper,
             UserRegisterMapper userMapper,
+            TaskService taskService,
             @Value("${retina.upload.image-root:uploads/images}") String imageRoot) {  // @Value 注解 获取配置文件中的属性值
         this.imageMapper = imageMapper;
         this.caseMapper = caseMapper;
         this.userMapper = userMapper;
+        this.taskService = taskService;
         this.imageRootPath = Paths.get(imageRoot).toAbsolutePath().normalize();  //toAbsolutePath 获取绝对路径 normalize 获取规范路径
     }
 
@@ -122,6 +132,7 @@ public class ImageServiceImpl implements ImageService {
                 .imageWidth(imageWidth)
                 .imageHeight(imageHeight)
                 .status(ImageStatus.UPLOADED)
+                .qualityStatus(com.example.retinavision.enumeration.ImageQualityStatus.NOT_CHECKED)
                 .uploadedBy(userid.longValue())
                 .uploadedAt(now)
                 .updatedAt(now)
@@ -129,6 +140,18 @@ public class ImageServiceImpl implements ImageService {
         // MyBatis-Plus 会把生成的 id 回填到 imageEntity.id
         imageMapper.insert(imageEntity);
         imageEntity.setPreviewUrl(buildPreviewUrl(imageEntity.getId()));
+        imageMapper.updateById(imageEntity);
+
+        try {
+            taskService.createTask(new CreateTaskDTO(
+                    caseId.longValue(), imageEntity.getId(), TaskType.IMAGE_QUALITY_CHECK, 5), userid);
+            imageEntity.setQualityStatus(ImageQualityStatus.CHECKING);
+        } catch (RuntimeException exception) {
+            imageEntity.setQualityStatus(ImageQualityStatus.ERROR);
+            log.warn("Automatic image quality task submission failed imageId={} errorType={}",
+                    imageEntity.getId(), exception.getClass().getSimpleName());
+        }
+        imageEntity.setUpdatedAt(LocalDateTime.now());
         imageMapper.updateById(imageEntity);
 
         return toVO(imageEntity);
@@ -223,6 +246,10 @@ public class ImageServiceImpl implements ImageService {
                 .imageWidth(entity.getImageWidth())
                 .imageHeight(entity.getImageHeight())
                 .status(entity.getStatus())
+                .qualityStatus(entity.getQualityStatus())
+                .qualityScore(entity.getQualityScore())
+                .qualityResultId(entity.getQualityResultId())
+                .qualityCheckedAt(entity.getQualityCheckedAt())
                 .uploadedBy(entity.getUploadedBy())
                 .uploadedByName(uploadedByName)
                 .uploadedAt(entity.getUploadedAt())

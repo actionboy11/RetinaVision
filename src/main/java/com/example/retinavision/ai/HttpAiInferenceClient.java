@@ -18,6 +18,7 @@ import java.nio.file.Path;
 @Component
 public class HttpAiInferenceClient implements AiInferenceClient {
     private static final String SEGMENTATION_PATH = "/v1/inference/vessel-segmentation";
+    private static final String QUALITY_PATH = "/v1/inference/image-quality-check";
 
     // 客户端配置
     private final RestClient restClient;
@@ -95,6 +96,31 @@ public class HttpAiInferenceClient implements AiInferenceClient {
             throw exception;
         } catch (Exception exception) {
             throw classify(exception, AiFailureCategory.ARTIFACT_DOWNLOAD_FAILED, "下载 AI 分割结果图失败");
+        }
+    }
+
+    @Override
+    public AiInferenceResponse checkQuality(Path imagePath, String originalFilename, String contentType, String requestId) {
+        try {
+            MultipartBodyBuilder body = new MultipartBodyBuilder();
+            body.part("file", new FileSystemResource(imagePath))
+                    .filename(originalFilename)
+                    .contentType(parseContentType(contentType));
+            AiInferenceResponse response = restClient.post()
+                    .uri(QUALITY_PATH)
+                    .header("X-Request-ID", requestId)
+                    .contentType(MediaType.MULTIPART_FORM_DATA)
+                    .body(body.build()).retrieve().body(AiInferenceResponse.class);
+            if (response == null || response.getResultJson() == null
+                    || !"IMAGE_QUALITY_CHECK".equals(response.getResultType())) {
+                throw new AiInferenceException(AiFailureCategory.INCOMPLETE_RESPONSE,
+                        "AI 服务返回了不完整的图像质量结果");
+            }
+            return response;
+        } catch (AiInferenceException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw classify(exception, AiFailureCategory.UNKNOWN, "调用 AI 图像质量检测服务失败");
         }
     }
 

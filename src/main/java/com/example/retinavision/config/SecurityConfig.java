@@ -55,7 +55,8 @@ public class SecurityConfig {
                 // 关闭 Spring Security 创建的会话，使用 JWT 登录。
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 配置异常处理，返回 401 错误信息。
-            .exceptionHandling(exception -> exception.authenticationEntryPoint((request, response, authException) -> {
+            .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint((request, response, authException) -> {
                 response.setStatus(401);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setCharacterEncoding("UTF-8");
@@ -65,7 +66,17 @@ public class SecurityConfig {
                         "data", false
                 ));
                 response.getWriter().flush();  // ← 保数据被写入响应
-            }))
+                    })
+                    .accessDeniedHandler((request, response, denied) -> {
+                        response.setStatus(403);
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        response.setCharacterEncoding("UTF-8");
+                        objectMapper.writeValue(response.getWriter(), Map.of(
+                                "code", 40300,
+                                "message", "无权执行此操作",
+                                "data", false
+                        ));
+                    }))
             .authorizeHttpRequests(auth -> auth
                 // 放行浏览器预检请求，避免开发期跨域/代理预检返回 403。
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -76,6 +87,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
                 // 有限重试与死信恢复功能完善：死信恢复会重新执行失败任务，只允许管理员操作。
                 .requestMatchers("/admin/dead-letters/**").hasRole("ADMIN")
+                .requestMatchers("/admin/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/analysis-results/*/review").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.POST, "/analysis-results/*/corrections").hasAnyRole("RESEARCHER", "DOCTOR")
+                .requestMatchers(HttpMethod.POST, "/analysis-results/*/report-sign").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.PUT, "/analysis-results/*/report-draft").hasRole("DOCTOR")
                 .anyRequest().authenticated()  // 其他接口需要登录后才能访问
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);   //// ↑ 显式添加到过滤器链，并指定位置

@@ -63,9 +63,6 @@ public class UserLoginServiceImpl implements UserLoginService {
         if (password.length() < 6 || password.length() > 20){
             throw new AccountNotFoundException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.PASSWORD_LENGTH_ERROR);
         }
-        if(userRegisterDTO.getRoleCode()== UserRole.ADMIN){
-            throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_AUTHORIZED);
-        }
         if(userRegisterMapper.existsByUsername( username)){
             throw new AccountNotFoundException(ErrorMessageSignal.CONFLICT, ErrorMessageContant.USER_ALREADY_EXISTS);
         }
@@ -74,7 +71,8 @@ public class UserLoginServiceImpl implements UserLoginService {
         String encodePassword = passwordEncoder.encode(password);
         userEntity.setPasswordHash(encodePassword);
         userEntity.setRealName(realname);
-        userEntity.setRoleCode(userRegisterDTO.getRoleCode());
+        // 公开注册输入不可信：角色固定为 USER，医生/研究员身份只能由管理员授予。
+        userEntity.setRoleCode(UserRole.USER);
         userEntity.setStatus(1);
         userEntity.setCreatedAt(LocalDateTime.now());
         userEntity.setUpdatedAt(LocalDateTime.now());
@@ -107,7 +105,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         //
         loginAttemptService.recordSuccess(username);
         String token = jwtUtil.generateToken(user.getId(),user.getUsername(),user.getRoleCode().name());
-        return new UserLoginVO(token, new CurrentUserVO(user.getId(),user.getUsername(),user.getRealName(),user.getRoleCode()));
+        return new UserLoginVO(token, new CurrentUserVO(user.getId(),user.getUsername(),user.getRealName(),user.getRoleCode(),user.getProfessionalNo()));
 
     }
 
@@ -142,7 +140,7 @@ public class UserLoginServiceImpl implements UserLoginService {
             throw new AccountNotFoundException(ErrorMessageSignal.FORBIDDEN, ErrorMessageContant.USER_NOT_ACTIVE);
         }
 
-        return new CurrentUserVO(user.getId(), user.getUsername(), user.getRealName(), user.getRoleCode());
+        return new CurrentUserVO(user.getId(), user.getUsername(), user.getRealName(), user.getRoleCode(), user.getProfessionalNo());
     }
 
     private String normalizeBlank(String value) {

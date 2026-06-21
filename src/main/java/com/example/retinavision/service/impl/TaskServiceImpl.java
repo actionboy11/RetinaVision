@@ -6,8 +6,12 @@ import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
+import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.enumeration.TaskStatus;
+import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.ConflictException;
 import com.example.retinavision.mapper.CaseMapper;
 import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.LogMapper;
@@ -105,6 +109,7 @@ public class TaskServiceImpl implements TaskService {
         ImageFileEntity imageFileEntity = imageMapper.selectById(imageFileId);
         // 校验病例和图像的有效性和关联性，确保它们存在且未被删除，并且图像确实属于该病例。同时还检查病例状态是否允许创建任务。
         validateCaseAndImageForTask(caseEntity, imageFileEntity, caseId);
+        validateQualityGate(createTaskDTO, imageFileEntity, submittedBy);
 
         // 同一图像同一任务类型的任务只能有一个未完成的，避免重复提交导致资源浪费和结果冲突。
         Long unfinishedTaskCount = taskMapper.countUnfinishedTask(imageFileId, createTaskDTO.getTaskType());
@@ -112,9 +117,11 @@ public class TaskServiceImpl implements TaskService {
             throw new BaseException(ErrorMessageSignal.CONFLICT, ErrorMessageContant.CONFLICT_MSG);
         }
         // 预留 AI 任务配额，确保用户在提交任务时不会超过系统设定的配额限制。
-        AiQuotaReservation reservation = aiTaskQuotaService.reserve(submittedBy);
+        AiQuotaReservation reservation = createTaskDTO.getTaskType() == TaskType.VESSEL_SEGMENTATION
+                ? aiTaskQuotaService.reserve(submittedBy)
+                : null;
         // 注册回滚回调，确保在任务创建失败时释放预留的配额。
-        boolean rollbackCallbackRegistered = registerQuotaRollback(reservation);
+        boolean rollbackCallbackRegistered = reservation != null && registerQuotaRollback(reservation);
         try {
         LocalDateTime now = LocalDateTime.now();
         TaskEntity taskEntity = TaskEntity.builder()
@@ -127,13 +134,18 @@ public class TaskServiceImpl implements TaskService {
                 .retryCount(0)
                 .maxRetryCount(DEFAULT_MAX_RETRY_COUNT)
                 .errorMessage(null)
+                .qualityOverride(Boolean.TRUE.equals(createTaskDTO.getQualityOverride()))
+                .qualityOverrideReason(normalizeKeyword(createTaskDTO.getQualityOverrideReason()))
                 .submittedBy(submittedBy)
                 .submittedAt(now)
                 .updatedAt(now)
                 .build();
         taskMapper.insert(taskEntity);
         analysisTaskMessagePublisher.publish(buildTaskMessage(taskEntity));
-        insertTaskLog(taskEntity.getId(), null, TaskStatus.WAITING, "任务已创建并投递 MQ，等待 Worker 处理", "USER", submittedBy, now);
+        String creationLog = Boolean.TRUE.equals(taskEntity.getQualityOverride())
+                ? "医生覆盖图像质量门控并创建任务，原因：" + taskEntity.getQualityOverrideReason()
+                : "任务已创建并投递 MQ，等待 Worker 处理";
+        insertTaskLog(taskEntity.getId(), null, TaskStatus.WAITING, creationLog, "USER", submittedBy, now);
 
         return CreateTaskVO.builder()
                 .id(taskEntity.getId())
@@ -142,7 +154,7 @@ public class TaskServiceImpl implements TaskService {
                 .errorMessage(null)
                 .build();
         } catch (RuntimeException exception) {
-            if (!rollbackCallbackRegistered) {
+            if (reservation != null && !rollbackCallbackRegistered) {
                 releaseQuotaSafely(reservation);
             }
             throw exception;
@@ -279,6 +291,29 @@ public class TaskServiceImpl implements TaskService {
         if (imageFileEntity.getStatus() == ImageStatus.DELETED) {
             throw new BaseException(ErrorMessageSignal.CONFLICT, "图像已删除，不允许创建任务");
         }
+    }
+
+    private void validateQualityGate(CreateTaskDTO dto, ImageFileEntity image, Integer userId) {
+        if (dto.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
+            return;
+        }
+        ImageQualityStatus status = image.getQualityStatus() == null
+                ? ImageQualityStatus.NOT_CHECKED : image.getQualityStatus();
+        if (status == ImageQualityStatus.PASS || status == ImageQualityStatus.WARNING) {
+            return;
+        }
+        if (status == ImageQualityStatus.FAIL && Boolean.TRUE.equals(dto.getQualityOverride())) {
+            UserEntity user = userRegisterMapper.selectById(userId);
+            if (user == null || user.getRoleCode() != UserRole.DOCTOR
+                    || !StringUtils.hasText(dto.getQualityOverrideReason())) {
+                throw new BaseException(ErrorMessageSignal.FORBIDDEN, "只有医生填写原因后才能覆盖质量门控");
+            }
+            return;
+        }
+        String message = status == ImageQualityStatus.FAIL
+                ? "图像质量不合格，禁止创建血管分割任务"
+                : "图像质量检测尚未完成或执行失败";
+        throw new ConflictException(message);
     }
 
     private void validateCaseAndImageForRetry(CaseEntity caseEntity, ImageFileEntity imageFileEntity) {

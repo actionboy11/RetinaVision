@@ -28,6 +28,12 @@ public class GlobalExceptionHandler {
                 .body(Result.error(exception.getCode(), exception.getMessage()));
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Result<Boolean>> handleConflictException(ConflictException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Result.error(exception.getCode(), exception.getMessage()));
+    }
+
     @ExceptionHandler(BaseException.class)   // 处理 BaseException 及其子类
     // 优先级高：精确匹配 BaseException 及其子类
     public Result<Boolean> handleBaseException(BaseException exception) {

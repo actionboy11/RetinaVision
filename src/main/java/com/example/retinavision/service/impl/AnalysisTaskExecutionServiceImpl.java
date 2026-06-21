@@ -4,6 +4,7 @@ import com.example.retinavision.ai.AiInferenceClient;
 import com.example.retinavision.ai.AiInferenceException;
 import com.example.retinavision.ai.dto.AiInferenceResponse;
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.mapper.AnalysisResultMapper;
@@ -16,9 +17,11 @@ import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.LogEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.service.AnalysisTaskExecutionService;
+import com.example.retinavision.service.AnalysisReportService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -48,7 +51,9 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
     private final ObjectMapper objectMapper;
     private final Path imageRootPath;
     private final Path resultRootPath;
+    private final AnalysisReportService analysisReportService;
 
+    @Autowired
     public AnalysisTaskExecutionServiceImpl(
             TaskMapper taskMapper,
             ImageMapper imageMapper,
@@ -57,7 +62,8 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
             AiInferenceClient aiInferenceClient,
             ObjectMapper objectMapper,
             @Value("${retina.upload.image-root:uploads/images}") String imageRoot,
-            @Value("${retina.upload.result-root:uploads/results}") String resultRoot) {
+            @Value("${retina.upload.result-root:uploads/results}") String resultRoot,
+            AnalysisReportService analysisReportService) {
         this.taskMapper = taskMapper;
         this.imageMapper = imageMapper;
         this.analysisResultMapper = analysisResultMapper;
@@ -66,6 +72,14 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         this.objectMapper = objectMapper;
         this.imageRootPath = Paths.get(imageRoot).toAbsolutePath().normalize();
         this.resultRootPath = Paths.get(resultRoot).toAbsolutePath().normalize();
+        this.analysisReportService = analysisReportService;
+    }
+
+    public AnalysisTaskExecutionServiceImpl(TaskMapper taskMapper, ImageMapper imageMapper,
+            AnalysisResultMapper analysisResultMapper, LogMapper logMapper, AiInferenceClient aiInferenceClient,
+            ObjectMapper objectMapper, String imageRoot, String resultRoot) {
+        this(taskMapper, imageMapper, analysisResultMapper, logMapper, aiInferenceClient, objectMapper,
+                imageRoot, resultRoot, null);
     }
 
     @Override
@@ -90,12 +104,18 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         String requestId = "task-" + task.getId() + "-" + UUID.randomUUID();
         long attemptStarted = System.nanoTime();
         try {
-            if (task.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
-                throw new IllegalStateException("暂不支持任务类型：" + task.getTaskType());
-            }
             ImageFileEntity image = getAvailableImage(task.getImageFileId());
             // 解析图像文件路径(后端服务器上的原图实际路径)
             Path imagePath = resolveImagePath(image.getStorageObjectKey());
+            if (task.getTaskType() == TaskType.IMAGE_QUALITY_CHECK) {
+                AiInferenceResponse qualityResponse = aiInferenceClient.checkQuality(
+                        imagePath, image.getOriginalFilename(), image.getFileType(), requestId);
+                persistQualitySuccess(task, image, qualityResponse);
+                return ExecutionDisposition.SUCCESS;
+            }
+            if (task.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
+                throw new IllegalStateException("暂不支持任务类型：" + task.getTaskType());
+            }
             // 调用 AI 血管分割服务
             AiInferenceResponse response = aiInferenceClient.segment(
                     imagePath,
@@ -118,6 +138,9 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
         } catch (Exception exception) {
             // 将任务状态更新为 FAILED，并记录失败时间和日志
             persistFailure(task, exception);
+            if (task.getTaskType() == TaskType.IMAGE_QUALITY_CHECK) {
+                markQualityError(task.getImageFileId());
+            }
             String category = exception instanceof AiInferenceException aiException
                     ? aiException.getCategory().name()
                     : "UNKNOWN";
@@ -127,6 +150,40 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
                     elapsedMillis(attemptStarted)
             );
             return ExecutionDisposition.FAILED;
+        }
+    }
+
+    private void persistQualitySuccess(TaskEntity task, ImageFileEntity image, AiInferenceResponse response)
+            throws JsonProcessingException {
+        LocalDateTime now = LocalDateTime.now();
+        AnalysisResultEntity result = AnalysisResultEntity.builder()
+                .taskId(task.getId()).resultType(TaskType.IMAGE_QUALITY_CHECK)
+                .resultJson(objectMapper.writeValueAsString(response.getResultJson()))
+                .modelName(response.getModelName()).modelVersion(response.getModelVersion())
+                .processingTimeMs(response.getProcessingTimeMs())
+                .createdAt(now).updatedAt(now).build();
+        analysisResultMapper.insert(result);
+        image.setQualityStatus(ImageQualityStatus.valueOf(String.valueOf(response.getResultJson().get("grade"))));
+        Object score = response.getResultJson().get("score");
+        image.setQualityScore(score instanceof Number number ? number.doubleValue() : null);
+        image.setQualityResultId(result.getId());
+        image.setQualityCheckedAt(now);
+        image.setUpdatedAt(now);
+        imageMapper.updateById(image);
+        task.setStatus(TaskStatus.SUCCESS);
+        task.setFinishedAt(now);
+        task.setUpdatedAt(now);
+        task.setErrorMessage(null);
+        taskMapper.updateById(task);
+        insertLog(task.getId(), TaskStatus.RUNNING, TaskStatus.SUCCESS, "图像质量检测完成", now);
+    }
+
+    private void markQualityError(Long imageId) {
+        ImageFileEntity image = imageMapper.selectById(imageId);
+        if (image != null) {
+            image.setQualityStatus(ImageQualityStatus.ERROR);
+            image.setUpdatedAt(LocalDateTime.now());
+            imageMapper.updateById(image);
         }
     }
 
@@ -204,6 +261,9 @@ public class AnalysisTaskExecutionServiceImpl implements AnalysisTaskExecutionSe
                 .updatedAt(now)
                 .build();
         analysisResultMapper.insert(result);
+        if (analysisReportService != null) {
+            analysisReportService.getOrCreateDraft(result.getId(), task.getSubmittedBy());
+        }
 
         task.setStatus(TaskStatus.SUCCESS);
         task.setFinishedAt(now);

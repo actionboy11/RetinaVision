@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS sys_user (
     password_hash VARCHAR(255) NOT NULL,
     real_name VARCHAR(64),
     role_code VARCHAR(32) NOT NULL,
+    professional_no VARCHAR(64) UNIQUE NULL COMMENT '医生工号或执业标识',
+    role_assigned_by BIGINT NULL COMMENT '最近一次角色授予管理员ID',
+    role_assigned_at DATETIME NULL COMMENT '最近一次角色授予时间',
     status TINYINT NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
@@ -44,6 +47,10 @@ CREATE TABLE IF NOT EXISTS image_file (
     image_width INT,
     image_height INT,
     status VARCHAR(32) NOT NULL DEFAULT 'UPLOADED',
+    quality_status VARCHAR(32) NOT NULL DEFAULT 'NOT_CHECKED',
+    quality_score DECIMAL(6,2) NULL,
+    quality_result_id BIGINT NULL,
+    quality_checked_at DATETIME NULL,
     uploaded_by BIGINT NOT NULL COMMENT '上传用户ID，逻辑关联 sys_user.id',
     uploaded_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
@@ -65,6 +72,8 @@ CREATE TABLE IF NOT EXISTS analysis_task (
     retry_count INT NOT NULL DEFAULT 0,
     max_retry_count INT NOT NULL DEFAULT 3,
     error_message VARCHAR(1024) NULL,
+    quality_override TINYINT(1) NOT NULL DEFAULT 0,
+    quality_override_reason VARCHAR(512) NULL,
     submitted_by BIGINT NOT NULL COMMENT '提交用户ID，逻辑关联 sys_user.id',
     submitted_at DATETIME NOT NULL,
     started_at DATETIME NULL,
@@ -114,4 +123,56 @@ CREATE TABLE IF NOT EXISTS task_log (
     INDEX idx_task_log_task_id (task_id),
     INDEX idx_task_log_created_at (created_at),
     INDEX idx_task_log_operator_id (operator_id)
+);
+
+CREATE TABLE IF NOT EXISTS analysis_feedback (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    result_id BIGINT NOT NULL,
+    verdict VARCHAR(32) NOT NULL,
+    issue_codes JSON NOT NULL,
+    comment VARCHAR(2000) NULL,
+    submitted_by BIGINT NOT NULL,
+    created_at DATETIME NOT NULL,
+    INDEX idx_feedback_result_id (result_id)
+);
+
+CREATE TABLE IF NOT EXISTS analysis_correction (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    result_id BIGINT NOT NULL,
+    version INT NOT NULL,
+    corrected_result_json JSON NOT NULL,
+    corrected_mask_object_key VARCHAR(512) NOT NULL,
+    reason VARCHAR(1000) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    submitted_by BIGINT NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    UNIQUE KEY uk_correction_result_version (result_id, version)
+);
+
+CREATE TABLE IF NOT EXISTS analysis_review (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    result_id BIGINT NOT NULL,
+    correction_version INT NULL,
+    status VARCHAR(32) NOT NULL,
+    findings TEXT NULL,
+    conclusion TEXT NULL,
+    recommendation TEXT NULL,
+    reviewer_id BIGINT NOT NULL,
+    reviewer_name_snapshot VARCHAR(64) NOT NULL,
+    professional_no_snapshot VARCHAR(64) NOT NULL,
+    version INT NOT NULL,
+    reviewed_at DATETIME NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    UNIQUE KEY uk_review_result_id (result_id)
+);
+
+CREATE TABLE IF NOT EXISTS analysis_report (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT, result_id BIGINT NOT NULL, version INT NOT NULL,
+    status VARCHAR(32) NOT NULL, correction_version INT NULL, draft_json JSON NOT NULL,
+    report_object_key VARCHAR(512) NULL, report_sha256 CHAR(64) NULL, created_by BIGINT NOT NULL,
+    signed_by BIGINT NULL, signer_name_snapshot VARCHAR(64) NULL, professional_no_snapshot VARCHAR(64) NULL,
+    signed_at DATETIME NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL,
+    UNIQUE KEY uk_report_result_version (result_id, version)
 );

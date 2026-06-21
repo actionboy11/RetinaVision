@@ -3,6 +3,8 @@ package com.example.retinavision.controller;
 import com.example.retinavision.pojo.VO.AnalysisResultVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.AnalysisResultService;
+import com.example.retinavision.service.AnalysisReportService;
+import com.example.retinavision.enumeration.ReportStatus;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -21,9 +23,11 @@ import java.util.Locale;
 @RequestMapping
 public class ResultAnalysisController {
     private final AnalysisResultService analysisResultService;
+    private final AnalysisReportService analysisReportService;
 
-    public ResultAnalysisController(AnalysisResultService analysisResultService) {
+    public ResultAnalysisController(AnalysisResultService analysisResultService, AnalysisReportService analysisReportService) {
         this.analysisResultService = analysisResultService;
+        this.analysisReportService = analysisReportService;
     }
 
     // 查询任务分析结果，JSON 业务接口仍然使用统一 Result<T> 包装。
@@ -46,7 +50,11 @@ public class ResultAnalysisController {
     // 下载分析报告，Content-Disposition 会提示浏览器按文件下载。
     @GetMapping("/results/{resultId}/report")
     public ResponseEntity<InputStreamResource> downloadReport(@PathVariable Long resultId) throws IOException {
-        Path reportPath = analysisResultService.getResultReportPath(resultId);
+        Path reportPath = analysisReportService.list(resultId).stream()
+                .filter(report -> report.getStatus() == ReportStatus.SIGNED || report.getStatus() == ReportStatus.SUPERSEDED)
+                .max(java.util.Comparator.comparingInt(com.example.retinavision.pojo.Entity.AnalysisReportEntity::getVersion))
+                .map(report -> analysisReportService.getFile(resultId, report.getVersion()))
+                .orElseGet(() -> analysisResultService.getResultReportPath(resultId));
         String filename = "report-" + resultId + getExtension(reportPath);
 
         return ResponseEntity.ok()
