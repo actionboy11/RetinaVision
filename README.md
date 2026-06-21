@@ -342,3 +342,16 @@ RETINA_AI_BASE_URL=http://retinavision-ai:8000
 ```
 
 AI 的 Windows Conda 启停脚本和 Docker 说明见同级项目 `../retinavision-ai/README.md`。
+# 核心医疗闭环配置
+
+已有数据库升级执行 `docker/mysql/migration/V20260621__medical_loop_phase_one.sql`；全新环境由 `docker/mysql/init.sql` 自动建表。升级前请备份数据库，迁移脚本只执行一次。
+
+PDF 报告由 Java 服务生成。Windows 默认读取 `C:/Windows/Fonts/simhei.ttf`，其他环境必须配置具有合法使用授权的中文 TrueType 字体：
+
+```yaml
+retina:
+  report:
+    font-path: /opt/retinavision/fonts/your-authorized-font.ttf
+```
+
+服务不会把字体文件提交到仓库。签发前要求医生身份、`APPROVED` 审核结果；签发记录保存 PDF SHA-256、医生身份快照和版本。

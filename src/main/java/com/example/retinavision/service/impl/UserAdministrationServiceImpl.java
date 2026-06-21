@@ -1,0 +1,67 @@
+package com.example.retinavision.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.mapper.UserRegisterMapper;
+import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
+import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.service.UserAdministrationService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import com.example.retinavision.pojo.VO.AdminUserItemVO;
+
+@Service
+public class UserAdministrationServiceImpl implements UserAdministrationService {
+    private final UserRegisterMapper userMapper;
+
+    public UserAdministrationServiceImpl(UserRegisterMapper userMapper) {
+        this.userMapper = userMapper;
+    }
+
+    @Override
+    @Transactional
+    public void assignRole(Integer userId, UpdateUserRoleDTO request, Integer assignedBy) {
+        UserEntity user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BaseException(ErrorMessageSignal.NOT_FOUND, "用户不存在");
+        }
+        if (request == null || request.getRoleCode() == null || request.getRoleCode() == UserRole.ADMIN) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "仅可授予 USER、DOCTOR 或 RESEARCHER 角色");
+        }
+
+        String professionalNo = StringUtils.hasText(request.getProfessionalNo())
+                ? request.getProfessionalNo().trim() : null;
+        if (request.getRoleCode() == UserRole.DOCTOR && professionalNo == null) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "授予医生角色时必须填写医生工号或执业标识");
+        }
+        if (professionalNo != null) {
+            UserEntity existing = userMapper.selectOne(new QueryWrapper<UserEntity>()
+                    .eq("professional_no", professionalNo)
+                    .ne("id", userId));
+            if (existing != null) {
+                throw new BaseException(ErrorMessageSignal.CONFLICT, "医生工号或执业标识已被使用");
+            }
+        }
+
+        user.setRoleCode(request.getRoleCode());
+        user.setProfessionalNo(request.getRoleCode() == UserRole.DOCTOR ? professionalNo : null);
+        user.setRoleAssignedBy(assignedBy);
+        user.setRoleAssignedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateById(user);
+    }
+
+    @Override public List<AdminUserItemVO> listUsers() {
+        return userMapper.selectList(null).stream().map(user -> AdminUserItemVO.builder()
+                .id(user.getId()).username(user.getUsername()).realName(user.getRealName())
+                .roleCode(user.getRoleCode()).professionalNo(user.getProfessionalNo())
+                .roleAssignedBy(user.getRoleAssignedBy()).roleAssignedAt(user.getRoleAssignedAt())
+                .status(user.getStatus()).build()).toList();
+    }
+}

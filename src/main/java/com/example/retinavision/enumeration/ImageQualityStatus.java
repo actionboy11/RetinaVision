@@ -1,0 +1,19 @@
+package com.example.retinavision.enumeration;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public enum ImageQualityStatus {
+    NOT_CHECKED("NOT_CHECKED"), CHECKING("CHECKING"), PASS("PASS"),
+    WARNING("WARNING"), FAIL("FAIL"), ERROR("ERROR");
+
+    @EnumValue
+    private final String code;
+
+    ImageQualityStatus(String code) {
+        this.code = code;
+    }
+
+    @JsonValue
+    public String getCode() { return code; }
+}

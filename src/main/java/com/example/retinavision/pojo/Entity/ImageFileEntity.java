@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.example.retinavision.common.Deletable;
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,6 +57,10 @@ public class ImageFileEntity implements Deletable {
     
     /** 状态：UPLOADED, BOUND_TASK, DELETED */
     private ImageStatus status;
+    private ImageQualityStatus qualityStatus;
+    private Double qualityScore;
+    private Long qualityResultId;
+    private LocalDateTime qualityCheckedAt;
     
     /** 上传用户ID，逻辑关联 sys_user.id */
     private Long uploadedBy;

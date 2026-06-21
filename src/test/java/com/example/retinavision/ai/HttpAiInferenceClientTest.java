@@ -30,6 +30,9 @@ class HttpAiInferenceClientTest {
     void setUp() throws IOException {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/v1/inference/vessel-segmentation", this::handleInference);
+        server.createContext("/v1/inference/image-quality-check", exchange -> respond(exchange, 200, "application/json", """
+                {"resultType":"IMAGE_QUALITY_CHECK","resultJson":{"grade":"PASS","score":88.5,"metrics":{"sharpness":0.9},"reasons":[]},"modelName":"retinavision-rule-quality","modelVersion":"1.0.0","processingTimeMs":8}
+                """.getBytes(StandardCharsets.UTF_8)));
         server.createContext("/v1/artifacts/abc123/mask", exchange -> {
             artifactRequestId.set(exchange.getRequestHeaders().getFirst("X-Request-ID"));
             respond(exchange, 200, "image/png", "png-mask".getBytes(StandardCharsets.UTF_8));
@@ -76,6 +79,17 @@ class HttpAiInferenceClientTest {
                 .isInstanceOf(AiInferenceException.class)
                 .extracting("category")
                 .isEqualTo(AiFailureCategory.UNTRUSTED_ARTIFACT_URL);
+    }
+
+    @Test
+    void callsQualityEndpointAndParsesStableContract() throws IOException {
+        Path image = Files.createTempFile("retina-quality", ".png");
+        Files.writeString(image, "image-bytes");
+        AiServiceProperties properties = new AiServiceProperties(); properties.setBaseUrl(baseUrl);
+        AiInferenceResponse response = new HttpAiInferenceClient(properties)
+                .checkQuality(image, "retina.png", "image/png", "quality-1");
+        assertThat(response.getResultType()).isEqualTo("IMAGE_QUALITY_CHECK");
+        assertThat(response.getResultJson()).containsEntry("grade", "PASS").containsEntry("score", 88.5);
     }
 
     private void handleInference(HttpExchange exchange) throws IOException {

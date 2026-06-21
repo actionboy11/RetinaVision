@@ -1,6 +1,7 @@
 package com.example.retinavision.pojo.VO;
 
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,6 +51,10 @@ public class ImageFileItemVO {
     
     /** 状态：UPLOADED, BOUND_TASK, DELETED */
     private ImageStatus status;
+    private ImageQualityStatus qualityStatus;
+    private Double qualityScore;
+    private Long qualityResultId;
+    private LocalDateTime qualityCheckedAt;
     
     /** 上传用户ID */
     private Long uploadedBy;

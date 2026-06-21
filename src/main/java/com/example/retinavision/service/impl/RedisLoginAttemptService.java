@@ -17,6 +17,7 @@ import java.util.List;
  * Redis 实现的登录尝试服务，用于检查和记录登录尝试次数。
  * 该服务将负责管理登录尝试次数的检查和记录逻辑
  */
+@Service
 public class RedisLoginAttemptService implements LoginAttemptService {
 
     // RedisTemplate 用于与 Redis 进行交互，提供了对 Redis 数据库的操作方法

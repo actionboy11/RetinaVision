@@ -3,6 +3,8 @@ package com.example.retinavision.service.impl;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
+import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.exception.BaseException;
@@ -17,6 +19,7 @@ import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.LogEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.pojo.VO.CreateTaskVO;
 import com.example.retinavision.service.AiQuotaReservation;
 import com.example.retinavision.service.AiTaskQuotaService;
@@ -80,7 +83,8 @@ class TaskServiceImplTest {
     void createTaskCreatesWaitingTaskAfterMqDelivery() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
-        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.PASS).build());
         when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
         doAnswer(invocation -> {
             TaskEntity entity = invocation.getArgument(0);
@@ -108,7 +112,8 @@ class TaskServiceImplTest {
     void createTaskRejectsDuplicateUnfinishedTask() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.IMAGE_QUALITY_CHECK, 3);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
-        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.PASS).build());
         when(taskMapper.countUnfinishedTask(20L, TaskType.IMAGE_QUALITY_CHECK)).thenReturn(1L);
 
         assertThatThrownBy(() -> taskService.createTask(dto, 7))
@@ -122,10 +127,64 @@ class TaskServiceImplTest {
     }
 
     @Test
+    void vesselTaskRejectsFailedQualityForOrdinaryUser() {
+        CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 3);
+        when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.FAIL).build());
+
+        assertThatThrownBy(() -> taskService.createTask(dto, 7))
+                .isInstanceOf(BaseException.class)
+                .extracting("code").isEqualTo(ErrorMessageSignal.CONFLICT);
+        verify(analysisTaskMessagePublisher, never()).publish(any());
+    }
+
+    @Test
+    void doctorMayOverrideFailedQualityWithReason() {
+        CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 3);
+        dto.setQualityOverride(true);
+        dto.setQualityOverrideReason("临床紧急，接受低质量风险");
+        when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.FAIL).build());
+        when(userRegisterMapper.selectById(7)).thenReturn(user(7, UserRole.DOCTOR));
+        when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
+        doAnswer(invocation -> { ((TaskEntity) invocation.getArgument(0)).setId(100L); return 1; })
+                .when(taskMapper).insert(any(TaskEntity.class));
+
+        taskService.createTask(dto, 7);
+
+        verify(analysisTaskMessagePublisher).publish(any());
+    }
+
+    @Test
+    void qualityTaskDoesNotReserveGpuQuota() {
+        CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.IMAGE_QUALITY_CHECK, 3);
+        when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.NOT_CHECKED).build());
+        when(taskMapper.countUnfinishedTask(20L, TaskType.IMAGE_QUALITY_CHECK)).thenReturn(0L);
+        doAnswer(invocation -> { ((TaskEntity) invocation.getArgument(0)).setId(100L); return 1; })
+                .when(taskMapper).insert(any(TaskEntity.class));
+
+        taskService.createTask(dto, 7);
+
+        verify(aiTaskQuotaService, never()).reserve(any());
+    }
+
+    private UserEntity user(int id, UserRole role) {
+        UserEntity user = new UserEntity();
+        user.setId(id);
+        user.setRoleCode(role);
+        return user;
+    }
+
+    @Test
     void createTaskThrowsMqDeliveryErrorWhenPublisherFails() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
-        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.PASS).build());
         when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
         doAnswer(invocation -> {
             TaskEntity entity = invocation.getArgument(0);
@@ -160,7 +219,8 @@ class TaskServiceImplTest {
                 .build();
         when(taskMapper.selectById(100)).thenReturn(task);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
-        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.PASS).build());
         when(aiTaskQuotaService.reserve(7)).thenThrow(new RateLimitException("quota", 10));
 
         assertThatThrownBy(() -> taskService.retryTask(100, 7))
@@ -174,7 +234,8 @@ class TaskServiceImplTest {
     void transactionRollbackReleasesReservedQuota() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
-        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L).status(ImageStatus.UPLOADED).build());
+        when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.PASS).build());
         when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
         doAnswer(invocation -> {
             TaskEntity entity = invocation.getArgument(0);

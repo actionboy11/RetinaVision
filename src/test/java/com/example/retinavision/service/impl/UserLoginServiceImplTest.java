@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
 import java.time.Duration;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,6 +55,23 @@ class UserLoginServiceImplTest {
         service.logout("Bearer token-value");
 
         verify(jwtBlacklistService).blacklist("jti-1", Duration.ofSeconds(90));
+    }
+
+    @Test
+    void publicRegistrationAlwaysCreatesUserRole() {
+        com.example.retinavision.pojo.DTO.UserRegisterDTO dto = new com.example.retinavision.pojo.DTO.UserRegisterDTO();
+        dto.setUsername("newuser");
+        dto.setPassword("secret1");
+        dto.setRealName("New User");
+        dto.setRoleCode(UserRole.DOCTOR);
+        when(userRegisterMapper.existsByUsername("newuser")).thenReturn(false);
+        when(passwordEncoder.encode("secret1")).thenReturn("hash");
+
+        service.UserRegister(dto);
+
+        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRegisterMapper).insert(captor.capture());
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().getRoleCode()).isEqualTo(UserRole.USER);
     }
 
     @Test

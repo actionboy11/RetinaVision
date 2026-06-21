@@ -4,6 +4,7 @@ import com.example.retinavision.ai.AiInferenceClient;
 import com.example.retinavision.ai.AiInferenceException;
 import com.example.retinavision.ai.dto.AiInferenceResponse;
 import com.example.retinavision.enumeration.ImageStatus;
+import com.example.retinavision.enumeration.ImageQualityStatus;
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.mapper.AnalysisResultMapper;
@@ -101,17 +102,39 @@ class AnalysisTaskExecutionServiceImplTest {
     }
 
     @Test
-    void processMarksUnsupportedTaskTypeFailedWithoutCallingAi() {
+    void processPersistsImageQualityResultAndProjection() throws Exception {
         TaskEntity task = task(101L, TaskType.IMAGE_QUALITY_CHECK);
+        Path image = imageRoot.resolve("quality.png");
+        Files.write(image, new byte[]{1});
+        ImageFileEntity imageEntity = ImageFileEntity.builder()
+                .id(20L).status(ImageStatus.UPLOADED)
+                .qualityStatus(ImageQualityStatus.CHECKING)
+                .originalFilename("quality.png").fileType("image/png")
+                .storageObjectKey("quality.png").build();
+        AiInferenceResponse response = new AiInferenceResponse();
+        response.setResultType("IMAGE_QUALITY_CHECK");
+        response.setResultJson(Map.of("grade", "PASS", "score", 88.5));
+        response.setModelName("retinavision-rule-quality");
+        response.setModelVersion("1.0.0");
+        response.setProcessingTimeMs(7);
         when(taskMapper.selectById(101L)).thenReturn(task);
         when(taskMapper.claimForExecution(org.mockito.ArgumentMatchers.eq(101L), any())).thenReturn(1);
+        when(imageMapper.selectById(20L)).thenReturn(imageEntity);
+        when(aiInferenceClient.checkQuality(any(), anyString(), anyString(), anyString())).thenReturn(response);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            AnalysisResultEntity result = invocation.getArgument(0);
+            result.setId(501L);
+            return 1;
+        }).when(analysisResultMapper).insert(any(AnalysisResultEntity.class));
 
         ExecutionDisposition disposition = service.process(message(101L, TaskType.IMAGE_QUALITY_CHECK));
 
-        assertThat(disposition).isEqualTo(ExecutionDisposition.FAILED);
-        assertThat(task.getStatus()).isEqualTo(TaskStatus.FAILED);
-        assertThat(task.getErrorMessage()).contains("暂不支持");
-        verify(aiInferenceClient, never()).segment(any(), any(), any(), any());
+        assertThat(disposition).isEqualTo(ExecutionDisposition.SUCCESS);
+        assertThat(task.getStatus()).isEqualTo(TaskStatus.SUCCESS);
+        assertThat(imageEntity.getQualityStatus()).isEqualTo(ImageQualityStatus.PASS);
+        assertThat(imageEntity.getQualityScore()).isEqualTo(88.5);
+        assertThat(imageEntity.getQualityResultId()).isEqualTo(501L);
+        verify(imageMapper).updateById(imageEntity);
     }
 
     @Test

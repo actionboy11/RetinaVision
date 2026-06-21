@@ -40,6 +40,8 @@ public class TaskEntity  {
     private Integer maxRetryCount;
 
     private String errorMessage;
+    private Boolean qualityOverride;
+    private String qualityOverrideReason;
     private Integer submittedBy;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private LocalDateTime submittedAt;
