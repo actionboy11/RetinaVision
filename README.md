@@ -344,6 +344,8 @@ RETINA_AI_BASE_URL=http://retinavision-ai:8000
 AI 的 Windows Conda 启停脚本和 Docker 说明见同级项目 `../retinavision-ai/README.md`。
 # 核心医疗闭环配置
 
+管理员可以访问不包含患者明细的聚合统计看板，但不能访问病例、图像、分析结果、审核和报告等临床明细接口。修正 mask 可上传 PNG、JPEG 或 TIFF；后端校验解码结果、像素数量和尺寸后，统一二值化保存为 PNG。
+
 数据库升级统一由 Flyway 自动执行。部署前备份数据库；不要重复手工执行旧的 `docker/mysql/migration` 脚本。
 
 PDF 报告由 Java 服务生成。Windows 默认读取 `C:/Windows/Fonts/simhei.ttf`，其他环境必须配置具有合法使用授权的中文 TrueType 字体：
