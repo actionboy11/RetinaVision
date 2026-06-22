@@ -23,16 +23,26 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 @Service
 public class ResultHumanWorkflowServiceImpl implements ResultHumanWorkflowService {
+    private static final Set<String> ALLOWED_MASK_CONTENT_TYPES = Set.of(
+            "image/png", "image/jpeg", "image/jpg", "image/tiff", "image/x-tiff");
+    private static final long MAX_MASK_PIXELS = 25_000_000L;
+
     private final AnalysisResultMapper resultMapper;
     private final AnalysisFeedbackMapper feedbackMapper;
     private final AnalysisCorrectionMapper correctionMapper;
@@ -58,7 +68,7 @@ public class ResultHumanWorkflowServiceImpl implements ResultHumanWorkflowServic
         AnalysisResultEntity result=requireResult(resultId);
         if(file==null || file.isEmpty() || !StringUtils.hasText(reason) || expectedVersion==null) throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask、原因和 expectedVersion 不能为空");
         String contentType=file.getContentType();
-        if(contentType==null || List.of("image/png","image/jpeg","image/jpg","image/tiff","image/x-tiff").stream().noneMatch(type -> type.equalsIgnoreCase(contentType))) throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 格式不支持");
+        if(contentType==null || !ALLOWED_MASK_CONTENT_TYPES.contains(contentType.toLowerCase(Locale.ROOT))) throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 格式不支持");
         if(StringUtils.hasText(json)) try{objectMapper.readTree(json);}catch(JsonProcessingException e){throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"correctedResultJson 不是合法 JSON");}
         int latest=listCorrections(resultId).stream().mapToInt(AnalysisCorrectionEntity::getVersion).max().orElse(0);
         if(latest!=expectedVersion) throw new ConflictException("修正版本已变化，请刷新后重试");
@@ -76,7 +86,20 @@ public class ResultHumanWorkflowServiceImpl implements ResultHumanWorkflowServic
     @Override public List<AnalysisCorrectionEntity> listCorrections(Long resultId){requireResult(resultId); return correctionMapper.selectList(new LambdaQueryWrapper<AnalysisCorrectionEntity>().eq(AnalysisCorrectionEntity::getResultId,resultId).orderByAsc(AnalysisCorrectionEntity::getVersion));}
     @Override public AnalysisCorrectionEntity getCorrection(Long resultId,Integer version){AnalysisCorrectionEntity x=correctionMapper.selectOne(new LambdaQueryWrapper<AnalysisCorrectionEntity>().eq(AnalysisCorrectionEntity::getResultId,resultId).eq(AnalysisCorrectionEntity::getVersion,version));if(x==null)throw new BaseException(ErrorMessageSignal.NOT_FOUND,"修正版本不存在");return x;}
     private AnalysisResultEntity requireResult(Long id){AnalysisResultEntity x=resultMapper.selectById(id);if(x==null)throw new BaseException(ErrorMessageSignal.NOT_FOUND,"分析结果不存在");return x;}
-    private BufferedImage read(MultipartFile f){try{BufferedImage x=ImageIO.read(f.getInputStream());if(x==null)throw new IOException();return x;}catch(IOException e){throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 无法解码");}}
+    private BufferedImage read(MultipartFile f){
+        try(InputStream input=f.getInputStream(); ImageInputStream imageInput=ImageIO.createImageInputStream(input)){
+            if(imageInput==null)throw new IOException();
+            Iterator<ImageReader> readers=ImageIO.getImageReaders(imageInput);
+            if(!readers.hasNext())throw new IOException();
+            ImageReader reader=readers.next();
+            try{
+                reader.setInput(imageInput,true,true);
+                int width=reader.getWidth(0),height=reader.getHeight(0);
+                if(width<=0 || height<=0 || (long)width*height>MAX_MASK_PIXELS)throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 像素数量不能超过 "+MAX_MASK_PIXELS);
+                BufferedImage x=reader.read(0);if(x==null)throw new IOException();return x;
+            }finally{reader.dispose();}
+        }catch(BaseException e){throw e;}catch(IOException|RuntimeException e){throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 无法解码");}
+    }
     private BufferedImage readOriginal(AnalysisResultEntity r){if(!StringUtils.hasText(r.getMaskObjectKey()))throw new BaseException(ErrorMessageSignal.CONFLICT,"AI 原始结果没有 mask");try{BufferedImage x=ImageIO.read(resolve(r.getMaskObjectKey()).toFile());if(x==null)throw new IOException();return x;}catch(IOException e){throw new BaseException(ErrorMessageSignal.NOT_FOUND,"AI 原始 mask 文件不存在或损坏");}}
     private Path resolve(String key){Path x=resultRoot.resolve(key).normalize();if(!x.startsWith(resultRoot))throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"结果文件路径无效");return x;}
     private BufferedImage binary(BufferedImage src){BufferedImage out=new BufferedImage(src.getWidth(),src.getHeight(),BufferedImage.TYPE_BYTE_BINARY);for(int y=0;y<src.getHeight();y++)for(int x=0;x<src.getWidth();x++){int rgb=src.getRGB(x,y);int gray=(((rgb>>16)&255)+((rgb>>8)&255)+(rgb&255))/3;out.setRGB(x,y,gray>=128?0xffffffff:0xff000000);}return out;}
