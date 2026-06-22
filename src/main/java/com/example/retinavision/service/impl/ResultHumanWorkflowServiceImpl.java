@@ -57,7 +57,8 @@ public class ResultHumanWorkflowServiceImpl implements ResultHumanWorkflowServic
     public AnalysisCorrectionEntity addCorrection(Long resultId, MultipartFile file, String reason, String json, Integer expectedVersion, Integer userId){
         AnalysisResultEntity result=requireResult(resultId);
         if(file==null || file.isEmpty() || !StringUtils.hasText(reason) || expectedVersion==null) throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask、原因和 expectedVersion 不能为空");
-        if(!"image/png".equalsIgnoreCase(file.getContentType())) throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 必须为 PNG");
+        String contentType=file.getContentType();
+        if(contentType==null || List.of("image/png","image/jpeg","image/jpg","image/tiff","image/x-tiff").stream().noneMatch(type -> type.equalsIgnoreCase(contentType))) throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"修正 mask 格式不支持");
         if(StringUtils.hasText(json)) try{objectMapper.readTree(json);}catch(JsonProcessingException e){throw new BaseException(ErrorMessageSignal.PARAM_ERROR,"correctedResultJson 不是合法 JSON");}
         int latest=listCorrections(resultId).stream().mapToInt(AnalysisCorrectionEntity::getVersion).max().orElse(0);
         if(latest!=expectedVersion) throw new ConflictException("修正版本已变化，请刷新后重试");
