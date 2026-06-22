@@ -7,6 +7,7 @@ import com.example.retinavision.pojo.VO.*;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.TaskService;
+import com.example.retinavision.service.ClinicalAccessService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,14 +18,18 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final ClinicalAccessService accessService;
 
-    public TaskController(TaskService taskService) {
+    public TaskController(TaskService taskService, ClinicalAccessService accessService) {
         this.taskService = taskService;
+        this.accessService = accessService;
     }
     //分页查询任务
     @GetMapping
-    public Result<PageResult<TaskListItemVO>> getTaskPage(TaskListQueryDTO taskListQueryDTO) {
-            PageResult<TaskListItemVO> taskList=taskService.getLTaskList(taskListQueryDTO);
+    public Result<PageResult<TaskListItemVO>> getTaskPage(TaskListQueryDTO taskListQueryDTO, Authentication authentication) {
+            CurrentUserVO currentUser = user(authentication);
+            accessService.assertClinicalRole(currentUser);
+            PageResult<TaskListItemVO> taskList=taskService.getLTaskList(taskListQueryDTO, currentUser);
             return Result.success(taskList);
     }
     //创建任务
@@ -33,6 +38,7 @@ public class TaskController {
             @RequestBody CreateTaskDTO createTaskDTO,
             Authentication authentication) {
             CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+            accessService.assertCanAccessImage(tokenUser, createTaskDTO.getImageFileId());
             Integer id = tokenUser.getId();
             CreateTaskVO createTaskVO= taskService.createTask(createTaskDTO,id);
             return Result.success(createTaskVO);
@@ -44,6 +50,7 @@ public class TaskController {
             @PathVariable Integer taskId,
             Authentication authentication) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         TaskDetailVO taskDetailVO=taskService.getTaskDetail(taskId, id);
         return Result.success(taskDetailVO);
@@ -55,6 +62,7 @@ public class TaskController {
             @PathVariable Integer taskId,
             Authentication authentication) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         taskService.cancelTask(taskId,id);
         return Result.success(null);
@@ -66,6 +74,7 @@ public class TaskController {
             Authentication authentication
           ) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         RetryTaskVO tryTaskVO=taskService.retryTask(taskId,id);
         return Result.success(tryTaskVO);
@@ -77,9 +86,14 @@ public class TaskController {
             @PathVariable Integer taskId,
             Authentication authentication) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         List<TaskLogVO> logList=taskService.getTaskLog(taskId,id);
         return Result.success(logList);
+    }
+
+    private CurrentUserVO user(Authentication authentication) {
+        return (CurrentUserVO) authentication.getPrincipal();
     }
 
 

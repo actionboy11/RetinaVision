@@ -13,10 +13,11 @@ import java.util.List;
 public interface TaskMapper extends BaseMapper<TaskEntity> {
 
 
-    Long countTaskPage( @Param("query") TaskListQueryDTO safeQuery);
+    Long countTaskPage(@Param("query") TaskListQueryDTO safeQuery, @Param("ownerId") Integer ownerId);
 
     List<TaskListItemVO> selectTaskPage(
             @Param("query") TaskListQueryDTO safeQuery,
+            @Param("ownerId") Integer ownerId,
             @Param("offset") int offset,
             @Param("pageSize") int pageSize);
 

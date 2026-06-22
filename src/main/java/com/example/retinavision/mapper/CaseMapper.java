@@ -11,10 +11,11 @@ import java.util.List;
 public interface CaseMapper extends BaseMapper<CaseEntity> {
 
     // SQL 已迁移到 resources/mapper/CaseMapper.xml，Mapper 接口只保留方法签名。
-    long countCasePage(@Param("query") CaseListQueryDTO queryDTO);
+    long countCasePage(@Param("query") CaseListQueryDTO queryDTO, @Param("ownerId") Integer ownerId);
 
     List<CaseListItemVO> selectCasePage(
             @Param("query") CaseListQueryDTO queryDTO,
+            @Param("ownerId") Integer ownerId,
             @Param("offset") int offset,
             @Param("pageSize") int pageSize
     );

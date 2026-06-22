@@ -109,6 +109,7 @@ class AnalysisTaskExecutionServiceImplTest {
         ImageFileEntity imageEntity = ImageFileEntity.builder()
                 .id(20L).status(ImageStatus.UPLOADED)
                 .qualityStatus(ImageQualityStatus.CHECKING)
+                .qualityTaskId(101L)
                 .originalFilename("quality.png").fileType("image/png")
                 .storageObjectKey("quality.png").build();
         AiInferenceResponse response = new AiInferenceResponse();

@@ -3,6 +3,10 @@ package com.example.retinavision.service.impl;
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.mapper.LogMapper;
 import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mapper.ImageMapper;
+import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.mq.AnalysisTaskMessage;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.mq.RabbitMqProperties;
@@ -26,19 +30,22 @@ public class DeadLetterRecoveryServiceImpl implements DeadLetterRecoveryService 
     private final LogMapper logMapper;
     private final AnalysisTaskMessagePublisher publisher;
     private final AnalysisTaskRetryService retryService;
+    private final ImageMapper imageMapper;
 
     public DeadLetterRecoveryServiceImpl(RabbitTemplate rabbitTemplate,
                                          RabbitMqProperties properties,
                                          TaskMapper taskMapper,
                                          LogMapper logMapper,
                                          AnalysisTaskMessagePublisher publisher,
-                                         AnalysisTaskRetryService retryService) {
+                                         AnalysisTaskRetryService retryService,
+                                         ImageMapper imageMapper) {
         this.rabbitTemplate = rabbitTemplate;
         this.properties = properties;
         this.taskMapper = taskMapper;
         this.logMapper = logMapper;
         this.publisher = publisher;
         this.retryService = retryService;
+        this.imageMapper = imageMapper;
     }
 
     @Override
@@ -69,6 +76,18 @@ public class DeadLetterRecoveryServiceImpl implements DeadLetterRecoveryService 
             }
 
             LocalDateTime now = LocalDateTime.now();
+            TaskEntity task = taskMapper.selectById(message.getTaskId());
+            if (task != null && task.getTaskType() == TaskType.IMAGE_QUALITY_CHECK) {
+                ImageFileEntity image = imageMapper.selectById(task.getImageFileId());
+                if (image != null && image.getQualityTaskId() != null
+                        && !message.getTaskId().equals(image.getQualityTaskId())) {
+                    logMapper.insert(LogEntity.builder().taskId(message.getTaskId())
+                            .fromStatus(TaskStatus.FAILED).toStatus(TaskStatus.FAILED)
+                            .message("旧质量任务已被更新任务替代，跳过死信恢复")
+                            .operatorType("ADMIN").operatorId(operatorId).createdAt(now).build());
+                    return true;
+                }
+            }
             // 有限重试与死信恢复功能完善：管理员恢复时重置自动重试次数，让任务重新进入完整的三次重试周期。
             int updated = taskMapper.prepareDeadLetterRecovery(message.getTaskId(), operatorId, now);
             if (updated == 0) {

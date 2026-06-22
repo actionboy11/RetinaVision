@@ -60,6 +60,7 @@ public class ImageFileEntity implements Deletable {
     private ImageQualityStatus qualityStatus;
     private Double qualityScore;
     private Long qualityResultId;
+    private Long qualityTaskId;
     private LocalDateTime qualityCheckedAt;
     
     /** 上传用户ID，逻辑关联 sys_user.id */

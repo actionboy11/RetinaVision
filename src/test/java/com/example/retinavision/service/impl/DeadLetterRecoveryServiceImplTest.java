@@ -32,6 +32,7 @@ class DeadLetterRecoveryServiceImplTest {
     @Mock private LogMapper logMapper;
     @Mock private AnalysisTaskMessagePublisher publisher;
     @Mock private AnalysisTaskRetryService retryService;
+    @Mock private com.example.retinavision.mapper.ImageMapper imageMapper;
 
     @Test
     void recoversDeadLetterAndPublishesFreshMainQueueMessage() {
@@ -43,7 +44,7 @@ class DeadLetterRecoveryServiceImplTest {
         when(messageConverter.fromMessage(raw)).thenReturn(taskMessage);
         when(taskMapper.prepareDeadLetterRecovery(eq(100L), eq(9), any(LocalDateTime.class))).thenReturn(1);
         DeadLetterRecoveryServiceImpl service = new DeadLetterRecoveryServiceImpl(
-                rabbitTemplate, properties, taskMapper, logMapper, publisher, retryService);
+                rabbitTemplate, properties, taskMapper, logMapper, publisher, retryService, imageMapper);
 
         int recovered = service.recover(9, 10);
 

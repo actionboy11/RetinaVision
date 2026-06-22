@@ -11,6 +11,9 @@ import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.CaseMapper;
 import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.UserRegisterMapper;
+import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
@@ -58,6 +61,7 @@ public class ImageServiceImpl implements ImageService {
     private final UserRegisterMapper userMapper;
     private final CaseMapper caseMapper;
     private final TaskService taskService;
+    private final TaskMapper taskMapper;
     private final Path imageRootPath;
 
     public ImageServiceImpl(
@@ -65,11 +69,13 @@ public class ImageServiceImpl implements ImageService {
             CaseMapper caseMapper,
             UserRegisterMapper userMapper,
             TaskService taskService,
+            TaskMapper taskMapper,
             @Value("${retina.upload.image-root:uploads/images}") String imageRoot) {  // @Value 注解 获取配置文件中的属性值
         this.imageMapper = imageMapper;
         this.caseMapper = caseMapper;
         this.userMapper = userMapper;
         this.taskService = taskService;
+        this.taskMapper = taskMapper;
         this.imageRootPath = Paths.get(imageRoot).toAbsolutePath().normalize();  //toAbsolutePath 获取绝对路径 normalize 获取规范路径
     }
 
@@ -143,9 +149,10 @@ public class ImageServiceImpl implements ImageService {
         imageMapper.updateById(imageEntity);
 
         try {
-            taskService.createTask(new CreateTaskDTO(
+            com.example.retinavision.pojo.VO.CreateTaskVO qualityTask = taskService.createTask(new CreateTaskDTO(
                     caseId.longValue(), imageEntity.getId(), TaskType.IMAGE_QUALITY_CHECK, 5), userid);
             imageEntity.setQualityStatus(ImageQualityStatus.CHECKING);
+            imageEntity.setQualityTaskId(qualityTask.getId());
         } catch (RuntimeException exception) {
             imageEntity.setQualityStatus(ImageQualityStatus.ERROR);
             log.warn("Automatic image quality task submission failed imageId={} errorType={}",
@@ -179,11 +186,37 @@ public class ImageServiceImpl implements ImageService {
         ImageFileEntity imageEntity = getAvailableImageEntity(imageId);
 
         // TODO 任务表完成后：删除前查询该图像是否绑定 RUNNING/SUCCESS 等任务；存在业务冲突时返回 40900。
+        long activeTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
+                .eq(TaskEntity::getImageFileId, imageId)
+                .in(TaskEntity::getStatus, TaskStatus.CREATED, TaskStatus.WAITING, TaskStatus.RUNNING, TaskStatus.RETRYING));
+        if (activeTasks > 0) throw new com.example.retinavision.exception.ConflictException("图像存在运行中任务，不能删除");
+        long successfulTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
+                .eq(TaskEntity::getImageFileId, imageId).eq(TaskEntity::getStatus, TaskStatus.SUCCESS));
+        if (successfulTasks > 0) throw new com.example.retinavision.exception.ConflictException("图像已有分析结果，不能删除");
         imageEntity.setStatus(ImageStatus.DELETED);
         imageEntity.setDeletedAt(LocalDateTime.now());
         imageEntity.setUpdatedAt(LocalDateTime.now());
         imageMapper.updateById(imageEntity);
         return true;
+    }
+
+    @Override
+    public ImageFileItemVO requestQualityCheck(Long imageId, Integer userId) {
+        ImageFileEntity image = getAvailableImageEntity(imageId);
+        ImageQualityStatus status = image.getQualityStatus() == null ? ImageQualityStatus.NOT_CHECKED : image.getQualityStatus();
+        if (status == ImageQualityStatus.CHECKING || status == ImageQualityStatus.PASS || status == ImageQualityStatus.WARNING) {
+            return toVO(image);
+        }
+        if (status == ImageQualityStatus.FAIL) {
+            throw new com.example.retinavision.exception.ConflictException("图像质量未通过，请重新上传图像");
+        }
+        com.example.retinavision.pojo.VO.CreateTaskVO task = taskService.createTask(
+                new CreateTaskDTO(image.getCaseId(), image.getId(), TaskType.IMAGE_QUALITY_CHECK, 5), userId);
+        image.setQualityStatus(ImageQualityStatus.CHECKING);
+        image.setQualityTaskId(task.getId());
+        image.setUpdatedAt(LocalDateTime.now());
+        imageMapper.updateById(image);
+        return toVO(image);
     }
 
     private void validateCaseCanUse(Integer caseId) {
@@ -249,6 +282,7 @@ public class ImageServiceImpl implements ImageService {
                 .qualityStatus(entity.getQualityStatus())
                 .qualityScore(entity.getQualityScore())
                 .qualityResultId(entity.getQualityResultId())
+                .qualityTaskId(entity.getQualityTaskId())
                 .qualityCheckedAt(entity.getQualityCheckedAt())
                 .uploadedBy(entity.getUploadedBy())
                 .uploadedByName(uploadedByName)

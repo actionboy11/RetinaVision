@@ -16,4 +16,5 @@ public interface ImageService {
     ImageFileItemVO getImageById(Long imageId);
 
     boolean deleteImage(Long imageId);
+    ImageFileItemVO requestQualityCheck(Long imageId, Integer userId);
 }

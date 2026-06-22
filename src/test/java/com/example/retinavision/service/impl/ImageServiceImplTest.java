@@ -9,6 +9,7 @@ import com.example.retinavision.pojo.DTO.CreateTaskDTO;
 import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.service.TaskService;
+import com.example.retinavision.pojo.VO.CreateTaskVO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.atLeastOnce;
 
 @ExtendWith(MockitoExtension.class)
 class ImageServiceImplTest {
@@ -32,6 +34,7 @@ class ImageServiceImplTest {
     @Mock CaseMapper caseMapper;
     @Mock UserRegisterMapper userMapper;
     @Mock TaskService taskService;
+    @Mock com.example.retinavision.mapper.TaskMapper taskMapper;
     @TempDir Path tempDir;
 
     @Test
@@ -39,12 +42,14 @@ class ImageServiceImplTest {
         when(caseMapper.selectById(10)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
         doAnswer(invocation -> { ((ImageFileEntity) invocation.getArgument(0)).setId(20L); return 1; })
                 .when(imageMapper).insert(any(ImageFileEntity.class));
+        when(taskService.createTask(any(CreateTaskDTO.class), org.mockito.ArgumentMatchers.eq(7)))
+                .thenReturn(CreateTaskVO.builder().id(33L).build());
         BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         ImageIO.write(image, "png", output);
         MockMultipartFile file = new MockMultipartFile("file", "retina.png", "image/png", output.toByteArray());
         ImageServiceImpl service = new ImageServiceImpl(
-                imageMapper, caseMapper, userMapper, taskService, tempDir.toString());
+                imageMapper, caseMapper, userMapper, taskService, taskMapper, tempDir.toString());
 
         service.uploadImage(10, file, 7);
 
@@ -52,5 +57,9 @@ class ImageServiceImplTest {
         verify(taskService).createTask(captor.capture(), org.mockito.ArgumentMatchers.eq(7));
         org.assertj.core.api.Assertions.assertThat(captor.getValue().getTaskType())
                 .isEqualTo(TaskType.IMAGE_QUALITY_CHECK);
+        org.mockito.ArgumentCaptor<ImageFileEntity> imageCaptor = org.mockito.ArgumentCaptor.forClass(ImageFileEntity.class);
+        verify(imageMapper, atLeastOnce()).updateById(imageCaptor.capture());
+        org.assertj.core.api.Assertions.assertThat(imageCaptor.getAllValues().get(imageCaptor.getAllValues().size() - 1).getQualityTaskId())
+                .isEqualTo(33L);
     }
 }
