@@ -18,6 +18,10 @@ class SchemaMigrationContractTest {
         assertThat(baseline).contains("CREATE TABLE", "analysis_task", "analysis_result", "task_log");
         assertThat(hardening).contains("analysis_feedback", "analysis_correction", "analysis_review",
                 "analysis_report", "quality_task_id");
+        assertThat(hardening)
+                .as("MySQL migrations must conditionally add columns through information_schema")
+                .contains("information_schema.COLUMNS")
+                .doesNotContain("ADD COLUMN IF NOT EXISTS");
     }
 
     private String resource(String path) throws IOException {

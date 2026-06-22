@@ -1,18 +1,54 @@
-ALTER TABLE sys_user
-    ADD COLUMN IF NOT EXISTS professional_no VARCHAR(64) NULL,
-    ADD COLUMN IF NOT EXISTS role_assigned_by BIGINT NULL,
-    ADD COLUMN IF NOT EXISTS role_assigned_at DATETIME NULL;
+-- 每个字段先查询 MySQL 元数据，再动态执行 DDL，
+-- 从而同时兼容空数据库、旧六表数据库和已经手工迁移过一部分的数据库。
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_user' AND COLUMN_NAME = 'professional_no') = 0,
+              'ALTER TABLE sys_user ADD COLUMN professional_no VARCHAR(64) NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
 
-ALTER TABLE image_file
-    ADD COLUMN IF NOT EXISTS quality_status VARCHAR(32) NOT NULL DEFAULT 'NOT_CHECKED',
-    ADD COLUMN IF NOT EXISTS quality_score DECIMAL(6,2) NULL,
-    ADD COLUMN IF NOT EXISTS quality_result_id BIGINT NULL,
-    ADD COLUMN IF NOT EXISTS quality_task_id BIGINT NULL,
-    ADD COLUMN IF NOT EXISTS quality_checked_at DATETIME NULL;
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_user' AND COLUMN_NAME = 'role_assigned_by') = 0,
+              'ALTER TABLE sys_user ADD COLUMN role_assigned_by BIGINT NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
 
-ALTER TABLE analysis_task
-    ADD COLUMN IF NOT EXISTS quality_override TINYINT(1) NOT NULL DEFAULT 0,
-    ADD COLUMN IF NOT EXISTS quality_override_reason VARCHAR(512) NULL;
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sys_user' AND COLUMN_NAME = 'role_assigned_at') = 0,
+              'ALTER TABLE sys_user ADD COLUMN role_assigned_at DATETIME NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'image_file' AND COLUMN_NAME = 'quality_status') = 0,
+              'ALTER TABLE image_file ADD COLUMN quality_status VARCHAR(32) NOT NULL DEFAULT ''NOT_CHECKED''', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'image_file' AND COLUMN_NAME = 'quality_score') = 0,
+              'ALTER TABLE image_file ADD COLUMN quality_score DECIMAL(6,2) NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'image_file' AND COLUMN_NAME = 'quality_result_id') = 0,
+              'ALTER TABLE image_file ADD COLUMN quality_result_id BIGINT NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'image_file' AND COLUMN_NAME = 'quality_task_id') = 0,
+              'ALTER TABLE image_file ADD COLUMN quality_task_id BIGINT NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'image_file' AND COLUMN_NAME = 'quality_checked_at') = 0,
+              'ALTER TABLE image_file ADD COLUMN quality_checked_at DATETIME NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'analysis_task' AND COLUMN_NAME = 'quality_override') = 0,
+              'ALTER TABLE analysis_task ADD COLUMN quality_override TINYINT(1) NOT NULL DEFAULT 0', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
+
+SET @ddl = IF((SELECT COUNT(*) FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'analysis_task' AND COLUMN_NAME = 'quality_override_reason') = 0,
+              'ALTER TABLE analysis_task ADD COLUMN quality_override_reason VARCHAR(512) NULL', 'SELECT 1');
+PREPARE migration_stmt FROM @ddl; EXECUTE migration_stmt; DEALLOCATE PREPARE migration_stmt;
 
 CREATE TABLE IF NOT EXISTS analysis_feedback (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
