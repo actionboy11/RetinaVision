@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 分析结果实体类
 @TableName("analysis_result")
 public class AnalysisResultEntity {
     @TableId(value = "id",type = IdType.AUTO)

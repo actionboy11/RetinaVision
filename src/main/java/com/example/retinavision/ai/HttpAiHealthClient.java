@@ -27,6 +27,7 @@ public class HttpAiHealthClient implements AiHealthClient {
     }
 
     @Override
+    // 检查 AI 服务的健康状态
     public AiHealthResponse checkHealth() {
         try {
             AiHealthResponse response = restClient.get()

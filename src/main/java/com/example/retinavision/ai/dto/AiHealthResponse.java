@@ -13,12 +13,15 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class AiHealthResponse {
     private String status;
+    // AI 服务是否可访问
     private boolean reachable;
+    // AI 服务是否准备好处理请求
     private boolean ready;
     private boolean modelLoaded;
     private String modelName;
     private String modelVersion;
     private String device;
+    // AI 服务是否正在处理请求
     private boolean busy;
     private OffsetDateTime startedAt;
     private Long totalRequests;

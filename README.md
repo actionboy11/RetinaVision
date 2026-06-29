@@ -6,16 +6,18 @@ RetinaVision Backend 是系统的业务核心和浏览器 API 入口。它负责
 
 ## 当前能力
 
-- 用户注册、登录、当前用户和退出登录
-- 病例分页、详情、新建、更新和软删除
-- 眼底图像上传、本地存储、列表、预览和软删除
-- 分析任务分页、创建、详情、取消、重试和状态日志
+- 用户注册、登录、当前用户、退出登录、JWT 黑名单和登录失败限流
+- 病例分页、详情、新建、更新、对象级访问控制和软删除
+- 眼底图像上传、本地存储、列表、预览、软删除、自动质量检测和幂等重检
+- 分析任务分页、创建、质量门控、详情、取消、重试、AI 配额和状态日志
 - RabbitMQ publisher confirm、JSON 消息、手动 ACK 和死信队列
-- 调用 FastAPI 血管分割接口，下载 mask 并保存分析结果
+- 调用 FastAPI 图像质量检测与血管分割接口，保存质量投影、mask 和分析结果
 - 任务统计、队列统计和近期任务趋势
 - 分割结果 JSON 查询与 mask 二进制预览
+- 人工反馈、修正版本、医生审核、报告草稿、医生签发 PDF 和报告历史
+- 管理员用户列表、角色授予、医生 professionalNo 维护和死信恢复
 
-当前只执行 `VESSEL_SEGMENTATION`。`IMAGE_QUALITY_CHECK` 可以进入公共请求枚举，但执行服务会将其标记为 `FAILED`，直至对应模型和执行分支完成。
+当前可执行 `IMAGE_QUALITY_CHECK` 和 `VESSEL_SEGMENTATION`。质量检测是 OpenCV/NumPy 规则评分的工程门控；血管分割使用 Python AI 服务中的 PyTorch 模型。AI 结果仅供辅助分析，正式 PDF 报告必须由医生审核通过后签发。
 
 ## 技术栈
 
@@ -207,9 +209,12 @@ mvn clean package
 |---|---|
 | Auth | `/auth/register`、`/auth/login`、`/auth/me`、`/auth/logout` |
 | Case | `/cases`、`/cases/{caseId}` |
-| Image | `/cases/{caseId}/images`、`/images/{imageId}/preview` |
+| Image | `/cases/{caseId}/images`、`/images/{imageId}/preview`、`/images/{imageId}/quality-check` |
 | Task | `/analysis-tasks`、`/analysis-tasks/{taskId}`、`cancel`、`retry` |
-| Result | `/analysis-tasks/{taskId}/result`、`/results/{resultId}/mask` |
+| Result | `/analysis-tasks/{taskId}/result`、`/results/{resultId}/mask`、`/results/{resultId}/report` |
+| Clinical workflow | `/analysis-results/{resultId}/feedback`、`corrections`、`review`、`report-draft`、`report-sign`、`reports` |
+| Doctor | `/doctor/reviews`、`/doctor/reviews/{resultId}` |
+| Admin | `/admin/users`、`/admin/users/{userId}/role`、`/admin/dead-letters/recover` |
 | Log | `/analysis-tasks/{taskId}/logs`（兼容单数 `/log`） |
 | Dashboard | `/admin/statistics/tasks`、`queue`、`task-trend` |
 
@@ -243,18 +248,19 @@ mvn clean package
 Java 通过 multipart `file` 调用：
 
 ```text
+POST {retina.ai.base-url}/v1/inference/image-quality-check
 POST {retina.ai.base-url}/v1/inference/vessel-segmentation
 ```
 
-随后从响应 `maskUrl` 下载 PNG。为避免服务端请求伪造，下载地址必须与配置的 AI 基础地址具有相同 scheme 和 authority。
+质量检测响应直接写入 `analysis_result`，并将 `quality_status`、`quality_score`、`quality_result_id` 和 `quality_checked_at` 投影到 `image_file`。血管分割响应包含 `maskUrl`，Java 随后下载 PNG。为避免服务端请求伪造，下载地址必须与配置的 AI 基础地址具有相同 scheme 和 authority。
 
 ### 结果持久化
 
 成功时：
 
 - `resultJson`、模型名、模型版本和耗时写入 `analysis_result`。
-- mask 保存到 `uploads/results/tasks/{taskId}/mask.png`。
-- `mask_bucket` 记录为 `local`，`mask_object_key` 记录相对路径。
+- 血管分割 mask 保存到 `uploads/results/tasks/{taskId}/mask.png`。
+- 血管分割结果的 `mask_bucket` 记录为 `local`，`mask_object_key` 记录相对路径；质量检测结果不生成 mask。
 - 任务更新为 `SUCCESS` 并写入 `WORKER` 日志。
 
 失败时：
@@ -282,7 +288,6 @@ uploads/
 
 - 创建任务 VO 当前返回 `errorMessage`，前端类型期望 `message`；前端已有默认成功文案，因此主流程不阻塞。
 - 取消任务 Controller 当前返回 `data: null`，前端类型和契约写作 `boolean`；前端当前不读取该值。
-- 公共枚举包含 `IMAGE_QUALITY_CHECK`，但执行服务尚未支持。
 
 调整这些行为时，应同时修改 Java VO/Controller、前端类型、契约示例和测试。
 

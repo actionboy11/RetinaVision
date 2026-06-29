@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
+// 图像质量摘要视图对象类
 public class ImageQualitySummaryVO {
     private ImageQualityStatus status;
     private Double score;

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+// 更新用户角色DTO类
 public class UpdateUserRoleDTO {
     private UserRole roleCode;
     private String professionalNo;

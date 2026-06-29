@@ -27,11 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.DeflaterOutputStream;
 
+// JDK 自带的 PDF 生成器，使用 Java2D 绘制图像并压缩为 PDF 文件。
 @Component
 public class JdkReportPdfRenderer implements ReportPdfRenderer {
 
+    // PDF 页面尺寸为 A4，单位为像素，分辨率为 150 DPI。
     private static final int PAGE_WIDTH = 1240;
     private static final int PAGE_HEIGHT = 1754;
+    // PDF 页面尺寸为 A4，单位为点，分辨率为 72 DPI。
     private static final int PDF_WIDTH = 595;
     private static final int PDF_HEIGHT = 842;
     private static final int MARGIN = 86;

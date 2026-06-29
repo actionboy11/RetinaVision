@@ -17,6 +17,7 @@ import java.util.List;
 import com.example.retinavision.pojo.VO.AdminUserItemVO;
 
 @Service
+// 用户管理服务实现类，提供用户角色分配和用户列表查询功能
 public class UserAdministrationServiceImpl implements UserAdministrationService {
     private final UserRegisterMapper userMapper;
 
@@ -26,6 +27,7 @@ public class UserAdministrationServiceImpl implements UserAdministrationService 
 
     @Override
     @Transactional
+    // 分配用户角色，包括医生、研究者和普通用户
     public void assignRole(Integer userId, UpdateUserRoleDTO request, Integer assignedBy) {
         UserEntity user = userMapper.selectById(userId);
         if (user == null) {
@@ -41,6 +43,7 @@ public class UserAdministrationServiceImpl implements UserAdministrationService 
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "授予医生角色时必须填写医生工号或执业标识");
         }
         if (professionalNo != null) {
+            //ne , "id", userId) 确保在更新时不会与自身冲突 相当于 SQL 中的 WHERE professional_no = ? AND id != ?
             UserEntity existing = userMapper.selectOne(new QueryWrapper<UserEntity>()
                     .eq("professional_no", professionalNo)
                     .ne("id", userId));
@@ -57,6 +60,7 @@ public class UserAdministrationServiceImpl implements UserAdministrationService 
         userMapper.updateById(user);
     }
 
+    // 获取所有用户列表，包括用户ID、用户名、真实姓名、角色、医生工号、角色分配者和分配时间
     @Override public List<AdminUserItemVO> listUsers() {
         return userMapper.selectList(null).stream().map(user -> AdminUserItemVO.builder()
                 .id(user.getId()).username(user.getUsername()).realName(user.getRealName())

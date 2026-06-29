@@ -2,6 +2,7 @@ package com.example.retinavision.service;
 
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 
+//  ClinicalAccessService 用于检查当前用户是否有权限访问临床数据
 public interface ClinicalAccessService {
     void assertClinicalRole(CurrentUserVO user);
     void assertCanAccessCase(CurrentUserVO user, Long caseId);

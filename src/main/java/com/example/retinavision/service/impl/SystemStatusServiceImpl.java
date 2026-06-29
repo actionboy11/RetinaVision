@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 
 @Service
+// 系统状态服务实现类
 public class SystemStatusServiceImpl implements SystemStatusService {
 
     private final AiHealthClient aiHealthClient;
@@ -41,6 +42,7 @@ public class SystemStatusServiceImpl implements SystemStatusService {
 
     private AiHealthResponse getAiStatus() {
         try {
+            // 检查 AI 服务的健康状态
             AiHealthResponse status = aiHealthClient.checkHealth();
             if (status != null) {
                 return status;

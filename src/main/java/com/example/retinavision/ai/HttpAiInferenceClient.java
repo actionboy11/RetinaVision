@@ -99,6 +99,7 @@ public class HttpAiInferenceClient implements AiInferenceClient {
         }
     }
 
+    // 实现 AiInferenceClient 接口，调用 AI 图像质量检测服务
     @Override
     public AiInferenceResponse checkQuality(Path imagePath, String originalFilename, String contentType, String requestId) {
         try {

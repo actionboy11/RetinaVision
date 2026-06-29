@@ -38,7 +38,8 @@ public class ResultAnalysisController {
 
     // 查询任务分析结果，JSON 业务接口仍然使用统一 Result<T> 包装。
     @GetMapping("/analysis-tasks/{taskId}/result")
-    public Result<AnalysisResultVO> getAnalysisResult(@PathVariable Long taskId, Authentication authentication) {
+    public Result<AnalysisResultVO> getAnalysisResult(@PathVariable Long taskId, Authentication authentication)
+    {
         accessService.assertCanAccessTask(user(authentication), taskId);
         return Result.success(analysisResultService.getAnalysisResult(taskId));
     }
@@ -47,7 +48,8 @@ public class ResultAnalysisController {
     //ResponseEntity 用于封装 HTTP 响应头和响应体。
     //contentType 根据文件类型设置响应头 Content-Type，InputStreamResource 用于将文件流返回给客户端。
     @GetMapping("/results/{resultId}/mask")
-    public ResponseEntity<InputStreamResource> getMaskPreview(@PathVariable Long resultId, Authentication authentication) throws IOException {
+    public ResponseEntity<InputStreamResource> getMaskPreview
+    (@PathVariable Long resultId, Authentication authentication) throws IOException {
         accessService.assertCanAccessResult(user(authentication), resultId);
         Path maskPath = analysisResultService.getResultMaskPath(resultId);
         return ResponseEntity.ok()

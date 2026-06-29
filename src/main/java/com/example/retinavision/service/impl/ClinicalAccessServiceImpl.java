@@ -34,7 +34,8 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         this.resultMapper = resultMapper;
     }
 
-    @Override
+    // 检验当前用户是否有临床访问权限
+       @Override
     public void assertClinicalRole(CurrentUserVO user) {
         if (user == null) {
             throw new BaseException(ErrorMessageSignal.UNAUTHORIZED, "请先登录");
@@ -44,6 +45,7 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         }
     }
 
+    // 检验当前用户是否有权限访问指定病例详情
     @Override
     public void assertCanAccessCase(CurrentUserVO user, Long caseId) {
         assertClinicalRole(user);
@@ -57,6 +59,7 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         }
     }
 
+    // 检验当前用户是否有权限访问指定图像详情
     @Override
     public void assertCanAccessImage(CurrentUserVO user, Long imageId) {
         assertClinicalRole(user);
@@ -66,7 +69,7 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         }
         assertCanAccessCase(user, image.getCaseId());
     }
-
+    // 检验当前用户是否有权限访问指定任务详情
     @Override
     public void assertCanAccessTask(CurrentUserVO user, Long taskId) {
         assertClinicalRole(user);
@@ -77,6 +80,7 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         assertCanAccessCase(user, task.getCaseId());
     }
 
+    // 检验当前用户是否有权限访问指定分析结果详情
     @Override
     public void assertCanAccessResult(CurrentUserVO user, Long resultId) {
         assertClinicalRole(user);

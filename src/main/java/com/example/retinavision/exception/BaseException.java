@@ -1,5 +1,5 @@
 package com.example.retinavision.exception;
-
+// 基础异常类
 public class BaseException extends RuntimeException {
     private int code;
     private String message;

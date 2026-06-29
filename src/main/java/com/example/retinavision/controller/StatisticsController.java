@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/statistics")
 public class StatisticsController {
+    // 统计服务接口，用于获取任务统计信息和趋势数据
     private final StatisticsService statisticsService;
 
     public StatisticsController(StatisticsService statisticsService) {
@@ -32,6 +33,7 @@ public class StatisticsController {
     }
 
     @GetMapping("/task-trend")
+    // 获取任务趋势数据，参数 days 表示查询的天数，默认值为 7 天
     public Result<List<TaskTrendItemVO>> getTaskTrend(@RequestParam Integer days) {
         return Result.success(statisticsService.getTaskTrend(days));
     }

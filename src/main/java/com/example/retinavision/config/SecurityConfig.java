@@ -87,7 +87,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/auth/register", "/auth/login").permitAll()
                 // 有限重试与死信恢复功能完善：死信恢复会重新执行失败任务，只允许管理员操作。
                 .requestMatchers("/admin/dead-letters/**").hasRole("ADMIN")
-                .requestMatchers("/admin/users/**").hasRole("ADMIN")
+                .requestMatchers("/admin/users/**").hasRole("ADMIN")  // 管理员接口 ，只能由管理员调用
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/review").hasRole("DOCTOR")
                 .requestMatchers(HttpMethod.GET, "/analysis-results/*/review").hasRole("DOCTOR")
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/corrections").hasAnyRole("RESEARCHER", "DOCTOR")

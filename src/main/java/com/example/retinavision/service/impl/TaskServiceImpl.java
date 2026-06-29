@@ -85,6 +85,7 @@ public class TaskServiceImpl implements TaskService {
         this.aiTaskQuotaService = aiTaskQuotaService;
     }
 
+    // 1. 获取任务列表，支持分页、关键字搜索和病例号过滤
     @Override
     public PageResult<TaskListItemVO> getLTaskList(TaskListQueryDTO taskListQueryDTO, CurrentUserVO user) {
         TaskListQueryDTO safeQuery = taskListQueryDTO == null ? new TaskListQueryDTO() : taskListQueryDTO;

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface StatisticsMapper {
+    // 查询任务统计信息
     TaskStatisticsVO selectTaskStatistics();
 
     List<TaskTrendItemVO> selectTaskTrend(@Param("startDate") LocalDate startDate);

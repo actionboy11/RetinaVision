@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Properties;
 
+// 统计服务实现类
 @Service
 public class StatisticsServiceImpl implements StatisticsService {
     private static final int DEFAULT_TREND_DAYS = 7;
@@ -59,6 +60,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         Properties mainQueueProperties = getRequiredQueueProperties(rabbitMqProperties.getAnalysisQueue());
         Properties deadLetterQueueProperties = getRequiredQueueProperties(rabbitMqProperties.getAnalysisDeadLetterQueue());
 
+        // 获取队列中待处理消息的数量和未确认消息的数量
         return QueueStatisticsVO.builder()
                 .queueName(rabbitMqProperties.getAnalysisQueue())
                 .messageReadyCount(getLongProperty(mainQueueProperties, RabbitAdmin.QUEUE_MESSAGE_COUNT))
@@ -72,6 +74,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Override
     public List<TaskTrendItemVO> getTaskTrend(Integer days) {
         int safeDays = normalizeTrendDays(days);
+        // 计算查询的开始日期，即 safeDays 天前
+        // 因为查询的是任务提交时间，所以需要减去 1 天，才能得到任务提交时间的开始日期
+        // 例如，如果查询 7 天的趋势数据，开始日期就是 7 天前的日期
         LocalDate startDate = LocalDate.now().minusDays(safeDays - 1L);
         return statisticsMapper.selectTaskTrend(startDate);
     }

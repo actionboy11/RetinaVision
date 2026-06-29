@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin/users")
+// 管理员用户管理控制器，提供用户列表和角色分配功能
 public class UserAdministrationController {
     private final UserAdministrationService userAdministrationService;
 

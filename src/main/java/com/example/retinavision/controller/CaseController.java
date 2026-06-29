@@ -52,6 +52,7 @@ public class CaseController {
     // 获取病例详情
     @GetMapping("/{caseId}")
     public  Result<CaseListItemVO> getCaseDetail(@PathVariable Integer caseId, Authentication authentication){
+            //检验当前用户是否有权限访问该病例详情
             accessService.assertCanAccessCase(user(authentication), caseId.longValue());
             CaseListItemVO caseListItemVO =caseService.getCaseById(caseId);
             return Result.success(caseListItemVO);

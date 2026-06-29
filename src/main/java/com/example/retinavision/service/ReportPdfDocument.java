@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 
+// 眼底图像分析报告 PDF 文档类
 public record ReportPdfDocument(
         String title,
         String reportNo,

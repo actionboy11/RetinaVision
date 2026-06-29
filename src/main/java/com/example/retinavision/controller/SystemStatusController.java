@@ -17,6 +17,7 @@ public class SystemStatusController {
         this.systemStatusService = systemStatusService;
     }
 
+    // 获取系统状态信息，包括数据库连接状态、系统运行时间等
     @GetMapping("/status")
     public Result<SystemStatusVO> getStatus() {
         return Result.success(systemStatusService.getStatus());

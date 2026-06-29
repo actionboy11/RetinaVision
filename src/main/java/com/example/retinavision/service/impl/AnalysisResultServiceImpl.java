@@ -65,6 +65,10 @@ public class AnalysisResultServiceImpl implements AnalysisResultService {
         if (resultEntity == null) {
             throw new BaseException(ErrorMessageSignal.NOT_FOUND, "分析结果不存在");
         }
+        // 解析分析结果 JSON 字符串为 Map<String, Object>
+        // objectMapper 是 Jackson 提供的 JSON 处理工具类，用于将 JSON 字符串转换为 Java 对象。
+        // TypeReference<Map<String, Object>>() 是一个类型引用，用于指定目标对象的类型为 Map<String, Object>
+        // 这里使用 TypeReference 是因为 Jackson 不支持直接使用 Map 类型，而需要通过 TypeReference 来指定目标对象的类型。
         Map<String, Object> resultJsonMap;
         try {
             resultJsonMap = objectMapper.readValue(
