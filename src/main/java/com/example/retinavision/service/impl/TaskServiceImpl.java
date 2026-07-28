@@ -1,6 +1,9 @@
 package com.example.retinavision.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.example.retinavision.analysis.application.model.AnalysisTaskRequestedEvent;
+import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventOutbox;
+import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.common.Deletable;
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
@@ -67,6 +70,7 @@ public class TaskServiceImpl implements TaskService {
     private final UserRegisterMapper userRegisterMapper;
     private final LogMapper logMapper;
     private final AnalysisTaskMessagePublisher analysisTaskMessagePublisher;
+    private final AnalysisTaskEventOutbox analysisTaskEventOutbox;
     private final AiTaskQuotaService aiTaskQuotaService;
 
     public TaskServiceImpl(TaskMapper taskMapper,
@@ -75,6 +79,7 @@ public class TaskServiceImpl implements TaskService {
                            UserRegisterMapper userRegisterMapper,
                            LogMapper logMapper,
                            AnalysisTaskMessagePublisher analysisTaskMessagePublisher,
+                           AnalysisTaskEventOutbox analysisTaskEventOutbox,
                            AiTaskQuotaService aiTaskQuotaService) {
         this.taskMapper = taskMapper;
         this.imageMapper = imageMapper;
@@ -82,6 +87,7 @@ public class TaskServiceImpl implements TaskService {
         this.userRegisterMapper = userRegisterMapper;
         this.logMapper = logMapper;
         this.analysisTaskMessagePublisher = analysisTaskMessagePublisher;
+        this.analysisTaskEventOutbox = analysisTaskEventOutbox;
         this.aiTaskQuotaService = aiTaskQuotaService;
     }
 
@@ -145,17 +151,32 @@ public class TaskServiceImpl implements TaskService {
                 .updatedAt(now)
                 .build();
         taskMapper.insert(taskEntity);
+        analysisTaskEventOutbox.append(
+                new AnalysisTaskRequestedEvent(
+                        taskEntity.getId(),
+                        taskEntity.getTaskNo(),
+                        taskEntity.getCaseId(),
+                        taskEntity.getImageFileId(),
+                        AnalysisTaskType.valueOf(taskEntity.getTaskType().name()),
+                        taskEntity.getPriority(),
+                        taskEntity.getSubmittedBy(),
+                        taskEntity.getSubmittedAt()),
+                "ANALYSIS_TASK_REQUESTED",
+                1);
         if (taskEntity.getTaskType() == TaskType.IMAGE_QUALITY_CHECK) {
             imageFileEntity.setQualityStatus(ImageQualityStatus.CHECKING);
             imageFileEntity.setQualityTaskId(taskEntity.getId());
             imageFileEntity.setUpdatedAt(now);
             imageMapper.updateById(imageFileEntity);
         }
-        analysisTaskMessagePublisher.publish(buildTaskMessage(taskEntity));
-        String creationLog = Boolean.TRUE.equals(taskEntity.getQualityOverride())
-                ? "医生覆盖图像质量门控并创建任务，原因：" + taskEntity.getQualityOverrideReason()
-                : "任务已创建并投递 MQ，等待 Worker 处理";
-        insertTaskLog(taskEntity.getId(), null, TaskStatus.WAITING, creationLog, "USER", submittedBy, now);
+        insertTaskLog(
+                taskEntity.getId(),
+                null,
+                TaskStatus.WAITING,
+                "任务已创建并等待消息发布",
+                "USER",
+                submittedBy,
+                now);
 
         return CreateTaskVO.builder()
                 .id(taskEntity.getId())

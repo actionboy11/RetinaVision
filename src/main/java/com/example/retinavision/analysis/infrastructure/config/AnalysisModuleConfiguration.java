@@ -3,6 +3,10 @@ package com.example.retinavision.analysis.infrastructure.config;
 import com.example.retinavision.ai.AiInferenceClient;
 import com.example.retinavision.analysis.application.ExecuteAnalysisTaskHandler;
 import com.example.retinavision.analysis.application.ExecuteAnalysisTaskUseCase;
+import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxMapper;
+import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxProperties;
+import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxPublisher;
+import com.example.retinavision.analysis.infrastructure.outbox.MyBatisAnalysisTaskEventOutbox;
 import com.example.retinavision.analysis.infrastructure.ai.HttpAiInferenceGateway;
 import com.example.retinavision.analysis.infrastructure.image.MyBatisSourceImageReader;
 import com.example.retinavision.analysis.infrastructure.persistence.LegacyAnalysisTaskRepository;
@@ -14,16 +18,23 @@ import com.example.retinavision.mapper.AnalysisResultMapper;
 import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.LogMapper;
 import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.service.AnalysisReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Clock;
 
 @Configuration(proxyBeanMethods = false)
+@EnableScheduling
+@EnableConfigurationProperties(AnalysisOutboxProperties.class)
+@MapperScan(basePackageClasses = AnalysisOutboxMapper.class)
 public class AnalysisModuleConfiguration {
 
     @Bean
@@ -71,6 +82,25 @@ public class AnalysisModuleConfiguration {
     @Bean
     MyBatisTaskAuditLog taskAuditLog(LogMapper logMapper) {
         return new MyBatisTaskAuditLog(logMapper);
+    }
+
+    @Bean
+    MyBatisAnalysisTaskEventOutbox analysisTaskEventOutbox(
+            AnalysisOutboxMapper mapper,
+            ObjectMapper objectMapper,
+            Clock clock) {
+        return new MyBatisAnalysisTaskEventOutbox(mapper, objectMapper, clock);
+    }
+
+    @Bean
+    AnalysisOutboxPublisher analysisOutboxPublisher(
+            AnalysisOutboxMapper mapper,
+            AnalysisTaskMessagePublisher messagePublisher,
+            ObjectMapper objectMapper,
+            AnalysisOutboxProperties properties,
+            Clock clock) {
+        return new AnalysisOutboxPublisher(
+                mapper, messagePublisher, objectMapper, properties, clock);
     }
 
     @Bean

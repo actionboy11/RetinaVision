@@ -1,5 +1,8 @@
 package com.example.retinavision.service.impl;
 
+import com.example.retinavision.analysis.application.model.AnalysisTaskRequestedEvent;
+import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventOutbox;
+import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
 import com.example.retinavision.enumeration.ImageStatus;
@@ -36,10 +39,12 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 
@@ -59,6 +64,8 @@ class TaskServiceImplTest {
     @Mock
     private AnalysisTaskMessagePublisher analysisTaskMessagePublisher;
     @Mock
+    private AnalysisTaskEventOutbox analysisTaskEventOutbox;
+    @Mock
     private AiTaskQuotaService aiTaskQuotaService;
 
     private final AiQuotaReservation reservation = new AiQuotaReservation("minute-key", "day-key");
@@ -74,13 +81,14 @@ class TaskServiceImplTest {
                 userRegisterMapper,
                 logMapper,
                 analysisTaskMessagePublisher,
+                analysisTaskEventOutbox,
                 aiTaskQuotaService
         );
         lenient().when(aiTaskQuotaService.reserve(7)).thenReturn(reservation);
     }
 
     @Test
-    void createTaskCreatesWaitingTaskAfterMqDelivery() {
+    void createTaskCommitsWaitingTaskAndOutboxEvent() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
         when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
@@ -96,16 +104,33 @@ class TaskServiceImplTest {
 
         assertThat(result.getId()).isEqualTo(100L);
         assertThat(result.getTaskStatus()).isEqualTo(TaskStatus.WAITING);
-        verify(analysisTaskMessagePublisher).publish(any());
+        verifyNoInteractions(analysisTaskMessagePublisher);
 
         ArgumentCaptor<TaskEntity> insertedTask = ArgumentCaptor.forClass(TaskEntity.class);
         verify(taskMapper).insert(insertedTask.capture());
         assertThat(insertedTask.getValue().getStatus()).isEqualTo(TaskStatus.WAITING);
 
+        ArgumentCaptor<AnalysisTaskRequestedEvent> eventCaptor =
+                ArgumentCaptor.forClass(AnalysisTaskRequestedEvent.class);
+        verify(analysisTaskEventOutbox).append(
+                eventCaptor.capture(),
+                org.mockito.ArgumentMatchers.eq("ANALYSIS_TASK_REQUESTED"),
+                org.mockito.ArgumentMatchers.eq(1));
+        assertThat(eventCaptor.getValue()).isEqualTo(new AnalysisTaskRequestedEvent(
+                100L,
+                insertedTask.getValue().getTaskNo(),
+                10L,
+                20L,
+                AnalysisTaskType.VESSEL_SEGMENTATION,
+                5,
+                7,
+                insertedTask.getValue().getSubmittedAt()));
+
         ArgumentCaptor<LogEntity> logCaptor = ArgumentCaptor.forClass(LogEntity.class);
         verify(logMapper).insert(logCaptor.capture());
         assertThat(logCaptor.getValue().getFromStatus()).isNull();
         assertThat(logCaptor.getValue().getToStatus()).isEqualTo(TaskStatus.WAITING);
+        assertThat(logCaptor.getValue().getMessage()).isEqualTo("任务已创建并等待消息发布");
     }
 
     @Test
@@ -122,6 +147,7 @@ class TaskServiceImplTest {
                 .isEqualTo(ErrorMessageSignal.CONFLICT);
 
         verify(taskMapper, never()).insert(any(TaskEntity.class));
+        verify(analysisTaskEventOutbox, never()).append(any(), any(), anyInt());
         verify(analysisTaskMessagePublisher, never()).publish(any());
         verify(aiTaskQuotaService, never()).reserve(any());
     }
@@ -136,6 +162,7 @@ class TaskServiceImplTest {
         assertThatThrownBy(() -> taskService.createTask(dto, 7))
                 .isInstanceOf(BaseException.class)
                 .extracting("code").isEqualTo(ErrorMessageSignal.CONFLICT);
+        verify(analysisTaskEventOutbox, never()).append(any(), any(), anyInt());
         verify(analysisTaskMessagePublisher, never()).publish(any());
     }
 
@@ -154,7 +181,8 @@ class TaskServiceImplTest {
 
         taskService.createTask(dto, 7);
 
-        verify(analysisTaskMessagePublisher).publish(any());
+        verify(analysisTaskEventOutbox).append(any(), any(), anyInt());
+        verifyNoInteractions(analysisTaskMessagePublisher);
     }
 
     @Test
@@ -180,7 +208,7 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void createTaskThrowsMqDeliveryErrorWhenPublisherFails() {
+    void createTaskPropagatesOutboxFailureAndReleasesQuotaOnRollback() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
         when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
@@ -191,15 +219,22 @@ class TaskServiceImplTest {
             entity.setId(100L);
             return 1;
         }).when(taskMapper).insert(any(TaskEntity.class));
-        doThrow(new BaseException(ErrorMessageSignal.MQ_DELIVERY_ERROR, "MQ delivery failed"))
-                .when(analysisTaskMessagePublisher).publish(any());
+        IllegalStateException outboxFailure = new IllegalStateException("outbox unavailable");
+        doThrow(outboxFailure).when(analysisTaskEventOutbox).append(any(), any(), anyInt());
 
-        assertThatThrownBy(() -> taskService.createTask(dto, 7))
-                .isInstanceOf(BaseException.class)
-                .extracting("code")
-                .isEqualTo(ErrorMessageSignal.MQ_DELIVERY_ERROR);
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            assertThatThrownBy(() -> taskService.createTask(dto, 7))
+                    .isSameAs(outboxFailure);
+            TransactionSynchronizationManager.getSynchronizations().forEach(
+                    synchronization -> synchronization.afterCompletion(TransactionSynchronization.STATUS_ROLLED_BACK)
+            );
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
 
-        verify(taskMapper, never()).updateById(any(TaskEntity.class));
+        verify(logMapper, never()).insert(any(LogEntity.class));
+        verify(analysisTaskMessagePublisher, never()).publish(any());
         verify(aiTaskQuotaService).release(reservation);
     }
 

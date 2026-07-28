@@ -55,5 +55,10 @@ retina:
     expire-hours: 24
   upload:
     image-root: uploads/images
+  outbox:
+    fixed-delay: 1s
+    batch-size: 50
+    retry-delay: 10s
+    claim-timeout: 2m
   doctor-review:
     overdue-threshold-minutes: 120

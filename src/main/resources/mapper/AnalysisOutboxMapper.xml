@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxMapper">
+    <resultMap id="analysisOutboxResult"
+               type="com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxEntity">
+        <id property="id" column="id"/>
+        <result property="eventKey" column="event_key"/>
+        <result property="aggregateId" column="aggregate_id"/>
+        <result property="eventType" column="event_type"/>
+        <result property="eventVersion" column="event_version"/>
+        <result property="payloadJson" column="payload_json"/>
+        <result property="status" column="status"/>
+        <result property="attemptCount" column="attempt_count"/>
+        <result property="nextAttemptAt" column="next_attempt_at"/>
+        <result property="publishedAt" column="published_at"/>
+        <result property="lastError" column="last_error"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="selectDuePendingIds" resultType="long">
+        SELECT id
+        FROM analysis_outbox
+        WHERE status = 'PENDING'
+          AND next_attempt_at &lt;= #{now}
+        ORDER BY id
+        LIMIT #{limit}
+    </select>
+
+    <update id="claimPending">
+        UPDATE analysis_outbox
+        SET status = 'PROCESSING',
+            updated_at = #{now}
+        WHERE id = #{id}
+          AND status = 'PENDING'
+          AND next_attempt_at &lt;= #{now}
+    </update>
+
+    <select id="selectClaimed" resultMap="analysisOutboxResult">
+        SELECT id,
+               event_key,
+               aggregate_id,
+               event_type,
+               event_version,
+               payload_json,
+               status,
+               attempt_count,
+               next_attempt_at,
+               published_at,
+               last_error,
+               created_at,
+               updated_at
+        FROM analysis_outbox
+        WHERE id = #{id}
+          AND status = 'PROCESSING'
+    </select>
+
+    <update id="markPublished">
+        UPDATE analysis_outbox
+        SET status = 'PUBLISHED',
+            published_at = #{publishedAt},
+            last_error = NULL,
+            updated_at = #{publishedAt}
+        WHERE id = #{id}
+          AND status = 'PROCESSING'
+    </update>
+
+    <update id="reschedule">
+        UPDATE analysis_outbox
+        SET status = 'PENDING',
+            attempt_count = #{nextAttemptCount},
+            next_attempt_at = #{nextAttemptAt},
+            last_error = #{safeError},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+          AND status = 'PROCESSING'
+    </update>
+
+    <update id="recoverStaleProcessing">
+        UPDATE analysis_outbox
+        SET status = 'PENDING',
+            next_attempt_at = #{now},
+            updated_at = #{now}
+        WHERE status = 'PROCESSING'
+          AND updated_at &lt; #{cutoff}
+    </update>
+</mapper>

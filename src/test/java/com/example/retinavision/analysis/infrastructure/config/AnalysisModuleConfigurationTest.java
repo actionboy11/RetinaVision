@@ -4,15 +4,20 @@ import com.example.retinavision.ai.AiInferenceClient;
 import com.example.retinavision.analysis.application.ExecuteAnalysisTaskUseCase;
 import com.example.retinavision.analysis.application.port.out.AiInferencePort;
 import com.example.retinavision.analysis.application.port.out.AnalysisResultStore;
+import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventOutbox;
 import com.example.retinavision.analysis.application.port.out.AnalysisTaskRepository;
 import com.example.retinavision.analysis.application.port.out.ArtifactStore;
 import com.example.retinavision.analysis.application.port.out.ReportDraftPort;
 import com.example.retinavision.analysis.application.port.out.SourceImageReader;
 import com.example.retinavision.analysis.application.port.out.TaskAuditLog;
+import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxMapper;
+import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxProperties;
+import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxPublisher;
 import com.example.retinavision.mapper.AnalysisResultMapper;
 import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.LogMapper;
 import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.service.AnalysisReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -33,7 +38,11 @@ class AnalysisModuleConfigurationTest {
             .withBean(ImageMapper.class, () -> mock(ImageMapper.class))
             .withBean(AnalysisResultMapper.class, () -> mock(AnalysisResultMapper.class))
             .withBean(LogMapper.class, () -> mock(LogMapper.class))
+            .withBean("analysisOutboxMapper", AnalysisOutboxMapper.class,
+                    () -> mock(AnalysisOutboxMapper.class))
             .withBean(AiInferenceClient.class, () -> mock(AiInferenceClient.class))
+            .withBean(AnalysisTaskMessagePublisher.class,
+                    () -> mock(AnalysisTaskMessagePublisher.class))
             .withBean(AnalysisReportService.class, () -> mock(AnalysisReportService.class))
             .withBean(ObjectMapper.class, ObjectMapper::new);
 
@@ -47,6 +56,9 @@ class AnalysisModuleConfigurationTest {
             assertThat(context).hasSingleBean(AnalysisResultStore.class);
             assertThat(context).hasSingleBean(TaskAuditLog.class);
             assertThat(context).hasSingleBean(ReportDraftPort.class);
+            assertThat(context).hasSingleBean(AnalysisTaskEventOutbox.class);
+            assertThat(context).hasSingleBean(AnalysisOutboxPublisher.class);
+            assertThat(context).hasSingleBean(AnalysisOutboxProperties.class);
             assertThat(context).hasSingleBean(ExecuteAnalysisTaskUseCase.class);
             assertThat(context).hasSingleBean(Clock.class);
             assertThat(context.getBean(Clock.class).getZone())
