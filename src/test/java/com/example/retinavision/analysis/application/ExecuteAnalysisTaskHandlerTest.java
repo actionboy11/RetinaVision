@@ -18,6 +18,7 @@ import com.example.retinavision.analysis.domain.model.TaskTransition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -149,26 +150,33 @@ class ExecuteAnalysisTaskHandlerTest {
         assertThat(fixture.taskRepository.saved().status()).isEqualTo(AnalysisTaskStatus.FAILED);
     }
 
-    @Test
-    void aiFailureIsStoredAndAuditedAsBoundedSingleLineText() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "unable to read C:\\retina\\patients\\patient-123\\fundus.png",
+            "unable to read /srv/retina/patients/patient-456/fundus.png",
+            "token=secret-token-123",
+            "password=patient-password",
+            "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.sensitive",
+            "https://db-user:db-password@example.test/artifacts/patient-789/mask.png"
+    })
+    void aiFailureNeverPersistsOrAuditsRawSensitiveMessage(String rawMessage) {
         Fixture fixture = new Fixture();
         fixture.taskRepository.task = Optional.of(waitingTask(AnalysisTaskType.VESSEL_SEGMENTATION));
-        fixture.aiInferencePort.failure = new IllegalStateException(
-                "provider\r\nreturned\n" + "x".repeat(1200));
+        fixture.aiInferencePort.failure = new IllegalStateException(rawMessage);
 
         ExecutionDisposition result = fixture.handler().execute(command());
 
         assertThat(result).isEqualTo(ExecutionDisposition.FAILED);
         assertThat(fixture.taskRepository.saved().status()).isEqualTo(AnalysisTaskStatus.FAILED);
         assertThat(fixture.taskRepository.saved().errorMessage())
-                .startsWith("AI 任务执行失败：provider returned ")
-                .doesNotContain("\r", "\n")
-                .hasSize(1024);
+                .isEqualTo("AI 任务执行失败，请稍后重试或联系管理员")
+                .doesNotContain(rawMessage);
         assertThat(fixture.auditLog.transitions())
                 .extracting(TaskTransition::to)
                 .containsExactly(AnalysisTaskStatus.RUNNING, AnalysisTaskStatus.FAILED);
         assertThat(fixture.auditLog.transitions().get(1).message())
-                .isEqualTo(fixture.taskRepository.saved().errorMessage());
+                .isEqualTo("AI 任务执行失败，请稍后重试或联系管理员")
+                .doesNotContain(rawMessage);
     }
 
     @Test

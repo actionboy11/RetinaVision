@@ -22,6 +22,9 @@ import java.util.Optional;
 
 public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseCase {
 
+    private static final String GENERIC_FAILURE_MESSAGE =
+            "AI 任务执行失败，请稍后重试或联系管理员";
+
     private final AnalysisTaskRepository taskRepository;
     private final SourceImageReader sourceImageReader;
     private final AiInferencePort aiInferencePort;
@@ -75,8 +78,8 @@ public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseC
 
         try {
             executeClaimedTask(task, command.traceId());
-        } catch (Exception exception) {
-            return failTask(task, exception);
+        } catch (Exception ignored) {
+            return failTask(task);
         }
 
         TaskTransition success = task.succeed(LocalDateTime.now(clock));
@@ -104,14 +107,9 @@ public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseC
         reportDraftPort.ensureDraft(resultId, task.id());
     }
 
-    private ExecutionDisposition failTask(AnalysisTask task, Exception exception) {
-        String message = exception.getMessage();
-        if (message == null || message.isBlank()) {
-            message = exception.getClass().getSimpleName();
-        }
-        String safeMessage = ("AI 任务执行失败：" + message)
-                .replaceAll("[\\r\\n]+", " ");
-        TaskTransition failure = task.fail(safeMessage, LocalDateTime.now(clock));
+    private ExecutionDisposition failTask(AnalysisTask task) {
+        TaskTransition failure = task.fail(
+                GENERIC_FAILURE_MESSAGE, LocalDateTime.now(clock));
         taskRepository.save(task);
         auditLog.append(task.id(), failure);
         return ExecutionDisposition.FAILED;
