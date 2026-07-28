@@ -1,5 +1,6 @@
 package com.example.retinavision.analysis.infrastructure.persistence;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.example.retinavision.analysis.application.model.InferenceOutput;
 import com.example.retinavision.analysis.application.port.out.AnalysisResultStore;
 import com.example.retinavision.enumeration.ImageQualityStatus;
@@ -39,19 +40,20 @@ public final class MyBatisAnalysisResultStore implements AnalysisResultStore {
                 taskId, TaskType.IMAGE_QUALITY_CHECK, output, now);
         resultMapper.insert(result);
 
-        ImageFileEntity image = imageMapper.selectById(imageFileId);
-        if (image != null && Long.valueOf(taskId).equals(image.getQualityTaskId())) {
-            image.setQualityStatus(ImageQualityStatus.valueOf(
-                    String.valueOf(output.resultJson().get("grade"))));
-            Object score = output.resultJson().get("score");
-            image.setQualityScore(score instanceof Number number
-                    ? number.doubleValue()
-                    : null);
-            image.setQualityResultId(result.getId());
-            image.setQualityCheckedAt(now);
-            image.setUpdatedAt(now);
-            imageMapper.updateById(image);
-        }
+        ImageQualityStatus qualityStatus = ImageQualityStatus.valueOf(
+                String.valueOf(output.resultJson().get("grade")));
+        Object score = output.resultJson().get("score");
+        Double qualityScore = score instanceof Number number
+                ? number.doubleValue()
+                : null;
+        imageMapper.update(null, new UpdateWrapper<ImageFileEntity>()
+                .eq("id", imageFileId)
+                .eq("quality_task_id", taskId)
+                .set("quality_status", qualityStatus)
+                .set("quality_score", qualityScore)
+                .set("quality_result_id", result.getId())
+                .set("quality_checked_at", now)
+                .set("updated_at", now));
         return result.getId();
     }
 
