@@ -348,3 +348,23 @@ Java 与 Python 之间增加契约测试，覆盖 camelCase 字段、错误状�
 - Outbox 会增加表、发布器和清理策略，需要同时验证数据库迁移、监控和故障恢复。
 - 前端页面拆分可能引入重复请求和状态不同步，应先提取用例级 composable 再拆展示组件。
 - Python 包移动可能影响模型加载路径和脚本，应保持外部启动命令与 HTTP 契约不变，并以契约测试验证。
+
+## 18. 实施状态（2026-07-28）
+
+### 已完成
+
+- 架构边界与 ArchUnit 基线。
+- 无框架依赖的分析任务状态机。
+- 执行用例与端口。
+- MyBatis、AI、存储与报告适配器。
+- 事务性 worker 兼容 facade。
+- Transactional Outbox：确认发布、条件抢占、安全重试与过期 claim 恢复。
+
+### 延后
+
+- 提取 `clinical-workflow`、`reporting`、`case-management`、`identity`、`knowledge` 与 `operations`。
+- 前端按 feature 切片。
+- Python 内部重组。
+- OpenTelemetry 与指标仪表板。
+- Testcontainers 真实 MySQL 并发争用测试。
+- `PUBLISHED` Outbox 的保留与清理。

@@ -73,6 +73,47 @@ Vue -> Spring Controller -> Service -> MySQL / uploads
 
 Java 进程既是任务生产者，也是任务消费者。任务创建接口不直接执行模型，接口返回后由监听器异步处理。
 
+## Analysis 模块与 Outbox
+
+第一个纵向切片位于 `src/main/java/com/example/retinavision/analysis/`：
+
+```text
+analysis/
+├─ domain/          # 不依赖框架的任务状态机与领域模型
+├─ application/     # 用例、命令和输入/输出端口
+└─ infrastructure/  # MyBatis、AI、文件、报告、MQ 与 Outbox 适配器
+```
+
+依赖方向为 `infrastructure -> application -> domain`；应用层只依赖端口，领域层不依赖 Spring、MyBatis、MQ、HTTP 或文件系统。`AnalysisTaskExecutionServiceImpl` 保留在遗留 service 包中，作为事务性兼容 facade：它把旧的 MQ 消息入口转换为应用用例调用，不承载新的执行编排。
+
+任务创建在一个数据库事务中持久化 `analysis_task` 及 `analysis_outbox` 的交付意图。因此创建成功表示“任务和交付意图已持久化”，不表示消息已经存在于 RabbitMQ。调度发布器随后以 Broker confirm 发布已到期的 Outbox 事件；确认后才标记为 `PUBLISHED`。
+
+Outbox 默认配置位于 `application.yaml`，可通过外部配置覆盖：
+
+```yaml
+retina:
+  outbox:
+    fixed-delay: 1s
+    batch-size: 50
+    retry-delay: 10s
+    claim-timeout: 2m
+```
+
+发布器按 `PENDING -> PROCESSING -> PUBLISHED` 处理事件。条件更新确保同一事件只有一个发布器实例获得 claim；发布或反序列化失败会回到 `PENDING`，并在 `retry-delay` 后重试；超过 `claim-timeout` 的 `PROCESSING` 行会恢复为待处理。发布确认后、标记 `PUBLISHED` 前发生进程故障时，事件可能再次发布，因此交付语义为至少一次。任务消费者的原子 claim 会将重复消息处理为 `IGNORED`。
+
+运维检查只读取元数据，严禁查询或打印 `payload_json`：
+
+```sql
+SELECT status,
+       COUNT(*) AS event_count,
+       MIN(created_at) AS oldest_created_at,
+       MAX(attempt_count) AS max_attempt_count
+FROM analysis_outbox
+GROUP BY status;
+```
+
+重点监测待处理数量、最早待处理时间、处理时长、尝试次数和发布失败。当前没有自动清理 `PUBLISHED` 行；生产部署前应补充保留/清理策略。现有测试覆盖单元和契约行为，尚未覆盖真实 MySQL/Testcontainers 下的并发争用。
+
 ## 基础设施
 
 从本目录执行：
@@ -201,6 +242,8 @@ mvn clean package
 
 测试默认不等于完整联调。涉及真实数据库、RabbitMQ、文件和 AI 服务时，还需按根 README 完成端到端验证。
 
+`mvn test` 仍是日常验证命令。本隔离分支连接的开发数据库已经有用户拥有、但本分支未包含的 V3/V4 Flyway 迁移；因此在该共享数据库上执行完整 Flyway 验证，需要这些迁移同时存在。不要对共享数据库执行 Flyway repair、reset，也不要复制或修改这些用户迁移；若标准命令因此失败，应记录为环境受限，并在合适环境中验证。
+
 ## API 概览
 
 所有路径均位于 `/api` 下。JSON 业务接口使用统一响应包装；图片和报告接口直接返回二进制。
@@ -227,9 +270,10 @@ mvn clean package
 `TaskServiceImpl` 校验病例与图像后：
 
 1. 新增 `analysis_task`，状态为 `WAITING`。
-2. 发布 `AnalysisTaskMessage` 到 `retina.analysis.exchange`。
-3. 等待最长 5 秒的 broker confirm；未确认则返回 MQ 投递错误。
-4. 写入一条 `USER` 类型任务日志。
+2. 在同一事务中写入一条状态为 `PENDING` 的 `analysis_outbox` 事件。
+3. 写入一条 `USER` 类型任务日志；提交后由 Outbox 发布器异步投递。
+
+创建接口返回成功时，任务和消息交付意图已经持久化，但消息可能尚未到达 RabbitMQ。发布器等待 broker confirm 后才把 Outbox 行标记为 `PUBLISHED`；失败的发布会保留为可重试的 `PENDING` 行。
 
 ### 消费和状态
 
