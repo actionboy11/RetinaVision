@@ -21,7 +21,12 @@ class AnalysisModuleArchitectureTest {
                     "com.baomidou.mybatisplus..",
                     "com.fasterxml.jackson..",
                     "com.rabbitmq..",
-                    "java.nio.file..");
+                    "io.lettuce..",
+                    "redis.clients..",
+                    "java.nio.file..",
+                    "java.net..",
+                    "org.apache.hc..",
+                    "okhttp3..");
 
     @ArchTest
     static final ArchRule application_does_not_depend_on_infrastructure = noClasses()
