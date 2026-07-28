@@ -381,7 +381,7 @@ The handler constructor must receive all seven output ports plus `java.time.Cloc
 5. Load the image only after the claim succeeds.
 6. Branch only on `IMAGE_QUALITY_CHECK` and `VESSEL_SEGMENTATION`.
 7. Store result data before marking the aggregate successful.
-8. Sanitize exceptions to `"AI 任务执行失败：" + singleLineMessage`, capped at 1024 characters.
+8. Persist the fixed safe message `AI 任务执行失败，请稍后重试或联系管理员`; raw provider exception messages must not enter task state or audit logs.
 9. Persist failure and audit it before returning `FAILED`.
 
 - [ ] **Step 4: Run application, domain, and architecture tests**
