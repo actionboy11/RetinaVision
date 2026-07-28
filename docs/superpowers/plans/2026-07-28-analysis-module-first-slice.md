@@ -98,7 +98,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(
-        packages = "com.example.retinavision.analysis",
+        packages = "com.example.retinavision",
         importOptions = ImportOption.DoNotIncludeTests.class)
 class AnalysisModuleArchitectureTest {
 
