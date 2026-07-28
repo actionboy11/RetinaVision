@@ -10,8 +10,11 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -27,6 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -38,6 +44,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(OutputCaptureExtension.class)
 class AnalysisOutboxPublisherTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 7, 28, 16, 30);
@@ -65,6 +72,15 @@ class AnalysisOutboxPublisherTest {
         properties.setClaimTimeout(Duration.ofMinutes(2));
         publisher = new AnalysisOutboxPublisher(
                 mapper, messagePublisher, objectMapper, properties, CLOCK);
+        when(mapper.markPublished(anyLong(), any(LocalDateTime.class)))
+                .thenReturn(1);
+        when(mapper.reschedule(
+                anyLong(),
+                anyInt(),
+                any(LocalDateTime.class),
+                anyString(),
+                any(LocalDateTime.class)))
+                .thenReturn(1);
     }
 
     @Test
@@ -213,6 +229,63 @@ class AnalysisOutboxPublisherTest {
                 .doesNotContain("secret", "private", "patient", "Unexpected");
         verify(messagePublisher, never()).publish(any());
         verify(mapper, never()).markPublished(any(Long.class), any(LocalDateTime.class));
+    }
+
+    @Test
+    void zeroRowMarkPublishedWarnsWithoutUnsafeFallbackOrBatchAbort(
+            CapturedOutput output) throws Exception {
+        when(mapper.selectDuePendingIds(NOW, 50)).thenReturn(List.of(1L, 2L));
+        when(mapper.claimPending(1L, NOW)).thenReturn(1);
+        when(mapper.claimPending(2L, NOW)).thenReturn(1);
+        when(mapper.selectClaimed(1L)).thenReturn(entity(1L, 0, payload()));
+        when(mapper.selectClaimed(2L)).thenReturn(entity(2L, 0, payload()));
+        when(mapper.markPublished(1L, NOW)).thenReturn(0);
+
+        publisher.publishDueEvents();
+
+        verify(messagePublisher, times(2)).publish(any(AnalysisTaskMessage.class));
+        verify(mapper).markPublished(1L, NOW);
+        verify(mapper).markPublished(2L, NOW);
+        verify(mapper, never()).updateById(any(AnalysisOutboxEntity.class));
+        verify(mapper, never()).reschedule(
+                anyLong(),
+                anyInt(),
+                any(LocalDateTime.class),
+                anyString(),
+                any(LocalDateTime.class));
+        assertThat(output)
+                .contains("id=1", "PROCESSING->PUBLISHED")
+                .doesNotContain("TASK-42", "ANALYSIS_TASK_REQUESTED");
+    }
+
+    @Test
+    void zeroRowRescheduleWarnsWithoutUnsafeFallbackOrBatchAbort(
+            CapturedOutput output) throws Exception {
+        when(mapper.selectDuePendingIds(NOW, 50)).thenReturn(List.of(1L, 2L));
+        when(mapper.claimPending(1L, NOW)).thenReturn(1);
+        when(mapper.claimPending(2L, NOW)).thenReturn(1);
+        when(mapper.selectClaimed(1L)).thenReturn(entity(1L, 2, payload()));
+        when(mapper.selectClaimed(2L)).thenReturn(entity(2L, 0, payload()));
+        doThrow(new IllegalStateException("broker credential=secret"))
+                .doNothing()
+                .when(messagePublisher).publish(any(AnalysisTaskMessage.class));
+        when(mapper.reschedule(
+                1L, 3, NOW.plusSeconds(10), SAFE_ERROR, NOW))
+                .thenReturn(0);
+
+        publisher.publishDueEvents();
+
+        verify(messagePublisher, times(2)).publish(any(AnalysisTaskMessage.class));
+        verify(mapper).reschedule(
+                1L, 3, NOW.plusSeconds(10), SAFE_ERROR, NOW);
+        verify(mapper).markPublished(2L, NOW);
+        verify(mapper, never()).updateById(any(AnalysisOutboxEntity.class));
+        assertThat(output)
+                .contains("id=1", "PROCESSING->PENDING")
+                .doesNotContain(
+                        "credential=secret",
+                        "TASK-42",
+                        "ANALYSIS_TASK_REQUESTED");
     }
 
     private AnalysisOutboxEntity entity(long id, int attemptCount, String payloadJson) {

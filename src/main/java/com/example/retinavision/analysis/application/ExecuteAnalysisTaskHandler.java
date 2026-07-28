@@ -8,6 +8,7 @@ import com.example.retinavision.analysis.application.port.out.AiInferencePort;
 import com.example.retinavision.analysis.application.port.out.AnalysisResultStore;
 import com.example.retinavision.analysis.application.port.out.AnalysisTaskRepository;
 import com.example.retinavision.analysis.application.port.out.ArtifactStore;
+import com.example.retinavision.analysis.application.port.out.ImageQualityProjectionPort;
 import com.example.retinavision.analysis.application.port.out.ReportDraftPort;
 import com.example.retinavision.analysis.application.port.out.SourceImageReader;
 import com.example.retinavision.analysis.application.port.out.TaskAuditLog;
@@ -30,6 +31,7 @@ public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseC
     private final AiInferencePort aiInferencePort;
     private final ArtifactStore artifactStore;
     private final AnalysisResultStore resultStore;
+    private final ImageQualityProjectionPort imageQualityProjection;
     private final TaskAuditLog auditLog;
     private final ReportDraftPort reportDraftPort;
     private final Clock clock;
@@ -40,6 +42,7 @@ public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseC
             AiInferencePort aiInferencePort,
             ArtifactStore artifactStore,
             AnalysisResultStore resultStore,
+            ImageQualityProjectionPort imageQualityProjection,
             TaskAuditLog auditLog,
             ReportDraftPort reportDraftPort,
             Clock clock) {
@@ -48,6 +51,7 @@ public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseC
         this.aiInferencePort = aiInferencePort;
         this.artifactStore = artifactStore;
         this.resultStore = resultStore;
+        this.imageQualityProjection = imageQualityProjection;
         this.auditLog = auditLog;
         this.reportDraftPort = reportDraftPort;
         this.clock = clock;
@@ -79,6 +83,10 @@ public final class ExecuteAnalysisTaskHandler implements ExecuteAnalysisTaskUseC
         try {
             executeClaimedTask(task, command.traceId());
         } catch (Exception ignored) {
+            if (task.type() == AnalysisTaskType.IMAGE_QUALITY_CHECK) {
+                imageQualityProjection.markErrorIfCurrent(
+                        task.imageFileId(), task.id());
+            }
             return failTask(task);
         }
 

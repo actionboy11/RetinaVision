@@ -87,19 +87,39 @@ public class AnalysisOutboxPublisher {
                     entity.getPayloadJson(), AnalysisTaskRequestedEvent.class);
             messagePublisher.publish(toMessage(event));
             LocalDateTime publishedAt = LocalDateTime.now(clock);
-            mapper.markPublished(id, publishedAt);
+            int affectedRows = mapper.markPublished(id, publishedAt);
+            if (affectedRows != 1) {
+                warnFinalizationConflict(
+                        id, "PROCESSING->PUBLISHED", affectedRows);
+            }
         } catch (Exception exception) {
             int nextAttemptCount = entity == null || entity.getAttemptCount() == null
                     ? 1
                     : entity.getAttemptCount() + 1;
             LocalDateTime failedAt = LocalDateTime.now(clock);
-            mapper.reschedule(
+            int affectedRows = mapper.reschedule(
                     id,
                     nextAttemptCount,
                     failedAt.plus(properties.getRetryDelay()),
                     SAFE_PUBLISH_ERROR,
                     failedAt);
+            if (affectedRows != 1) {
+                warnFinalizationConflict(
+                        id, "PROCESSING->PENDING", affectedRows);
+            }
         }
+    }
+
+    private void warnFinalizationConflict(
+            long id,
+            String expectedTransition,
+            int affectedRows) {
+        log.warn(
+                "Analysis outbox conditional finalization conflict "
+                        + "id={} expectedTransition={} affectedRows={}",
+                id,
+                expectedTransition,
+                affectedRows);
     }
 
     private AnalysisTaskMessage toMessage(AnalysisTaskRequestedEvent event) {

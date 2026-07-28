@@ -7,6 +7,7 @@ import com.example.retinavision.analysis.application.port.out.AnalysisResultStor
 import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventOutbox;
 import com.example.retinavision.analysis.application.port.out.AnalysisTaskRepository;
 import com.example.retinavision.analysis.application.port.out.ArtifactStore;
+import com.example.retinavision.analysis.application.port.out.ImageQualityProjectionPort;
 import com.example.retinavision.analysis.application.port.out.ReportDraftPort;
 import com.example.retinavision.analysis.application.port.out.SourceImageReader;
 import com.example.retinavision.analysis.application.port.out.TaskAuditLog;
@@ -54,6 +55,7 @@ class AnalysisModuleConfigurationTest {
             assertThat(context).hasSingleBean(AiInferencePort.class);
             assertThat(context).hasSingleBean(ArtifactStore.class);
             assertThat(context).hasSingleBean(AnalysisResultStore.class);
+            assertThat(context).hasSingleBean(ImageQualityProjectionPort.class);
             assertThat(context).hasSingleBean(TaskAuditLog.class);
             assertThat(context).hasSingleBean(ReportDraftPort.class);
             assertThat(context).hasSingleBean(AnalysisTaskEventOutbox.class);

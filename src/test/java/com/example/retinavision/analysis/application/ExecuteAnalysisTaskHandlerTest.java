@@ -8,6 +8,7 @@ import com.example.retinavision.analysis.application.port.out.AiInferencePort;
 import com.example.retinavision.analysis.application.port.out.AnalysisResultStore;
 import com.example.retinavision.analysis.application.port.out.AnalysisTaskRepository;
 import com.example.retinavision.analysis.application.port.out.ArtifactStore;
+import com.example.retinavision.analysis.application.port.out.ImageQualityProjectionPort;
 import com.example.retinavision.analysis.application.port.out.ReportDraftPort;
 import com.example.retinavision.analysis.application.port.out.SourceImageReader;
 import com.example.retinavision.analysis.application.port.out.TaskAuditLog;
@@ -208,6 +209,65 @@ class ExecuteAnalysisTaskHandlerTest {
     }
 
     @Test
+    void qualityExecutionFailureMarksCurrentImageErrorExactlyOnceAndFailsTask() {
+        Fixture fixture = new Fixture();
+        fixture.taskRepository.task = Optional.of(
+                waitingTask(AnalysisTaskType.IMAGE_QUALITY_CHECK));
+        fixture.aiInferencePort.failure =
+                new IllegalStateException("quality inference unavailable");
+
+        ExecutionDisposition result =
+                fixture.handler().execute(command());
+
+        assertThat(result).isEqualTo(ExecutionDisposition.FAILED);
+        assertThat(fixture.imageQualityProjection.calls).isOne();
+        assertThat(fixture.imageQualityProjection.imageFileId).isEqualTo(20L);
+        assertThat(fixture.imageQualityProjection.taskId).isEqualTo(100L);
+        assertThat(fixture.taskRepository.saved().status())
+                .isEqualTo(AnalysisTaskStatus.FAILED);
+        assertThat(fixture.auditLog.transitions())
+                .extracting(TaskTransition::to)
+                .containsExactly(AnalysisTaskStatus.RUNNING, AnalysisTaskStatus.FAILED);
+    }
+
+    @Test
+    void segmentationExecutionFailureNeverMarksImageQualityError() {
+        Fixture fixture = new Fixture();
+        fixture.taskRepository.task = Optional.of(
+                waitingTask(AnalysisTaskType.VESSEL_SEGMENTATION));
+        fixture.aiInferencePort.failure =
+                new IllegalStateException("segmentation inference unavailable");
+
+        ExecutionDisposition result =
+                fixture.handler().execute(command());
+
+        assertThat(result).isEqualTo(ExecutionDisposition.FAILED);
+        assertThat(fixture.imageQualityProjection.calls).isZero();
+        assertThat(fixture.taskRepository.saved().status())
+                .isEqualTo(AnalysisTaskStatus.FAILED);
+    }
+
+    @Test
+    void qualityProjectionFailurePropagatesBeforeTaskFailureIsPersisted() {
+        Fixture fixture = new Fixture();
+        fixture.taskRepository.task = Optional.of(
+                waitingTask(AnalysisTaskType.IMAGE_QUALITY_CHECK));
+        fixture.aiInferencePort.failure =
+                new IllegalStateException("quality inference unavailable");
+        fixture.imageQualityProjection.failure =
+                new IllegalStateException("quality projection unavailable");
+
+        assertThatThrownBy(() -> fixture.handler().execute(command()))
+                .isSameAs(fixture.imageQualityProjection.failure);
+
+        assertThat(fixture.imageQualityProjection.calls).isOne();
+        assertThat(fixture.taskRepository.saved).isNull();
+        assertThat(fixture.auditLog.transitions())
+                .extracting(TaskTransition::to)
+                .containsExactly(AnalysisTaskStatus.RUNNING);
+    }
+
+    @Test
     void lookupAndAtomicClaimFailuresPropagate() {
         Fixture lookupFixture = new Fixture();
         lookupFixture.taskRepository.lookupFailure = new IllegalStateException("database unavailable");
@@ -290,6 +350,8 @@ class ExecuteAnalysisTaskHandlerTest {
         private final RecordingAiInferencePort aiInferencePort = new RecordingAiInferencePort();
         private final RecordingArtifactStore artifactStore = new RecordingArtifactStore();
         private final RecordingResultStore resultStore = new RecordingResultStore();
+        private final RecordingImageQualityProjection imageQualityProjection =
+                new RecordingImageQualityProjection();
         private final RecordingAuditLog auditLog = new RecordingAuditLog();
         private final RecordingReportDraftPort reportDraftPort = new RecordingReportDraftPort();
 
@@ -300,6 +362,7 @@ class ExecuteAnalysisTaskHandlerTest {
                     aiInferencePort,
                     artifactStore,
                     resultStore,
+                    imageQualityProjection,
                     auditLog,
                     reportDraftPort,
                     CLOCK);
@@ -448,6 +511,25 @@ class ExecuteAnalysisTaskHandlerTest {
             segmentationTaskId = taskId;
             this.maskObjectKey = maskObjectKey;
             return resultId;
+        }
+    }
+
+    private static final class RecordingImageQualityProjection
+            implements ImageQualityProjectionPort {
+
+        private int calls;
+        private long imageFileId;
+        private long taskId;
+        private RuntimeException failure;
+
+        @Override
+        public void markErrorIfCurrent(long imageFileId, long taskId) {
+            calls++;
+            this.imageFileId = imageFileId;
+            this.taskId = taskId;
+            if (failure != null) {
+                throw failure;
+            }
         }
     }
 

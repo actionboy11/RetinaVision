@@ -69,6 +69,12 @@ public class AnalysisTaskMessagePublisher {
                         ErrorMessageContant.MQ_DELIVERY_ERROR_MSG
                 );
             }
+            if (correlationData.getReturned() != null) {
+                throw new BaseException(
+                        ErrorMessageSignal.MQ_DELIVERY_ERROR,
+                        ErrorMessageContant.MQ_DELIVERY_ERROR_MSG
+                );
+            }
         }
         catch (BaseException exception) {
             throw exception;

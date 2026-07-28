@@ -183,6 +183,12 @@ class TaskServiceImplTest {
 
         verify(analysisTaskEventOutbox).append(any(), any(), anyInt());
         verifyNoInteractions(analysisTaskMessagePublisher);
+        ArgumentCaptor<LogEntity> logCaptor =
+                ArgumentCaptor.forClass(LogEntity.class);
+        verify(logMapper).insert(logCaptor.capture());
+        assertThat(logCaptor.getValue().getMessage()).isEqualTo(
+                "医生覆盖图像质量门控并创建任务，原因：临床紧急，接受低质量风险；"
+                        + "任务已创建并等待消息发布");
     }
 
     @Test

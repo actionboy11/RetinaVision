@@ -8,6 +8,7 @@ import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxPro
 import com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxPublisher;
 import com.example.retinavision.analysis.infrastructure.outbox.MyBatisAnalysisTaskEventOutbox;
 import com.example.retinavision.analysis.infrastructure.ai.HttpAiInferenceGateway;
+import com.example.retinavision.analysis.infrastructure.image.MyBatisImageQualityProjection;
 import com.example.retinavision.analysis.infrastructure.image.MyBatisSourceImageReader;
 import com.example.retinavision.analysis.infrastructure.persistence.LegacyAnalysisTaskRepository;
 import com.example.retinavision.analysis.infrastructure.persistence.MyBatisAnalysisResultStore;
@@ -80,6 +81,13 @@ public class AnalysisModuleConfiguration {
     }
 
     @Bean
+    MyBatisImageQualityProjection imageQualityProjection(
+            ImageMapper imageMapper,
+            Clock clock) {
+        return new MyBatisImageQualityProjection(imageMapper, clock);
+    }
+
+    @Bean
     MyBatisTaskAuditLog taskAuditLog(LogMapper logMapper) {
         return new MyBatisTaskAuditLog(logMapper);
     }
@@ -117,6 +125,7 @@ public class AnalysisModuleConfiguration {
             HttpAiInferenceGateway aiInferenceGateway,
             LocalArtifactStore artifactStore,
             MyBatisAnalysisResultStore resultStore,
+            MyBatisImageQualityProjection imageQualityProjection,
             MyBatisTaskAuditLog auditLog,
             LegacyReportDraftGateway reportDraftPort,
             Clock clock) {
@@ -126,6 +135,7 @@ public class AnalysisModuleConfiguration {
                 aiInferenceGateway,
                 artifactStore,
                 resultStore,
+                imageQualityProjection,
                 auditLog,
                 reportDraftPort,
                 clock);

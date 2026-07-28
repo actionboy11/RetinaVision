@@ -169,11 +169,19 @@ public class TaskServiceImpl implements TaskService {
             imageFileEntity.setUpdatedAt(now);
             imageMapper.updateById(imageFileEntity);
         }
+        String creationAuditMessage =
+                taskEntity.getTaskType() == TaskType.VESSEL_SEGMENTATION
+                        && imageFileEntity.getQualityStatus() == ImageQualityStatus.FAIL
+                        && Boolean.TRUE.equals(taskEntity.getQualityOverride())
+                        ? "医生覆盖图像质量门控并创建任务，原因："
+                                + taskEntity.getQualityOverrideReason()
+                                + "；任务已创建并等待消息发布"
+                        : "任务已创建并等待消息发布";
         insertTaskLog(
                 taskEntity.getId(),
                 null,
                 TaskStatus.WAITING,
-                "任务已创建并等待消息发布",
+                creationAuditMessage,
                 "USER",
                 submittedBy,
                 now);
