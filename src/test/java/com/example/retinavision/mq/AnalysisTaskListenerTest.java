@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -81,5 +82,16 @@ class AnalysisTaskListenerTest {
         listener.handleAnalysisTask(taskMessage, channel, rawMessage);
 
         verify(channel).basicAck(77L, false);
+    }
+
+    @Test
+    void infrastructureExceptionIsDeadLetteredAndPropagated() throws Exception {
+        IllegalStateException failure = new IllegalStateException("database unavailable");
+        when(executionService.process(taskMessage)).thenThrow(failure);
+
+        assertThatThrownBy(() ->
+                listener.handleAnalysisTask(taskMessage, channel, rawMessage))
+                .isSameAs(failure);
+        verify(channel).basicNack(77L, false, false);
     }
 }
