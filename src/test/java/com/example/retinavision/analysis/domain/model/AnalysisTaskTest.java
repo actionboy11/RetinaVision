@@ -92,6 +92,30 @@ class AnalysisTaskTest {
     }
 
     @Test
+    void failureMessageIsStoredAndAuditedAsSingleLineText() {
+        AnalysisTask task = waitingTask();
+        task.claim(now);
+
+        TaskTransition failed = task.fail(
+                "AI 任务执行失败：provider\r\nreturned\nerror", now.plusSeconds(5));
+
+        assertThat(task.errorMessage()).isEqualTo("AI 任务执行失败：provider returned error");
+        assertThat(failed.message()).isEqualTo(task.errorMessage());
+    }
+
+    @Test
+    void failureMessageIsStoredAndAuditedWithin1024Characters() {
+        AnalysisTask task = waitingTask();
+        task.claim(now);
+
+        String submittedMessage = "x".repeat(1025);
+        TaskTransition failed = task.fail(submittedMessage, now.plusSeconds(5));
+
+        assertThat(task.errorMessage()).hasSize(1024).isEqualTo("x".repeat(1024));
+        assertThat(failed.message()).isEqualTo(task.errorMessage());
+    }
+
+    @Test
     void waitingTaskCanBeCanceled() {
         AnalysisTask task = waitingTask();
 

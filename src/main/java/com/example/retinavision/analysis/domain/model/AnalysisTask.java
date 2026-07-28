@@ -76,8 +76,12 @@ public final class AnalysisTask {
         if (safeMessage == null || safeMessage.isBlank()) {
             throw new IllegalArgumentException("失败信息不能为空");
         }
-        errorMessage = safeMessage;
-        return transitionTo(AnalysisTaskStatus.FAILED, safeMessage, now);
+        String normalizedMessage = safeMessage.replaceAll("[\\r\\n]+", " ");
+        String storedMessage = normalizedMessage.length() > 1024
+                ? normalizedMessage.substring(0, 1024)
+                : normalizedMessage;
+        errorMessage = storedMessage;
+        return transitionTo(AnalysisTaskStatus.FAILED, storedMessage, now);
     }
 
     public TaskTransition prepareRetry(LocalDateTime now) {
