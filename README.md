@@ -15,6 +15,9 @@ RetinaVision Backend 是系统的业务核心和浏览器 API 入口。它负责
 - 任务统计、队列统计和近期任务趋势
 - 分割结果 JSON 查询与 mask 二进制预览
 - 人工反馈、修正版本、医生审核、报告草稿、医生签发 PDF 和报告历史
+- 可通过配置接入 Qwen 或 DeepSeek，为医生生成报告草稿和结构化结果解释
+- RAG 医疗知识助手通过 Qwen Embedding 与 Qdrant 检索知识库，面向所有登录用户提供带引用的资料解释
+- Prompt 模板数据库版本管理、管理员启用版本切换和脱敏 LLM 调用审计
 - 管理员用户列表、角色授予、医生 professionalNo 维护和死信恢复
 
 当前可执行 `IMAGE_QUALITY_CHECK` 和 `VESSEL_SEGMENTATION`。质量检测是 OpenCV/NumPy 规则评分的工程门控；血管分割使用 Python AI 服务中的 PyTorch 模型。AI 结果仅供辅助分析，正式 PDF 报告必须由医生审核通过后签发。
@@ -199,9 +202,64 @@ retina:
     read-timeout: 5m
   upload:
     image-root: uploads/images
+  llm:
+    enabled: false
+    provider: qwen
+    base-url: https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+    api-key: ${RETINA_LLM_API_KEY}
+    model: qwen-plus
+  embedding:
+    enabled: false
+    provider: qwen
+    base-url: https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+    api-key: ${RETINA_EMBEDDING_API_KEY}
+    model: text-embedding-v4
+    dimension: 1024
+  qdrant:
+    base-url: http://127.0.0.1:6333
+    collection: retina_knowledge_chunks
+    score-threshold: 0.2
 ```
 
 生产或共享环境必须通过外部配置覆盖 JWT secret 和所有凭据，不能沿用开发值。
+
+### 大模型报告草稿
+
+`retina.llm.*` 用于医生工作台中的“AI 生成草稿”。后端使用 OpenAI-compatible Chat Completions API 调用 Qwen 或 DeepSeek，浏览器不直接访问大模型。该功能只发送结构化分析结果、图像质量摘要和必要上下文，不发送原始眼底图、mask、token、绝对路径或患者真实身份。生成内容写入当前 `DRAFT` 报告的 `draftJson`，仅作为医生审核前参考；正式 PDF 的医生所见、审核结论和处理建议只来自医生保存的审核记录。
+
+草稿生成要求使用“辅助分析、建议复核、结合临床”的语气。后端会检查 `findings`、`conclusion`、`recommendation`，如果包含“诊断为”“确诊”“排除”“明确患有”“无需复查”等确定性诊断措辞，将拒绝写入并保留旧草稿。
+
+AI 草稿生成成功、医生审核保存和 PDF 签发成功后会追加 `task_log` 审计记录。此类记录只用于任务详情时间线展示，`fromStatus` 与 `toStatus` 使用当前任务状态且通常相同，不会改变 `analysis_task.status`。血管分割结果页展示的图像质量状态/评分来自图像质量检测任务投影的 `qualitySummary`，不要求血管分割 `resultJson` 自带 `imageQualityScore`。
+
+DeepSeek 配置示例：
+
+```yaml
+retina:
+  llm:
+    enabled: true
+    provider: deepseek
+    base-url: https://api.deepseek.com
+    api-key: ${RETINA_LLM_API_KEY}
+    model: deepseek-v4-flash
+```
+
+### RAG 医疗知识助手
+
+知识助手配置位于 `retina.embedding.*` 和 `retina.qdrant.*`。管理员通过 `/knowledge/documents` 录入纯文本或 Markdown，后端按 Markdown/段落感知切分后调用 Qwen Embedding，并将向量和引用 payload 写入 Qdrant。管理员可重建索引、启用/停用或删除文档；停用文档不参与检索，删除文档会同步删除 MySQL chunk 与 Qdrant points。所有已登录用户可通过 `/knowledge/chat` 提问，回答必须带引用来源和固定免责声明；该功能不替代医生诊断、治疗建议或 PDF 报告签发。
+
+引用现在只显示模型指认且可在本次检索 chunk 中逐字核验的摘录；没有可核验证据时，返回固定“依据不足”回答和空引用。Flyway `V8__rag_grounded_evaluation.sql` 新增未启用的 RAG v2 Prompt，要求返回 `answer` 与 `evidence[{chunkId,quote}]`。当前 v1 不强制提供 evidence，因此迁移到 v2 前部分问答会安全降级为“依据不足”，不会把所有检索命中伪装为引用。独立 `/rag-evaluations` 评测使用合成样本与 `retina_rag_eval_v1` collection，分别记录 Hit@3/MRR 和逐题回答引用校验；医生须判断引用是否真正支持回答。管理员只有在最新评测自动通过且医生批准后才能启用 v2。评测会调用真实 Embedding 和 LLM，可能产生费用，但不会写入正式知识库、病例或 PDF。
+
+`V9__rag_evaluation_configuration.sql` 为评测记录增加 Embedding 模型与相似度阈值快照；评测执行和候选版本启用时均会核对当前配置。V8 已应用的环境应继续执行 V9，不要修改 V8 或对 Flyway 历史执行 `repair`。
+
+### Prompt Engineering 平台
+
+Flyway `V6__prompt_engineering.sql` 初始化 `REPORT_DRAFT_GENERATION`、`RAG_KNOWLEDGE_CHAT`、`CASE_TREND_SUMMARY` 三个模板及 v1 版本。三个业务 Service 继续负责构造脱敏 user context，`LlmOrchestrationService` 统一读取数据库中的启用 system prompt、调用 Qwen/DeepSeek、校验 JSON 输出契约与医疗安全词，并记录调用摘要。
+
+管理员可通过 `/prompt-templates` 查看模板和版本，通过 `/prompt-templates/{templateCode}/active-version` 切换已经入库的版本，通过 `/llm-call-logs` 查看最近 200 条调用摘要。第一版不提供在线编辑能力；新增版本需要经过代码审查并通过后续 Flyway 迁移发布。若模板缺失、停用或没有有效启用版本，对应 LLM 场景会返回可读业务错误，不回退到源码中的隐藏 Prompt。
+
+`llm_call_log` 不保存完整 system prompt、user context、API Key、token、患者真实身份、文件绝对路径或模型长响应。错误摘要只保留异常类型和通用错误说明，业务事务失败时审计记录通过独立事务保留。
+
+Flyway `V7__prompt_evaluation.sql` 为已存在数据库新增报告草稿评测记录、版本发布标记和未启用候选 v2；新环境随 Flyway 顺序自动执行 V6、V7。`POST /prompt-evaluations/runs` 仅管理员可用，会在独立单线程有界队列中对固定合成样本分别调用当前版和候选版。医生通过 `PUT /prompt-evaluations/runs/{id}/review` 对结果给出 1–5 分与批准/拒绝意见；管理员及医生通过 `GET /prompt-evaluations/runs` 和详情查看进度、自动校验及有限长度的合成输出。新版本发布前必须通过最新一轮与当前版对照的自动校验及医生批准；已发布版本可回滚。评测不会写入正式报告，也不能替代医生审核。运行真实评测需要配置可用的大模型并会产生 API 调用费用。
 
 ## 启动与验证
 
@@ -255,9 +313,11 @@ mvn clean package
 | Image | `/cases/{caseId}/images`、`/images/{imageId}/preview`、`/images/{imageId}/quality-check` |
 | Task | `/analysis-tasks`、`/analysis-tasks/{taskId}`、`cancel`、`retry` |
 | Result | `/analysis-tasks/{taskId}/result`、`/results/{resultId}/mask`、`/results/{resultId}/report` |
-| Clinical workflow | `/analysis-results/{resultId}/feedback`、`corrections`、`review`、`report-draft`、`report-sign`、`reports` |
+| Clinical workflow | `/analysis-results/{resultId}/feedback`、`corrections`、`review`、`report-draft`、`report-draft/ai-generate`、`report-sign`、`reports` |
 | Doctor | `/doctor/reviews`、`/doctor/reviews/{resultId}` |
 | Admin | `/admin/users`、`/admin/users/{userId}/role`、`/admin/dead-letters/recover` |
+| Prompt | `/prompt-templates`、`/prompt-templates/{templateCode}/versions`、`active-version`、`/llm-call-logs` |
+| Prompt evaluation | `/prompt-evaluations/runs`、`/prompt-evaluations/runs/{id}`、`/prompt-evaluations/runs/{id}/review` |
 | Log | `/analysis-tasks/{taskId}/logs`（兼容单数 `/log`） |
 | Dashboard | `/admin/statistics/tasks`、`queue`、`task-trend` |
 
@@ -405,4 +465,4 @@ retina:
     font-path: /opt/retinavision/fonts/your-authorized-font.ttf
 ```
 
-服务不会把字体文件提交到仓库。签发前要求医生身份、`APPROVED` 审核结果；签发记录保存 PDF SHA-256、医生身份快照和版本。
+服务不会把字体文件提交到仓库。签发前要求医生身份、`APPROVED` 审核结果以及完整的医生所见、审核结论和处理建议；签发记录保存 PDF SHA-256、医生身份快照和版本。

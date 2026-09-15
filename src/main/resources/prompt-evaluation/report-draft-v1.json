@@ -1,0 +1,35 @@
+{
+  "version": "report-draft-v1",
+  "cases": [
+    {
+      "id": "quality-pass",
+      "title": "图像质量通过且分割指标存在",
+      "context": {
+        "result": {"type": "VESSEL_SEGMENTATION", "resultJson": {"vesselAreaRatio": 0.0926}, "modelName": "synthetic-model", "modelVersion": "test-v1", "processingTimeMs": 0},
+        "case": {"age": 50, "gender": "FEMALE", "eyeSide": "RIGHT"},
+        "image": {"qualityStatus": "PASS", "qualityScore": 91.5, "width": 512, "height": 512},
+        "acceptedCorrectionCount": 0
+      }
+    },
+    {
+      "id": "quality-warning",
+      "title": "图像质量警告时需提示复核",
+      "context": {
+        "result": {"type": "VESSEL_SEGMENTATION", "resultJson": {"vesselAreaRatio": 0.051}, "modelName": "synthetic-model", "modelVersion": "test-v1", "processingTimeMs": 0},
+        "case": {"age": 63, "gender": "MALE", "eyeSide": "LEFT"},
+        "image": {"qualityStatus": "WARNING", "qualityScore": 62.0, "width": 512, "height": 512},
+        "acceptedCorrectionCount": 0
+      }
+    },
+    {
+      "id": "missing-ratio",
+      "title": "分割面积比例缺失时不得补造数值",
+      "context": {
+        "result": {"type": "VESSEL_SEGMENTATION", "resultJson": {}, "modelName": "synthetic-model", "modelVersion": "test-v1", "processingTimeMs": 0},
+        "case": {"age": "", "gender": "", "eyeSide": "RIGHT"},
+        "image": {"qualityStatus": "NOT_CHECKED", "qualityScore": "", "width": 512, "height": 512},
+        "acceptedCorrectionCount": 0
+      }
+    }
+  ]
+}

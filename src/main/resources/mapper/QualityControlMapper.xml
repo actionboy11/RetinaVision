@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.retinavision.mapper.QualityControlMapper">
+    <select id="selectOverview" resultType="com.example.retinavision.mapper.QualityControlMapper$OverviewRow">
+        SELECT
+            COUNT(t.id) AS taskTotalCount,
+            CASE WHEN COUNT(t.id) = 0 THEN 0 ELSE SUM(CASE WHEN t.status = 'SUCCESS' THEN 1 ELSE 0 END) / COUNT(t.id) END AS successRate,
+            CASE WHEN COUNT(t.id) = 0 THEN 0 ELSE SUM(CASE WHEN t.status = 'FAILED' THEN 1 ELSE 0 END) / COUNT(t.id) END AS failedRate,
+            COALESCE(ROUND(AVG(CASE
+                WHEN t.status = 'SUCCESS' AND t.started_at IS NOT NULL AND t.finished_at IS NOT NULL
+                THEN TIMESTAMPDIFF(MICROSECOND, t.started_at, t.finished_at) / 1000
+                ELSE NULL
+            END)), 0) AS averageProcessingTimeMs,
+            COALESCE(SUM(CASE WHEN t.retry_count > 0 THEN 1 ELSE 0 END), 0) AS retryTaskCount,
+            COALESCE((SELECT COUNT(*) FROM analysis_report ar WHERE ar.status = 'SIGNED'), 0) AS signedReportCount,
+            COALESCE((
+                SELECT COUNT(*)
+                FROM analysis_review rv
+                WHERE rv.status = 'APPROVED'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM analysis_report rp
+                      WHERE rp.result_id = rv.result_id AND rp.status = 'SIGNED'
+                  )
+            ), 0) AS approvedUnsignedCount,
+            COALESCE((SELECT COUNT(*) FROM analysis_result r WHERE r.result_type = 'VESSEL_SEGMENTATION'), 0) AS vesselResultCount,
+            COALESCE((
+                SELECT AVG(CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8)))
+                FROM analysis_result r
+                WHERE r.result_type = 'VESSEL_SEGMENTATION'
+                  AND JSON_EXTRACT(r.result_json, '$.vesselAreaRatio') IS NOT NULL
+            ), 0) AS averageVesselAreaRatio,
+            COALESCE((
+                SELECT COUNT(*)
+                FROM analysis_result r
+                WHERE r.result_type = 'VESSEL_SEGMENTATION'
+                  AND JSON_EXTRACT(r.result_json, '$.vesselAreaRatio') IS NOT NULL
+                  AND CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8)) &lt; 0.01
+            ), 0) AS abnormalLowVesselRatioCount,
+            COALESCE((
+                SELECT COUNT(*)
+                FROM analysis_result r
+                WHERE r.result_type = 'VESSEL_SEGMENTATION'
+                  AND JSON_EXTRACT(r.result_json, '$.vesselAreaRatio') IS NOT NULL
+                  AND CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8)) &gt; 0.30
+            ), 0) AS abnormalHighVesselRatioCount
+        FROM analysis_task t
+    </select>
+
+    <select id="selectQualityDistribution" resultType="com.example.retinavision.mapper.QualityControlMapper$CountRow">
+        SELECT COALESCE(quality_status, 'NOT_CHECKED') AS name, COUNT(*) AS count
+        FROM image_file
+        WHERE deleted_at IS NULL
+        GROUP BY COALESCE(quality_status, 'NOT_CHECKED')
+    </select>
+
+    <select id="selectReviewDistribution" resultType="com.example.retinavision.mapper.QualityControlMapper$CountRow">
+        SELECT status AS name, COUNT(*) AS count
+        FROM analysis_review
+        GROUP BY status
+    </select>
+
+    <select id="selectModelPerformance" resultType="com.example.retinavision.pojo.VO.ModelPerformanceItemVO">
+        SELECT
+            COALESCE(r.model_name, 'UNKNOWN') AS modelName,
+            COALESCE(r.model_version, 'UNKNOWN') AS modelVersion,
+            COALESCE(r.result_type, t.task_type) AS resultType,
+            COUNT(r.id) AS resultCount,
+            CASE WHEN COUNT(t.id) = 0 THEN 0 ELSE SUM(CASE WHEN t.status = 'SUCCESS' THEN 1 ELSE 0 END) / COUNT(t.id) END AS successRate,
+            COALESCE(ROUND(AVG(CASE
+                WHEN t.status = 'SUCCESS' AND t.started_at IS NOT NULL AND t.finished_at IS NOT NULL
+                THEN TIMESTAMPDIFF(MICROSECOND, t.started_at, t.finished_at) / 1000
+                ELSE NULL
+            END)), 0) AS averageProcessingTimeMs,
+            COALESCE(AVG(CASE
+                WHEN r.result_type = 'VESSEL_SEGMENTATION' AND JSON_EXTRACT(r.result_json, '$.vesselAreaRatio') IS NOT NULL
+                THEN CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8))
+                ELSE NULL
+            END), 0) AS averageVesselAreaRatio,
+            CASE WHEN COUNT(rv.id) = 0 THEN 0 ELSE SUM(CASE WHEN rv.status = 'APPROVED' THEN 1 ELSE 0 END) / COUNT(rv.id) END AS reviewApprovedRate,
+            CASE WHEN COUNT(rv.id) = 0 THEN 0 ELSE SUM(CASE WHEN rv.status = 'CHANGES_REQUESTED' THEN 1 ELSE 0 END) / COUNT(rv.id) END AS reviewNeedsChangeRate,
+            CASE WHEN COUNT(t.id) = 0 THEN 0 ELSE SUM(CASE WHEN t.status = 'FAILED' THEN 1 ELSE 0 END) / COUNT(t.id) END AS failedRate
+        FROM analysis_result r
+        JOIN analysis_task t ON t.id = r.task_id
+        LEFT JOIN analysis_review rv ON rv.result_id = r.id
+        GROUP BY COALESCE(r.model_name, 'UNKNOWN'), COALESCE(r.model_version, 'UNKNOWN'), COALESCE(r.result_type, t.task_type)
+        ORDER BY resultCount DESC, modelName, modelVersion
+    </select>
+
+    <select id="selectRiskAlerts" resultType="com.example.retinavision.pojo.VO.RiskAlertItemVO">
+        SELECT *
+        FROM (
+            SELECT
+                'CRITICAL' AS level,
+                '图像质量 FAIL/ERROR 但仍执行血管分割' AS reason,
+                t.id AS taskId,
+                t.task_no AS taskNo,
+                r.id AS resultId,
+                t.case_id AS caseId,
+                t.task_type AS taskType,
+                t.status AS status,
+                COALESCE(t.finished_at, t.updated_at, t.submitted_at) AS createdAt
+            FROM analysis_task t
+            JOIN image_file i ON i.id = t.image_file_id
+            LEFT JOIN analysis_result r ON r.task_id = t.id
+            WHERE t.task_type = 'VESSEL_SEGMENTATION'
+              AND i.quality_status IN ('FAIL', 'ERROR')
+
+            UNION ALL
+
+            SELECT
+                'WARNING' AS level,
+                CASE
+                    WHEN JSON_EXTRACT(r.result_json, '$.vesselAreaRatio') IS NULL THEN '血管面积比例缺失'
+                    WHEN CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8)) &lt; 0.01 THEN '血管面积比例异常偏低'
+                    ELSE '血管面积比例异常偏高'
+                END AS reason,
+                t.id AS taskId,
+                t.task_no AS taskNo,
+                r.id AS resultId,
+                t.case_id AS caseId,
+                t.task_type AS taskType,
+                t.status AS status,
+                r.created_at AS createdAt
+            FROM analysis_result r
+            JOIN analysis_task t ON t.id = r.task_id
+            WHERE r.result_type = 'VESSEL_SEGMENTATION'
+              AND (
+                  JSON_EXTRACT(r.result_json, '$.vesselAreaRatio') IS NULL
+                  OR CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8)) &lt; 0.01
+                  OR CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result_json, '$.vesselAreaRatio')) AS DECIMAL(18,8)) &gt; 0.30
+              )
+
+            UNION ALL
+
+            SELECT
+                'CRITICAL' AS level,
+                CONCAT('医生审核结果：', rv.status) AS reason,
+                t.id AS taskId,
+                t.task_no AS taskNo,
+                r.id AS resultId,
+                t.case_id AS caseId,
+                t.task_type AS taskType,
+                t.status AS status,
+                rv.reviewed_at AS createdAt
+            FROM analysis_review rv
+            JOIN analysis_result r ON r.id = rv.result_id
+            JOIN analysis_task t ON t.id = r.task_id
+            WHERE rv.status IN ('CHANGES_REQUESTED', 'REJECTED')
+
+            UNION ALL
+
+            SELECT
+                CASE WHEN t.status = 'FAILED' THEN 'CRITICAL' ELSE 'WARNING' END AS level,
+                CASE WHEN t.status = 'FAILED' THEN '任务最终失败' ELSE '任务多次重试后成功或处理中' END AS reason,
+                t.id AS taskId,
+                t.task_no AS taskNo,
+                r.id AS resultId,
+                t.case_id AS caseId,
+                t.task_type AS taskType,
+                t.status AS status,
+                COALESCE(t.finished_at, t.updated_at, t.submitted_at) AS createdAt
+            FROM analysis_task t
+            LEFT JOIN analysis_result r ON r.task_id = t.id
+            WHERE t.status = 'FAILED' OR t.retry_count > 0
+
+            UNION ALL
+
+            SELECT
+                'INFO' AS level,
+                '已审核通过但尚未签发 PDF' AS reason,
+                t.id AS taskId,
+                t.task_no AS taskNo,
+                r.id AS resultId,
+                t.case_id AS caseId,
+                t.task_type AS taskType,
+                t.status AS status,
+                rv.reviewed_at AS createdAt
+            FROM analysis_review rv
+            JOIN analysis_result r ON r.id = rv.result_id
+            JOIN analysis_task t ON t.id = r.task_id
+            WHERE rv.status = 'APPROVED'
+              AND NOT EXISTS (
+                  SELECT 1 FROM analysis_report rp
+                  WHERE rp.result_id = rv.result_id AND rp.status = 'SIGNED'
+              )
+        ) alerts
+        ORDER BY createdAt DESC
+        LIMIT 100
+    </select>
+</mapper>

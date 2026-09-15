@@ -4,14 +4,22 @@ package com.example.retinavision.controller;
 import com.example.retinavision.pojo.DTO.CaseInsertDTO;
 import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
 import com.example.retinavision.pojo.DTO.CaseUpdateDTO;
+import com.example.retinavision.enumeration.EyeSide;
+import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.VO.CaseListItemVO;
+import com.example.retinavision.pojo.VO.CaseTrendSummaryVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
+import com.example.retinavision.service.CaseAnalysisTimelineService;
 import com.example.retinavision.service.CaseService;
 import com.example.retinavision.service.ClinicalAccessService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/cases")
@@ -19,10 +27,14 @@ public class CaseController {
 
     private final CaseService caseService;
     private final ClinicalAccessService accessService;
+    private final CaseAnalysisTimelineService timelineService;
 
-    public CaseController(CaseService caseService, ClinicalAccessService accessService) {
+    public CaseController(CaseService caseService,
+                          ClinicalAccessService accessService,
+                          CaseAnalysisTimelineService timelineService) {
         this.caseService = caseService;
         this.accessService = accessService;
+        this.timelineService = timelineService;
     }
 
     @GetMapping
@@ -57,6 +69,30 @@ public class CaseController {
             CaseListItemVO caseListItemVO =caseService.getCaseById(caseId);
             return Result.success(caseListItemVO);
 
+    }
+
+    @GetMapping("/{caseId}/analysis-timeline")
+    public Result<CaseAnalysisTimelineVO> analysisTimeline(@PathVariable Integer caseId,
+                                                          @RequestParam(required = false) EyeSide eyeSide,
+                                                          @RequestParam(required = false) TaskType taskType,
+                                                          @RequestParam(required = false)
+                                                          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                          LocalDateTime startTime,
+                                                          @RequestParam(required = false)
+                                                          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                          LocalDateTime endTime,
+                                                          Authentication authentication) {
+        accessService.assertCanAccessCase(user(authentication), caseId.longValue());
+        return Result.success(timelineService.timeline(caseId.longValue(), eyeSide, taskType, startTime, endTime));
+    }
+
+    @PostMapping("/{caseId}/trend-summary/ai-generate")
+    public Result<CaseTrendSummaryVO> generateTrendSummary(@PathVariable Integer caseId,
+                                                           @RequestParam(required = false) EyeSide eyeSide,
+                                                           @RequestParam(required = false) TaskType taskType,
+                                                           Authentication authentication) {
+        accessService.assertCanAccessCase(user(authentication), caseId.longValue());
+        return Result.success(timelineService.generateTrendSummary(caseId.longValue(), eyeSide, taskType));
     }
     // 更新病例信息
     @PutMapping("/{caseId}")

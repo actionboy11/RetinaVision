@@ -88,6 +88,16 @@ public class SecurityConfig {
                 // 有限重试与死信恢复功能完善：死信恢复会重新执行失败任务，只允许管理员操作。
                 .requestMatchers("/admin/dead-letters/**").hasRole("ADMIN")
                 .requestMatchers("/admin/users/**").hasRole("ADMIN")  // 管理员接口 ，只能由管理员调用
+                .requestMatchers("/prompt-templates/**", "/llm-call-logs/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/prompt-evaluations/runs").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/prompt-evaluations/runs/*/review").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/prompt-evaluations/runs/**").hasAnyRole("DOCTOR", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/rag-evaluations/runs").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/rag-evaluations/runs/*/review").hasRole("DOCTOR")
+                .requestMatchers(HttpMethod.GET, "/rag-evaluations/runs/**").hasAnyRole("DOCTOR", "ADMIN")
+                .requestMatchers("/knowledge/documents/**").hasRole("ADMIN")
+                .requestMatchers("/knowledge/**").hasAnyRole("USER", "DOCTOR", "RESEARCHER", "ADMIN")
+                .requestMatchers("/quality-control/**").hasAnyRole("DOCTOR", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/review").hasRole("DOCTOR")
                 .requestMatchers(HttpMethod.GET, "/analysis-results/*/review").hasRole("DOCTOR")
                 .requestMatchers(HttpMethod.POST, "/analysis-results/*/corrections").hasAnyRole("RESEARCHER", "DOCTOR")

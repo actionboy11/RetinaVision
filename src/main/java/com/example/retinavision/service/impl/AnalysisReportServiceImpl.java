@@ -25,6 +25,7 @@ import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.service.AnalysisReportService;
+import com.example.retinavision.service.ClinicalTaskLogService;
 import com.example.retinavision.service.ReportPdfDocument;
 import com.example.retinavision.service.ReportPdfRenderer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -76,6 +77,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
     private final CaseMapper cases;
     private final ImageMapper images;
     private final AnalysisCorrectionMapper corrections;
+    private final ClinicalTaskLogService clinicalLogs;
     // Jackson JSON 解析器，用于处理报告草稿和 AI 结果的 JSON 数据
     private final ObjectMapper json = new ObjectMapper();
 
@@ -89,6 +91,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
                                      CaseMapper cases,
                                      ImageMapper images,
                                      AnalysisCorrectionMapper corrections,
+                                     ClinicalTaskLogService clinicalLogs,
                                      @Value("${retina.upload.result-root:uploads/results}") String root,
                                      @Value("${retina.upload.image-root:uploads/images}") String imageRoot) {
         this.results = results;
@@ -100,6 +103,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
         this.cases = cases;
         this.images = images;
         this.corrections = corrections;
+        this.clinicalLogs = clinicalLogs;
         this.root = Paths.get(root).toAbsolutePath().normalize();
         this.imageRoot = Paths.get(imageRoot).toAbsolutePath().normalize();
     }
@@ -113,7 +117,17 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
                                      UserRegisterMapper users,
                                      ReportPdfRenderer renderer,
                                      String root) {
-        this(results, reports, reviews, users, renderer, null, null, null, null, root, "uploads/images");
+        this(results, reports, reviews, users, renderer, null, null, null, null, null, root, "uploads/images");
+    }
+
+    public AnalysisReportServiceImpl(AnalysisResultMapper results,
+                                     AnalysisReportMapper reports,
+                                     AnalysisReviewMapper reviews,
+                                     UserRegisterMapper users,
+                                     ReportPdfRenderer renderer,
+                                     String root,
+                                     ClinicalTaskLogService clinicalLogs) {
+        this(results, reports, reviews, users, renderer, null, null, null, null, clinicalLogs, root, "uploads/images");
     }
 
     /**
@@ -188,6 +202,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
         if (review == null || review.getStatus() != ReviewStatus.APPROVED) {
             throw conflict("只有审核通过的结果才能签发报告");
         }
+        requireCompleteDoctorOpinion(review);
 
         UserEntity doctor = users.selectById(doctorId);
         if (doctor == null || doctor.getProfessionalNo() == null) {
@@ -195,6 +210,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
         }
 
         AnalysisReportEntity report = getOrCreateDraft(resultId, doctorId);
+        report.setCorrectionVersion(review.getCorrectionVersion());
         String objectKey = "reports/" + resultId + "/v" + report.getVersion() + ".pdf";
         Path finalPath = resolve(objectKey);
         Path tempPath = resolve(objectKey + ".tmp");
@@ -225,6 +241,9 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
             report.setUpdatedAt(signedAt);
             if (reports.updateById(report) != 1) {
                 throw new IllegalStateException("signed report row was not updated");
+            }
+            if (clinicalLogs != null) {
+                clinicalLogs.appendResultEvent(resultId, "医生已签发正式 PDF 报告", "USER", doctorId);
             }
             return report;
         } catch (BaseException exception) {
@@ -320,7 +339,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
                 text(draftJson, "disclaimer", DISCLAIMER),
                 caseFields(caseAndImage),
                 analysisFields(result, resultJson, caseAndImage.image()),
-                doctorFields(review, draftJson, doctor),
+                doctorFields(review, doctor),
                 technicalFields(result, report, correction),
                 "",
                 caseAndImage.originalPath(),
@@ -371,15 +390,20 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
      * 医生审核信息区。
      */
     private List<ReportPdfDocument.Field> doctorFields(AnalysisReviewEntity review,
-                                                       JsonNode draftJson,
                                                        UserEntity doctor) {
         List<ReportPdfDocument.Field> fields = new ArrayList<>();
         add(fields, "审核医生", doctor.getRealName());
         add(fields, "医生编号", doctor.getProfessionalNo());
-        add(fields, "医生所见", firstNonBlank(review.getFindings(), text(draftJson, "findings", null)));
-        add(fields, "审核结论", firstNonBlank(review.getConclusion(), text(draftJson, "conclusion", null)));
-        add(fields, "处理建议", firstNonBlank(review.getRecommendation(), text(draftJson, "recommendation", null)));
+        add(fields, "医生所见", review.getFindings());
+        add(fields, "审核结论", review.getConclusion());
+        add(fields, "处理建议", review.getRecommendation());
         return fields;
+    }
+
+    private void requireCompleteDoctorOpinion(AnalysisReviewEntity review) {
+        if (isBlank(review.getFindings()) || isBlank(review.getConclusion()) || isBlank(review.getRecommendation())) {
+            throw conflict("请先保存完整医生审核意见后再签发报告");
+        }
     }
 
     /**
@@ -518,6 +542,10 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
 
     private String firstNonBlank(String first, String second) {
         return first != null && !first.isBlank() ? first : second;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private void add(List<ReportPdfDocument.Field> fields, String label, String value) {
