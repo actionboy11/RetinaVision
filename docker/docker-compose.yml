@@ -4,10 +4,10 @@ services:
     container_name: retina_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in docker/.env}
       MYSQL_DATABASE: retina_vision
-      MYSQL_USER: retina
-      MYSQL_PASSWORD: retina123456
+      MYSQL_USER: ${MYSQL_USER:-retina}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in docker/.env}
       TZ: Asia/Shanghai
     ports:
       - "3307:3306"
@@ -23,8 +23,8 @@ services:
     container_name: retina_rabbitmq
     restart: always
     environment:
-      RABBITMQ_DEFAULT_USER: retina
-      RABBITMQ_DEFAULT_PASS: retina123456
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-retina}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in docker/.env}
       RABBITMQ_DEFAULT_VHOST: /
       TZ: Asia/Shanghai
     ports:

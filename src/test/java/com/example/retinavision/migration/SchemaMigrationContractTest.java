@@ -123,7 +123,8 @@ class SchemaMigrationContractTest {
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();
-            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8)
+                    .replace("\r\n", "\n");
         }
     }
 }

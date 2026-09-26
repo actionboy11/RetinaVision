@@ -16,6 +16,7 @@ target/
 # local Spring Boot config
 src/main/resources/application-dev.yaml
 src/main/resources/application-local.yaml
+docker/.env
 
 ### IntelliJ IDEA ###
 .idea

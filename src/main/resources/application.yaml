@@ -6,6 +6,26 @@ spring:
   application:
     name: retina-vision-backend
 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3307/retina_vision?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:retina}
+    password: ${DB_PASSWORD}
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:retina}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VIRTUAL_HOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+
   flyway:
     enabled: true
     baseline-on-migrate: true
@@ -64,7 +84,7 @@ retina:
   embedding:
     enabled: ${RETINA_EMBEDDING_ENABLED:true}
     provider: ${RETINA_EMBEDDING_PROVIDER:qwen}
-    base-url: ${RETINA_EMBEDDING_BASE_URL:https://llm-wdlg7k43wtn2533c.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    base-url: ${RETINA_EMBEDDING_BASE_URL:}
     api-key: ${RETINA_EMBEDDING_API_KEY:}
     model: ${RETINA_EMBEDDING_MODEL:text-embedding-v4}
     dimension: ${RETINA_EMBEDDING_DIMENSION:1024}
@@ -80,7 +100,7 @@ retina:
     max-rounds: ${RETINA_AGENT_MAX_ROUNDS:4}
     max-tool-calls: ${RETINA_AGENT_MAX_TOOL_CALLS:6}
   jwt:
-    secret: retina-vision-dev-secret-retina-vision-dev-secret
+    secret: ${JWT_SECRET}
     expire-hours: 24
   upload:
     image-root: uploads/images
