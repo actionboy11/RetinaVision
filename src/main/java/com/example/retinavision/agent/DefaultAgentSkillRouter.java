@@ -34,6 +34,9 @@ public class DefaultAgentSkillRouter implements AgentSkillRouter {
         if (containsAny(value, "为什么", "是什么意思", "有什么作用", "医学知识", "如何理解")) {
             return new AgentSkillRoute(AgentSkillCode.MEDICAL_KNOWLEDGE_QA, 0.92, Map.of());
         }
+        if (containsAny(value, "查看", "摘要", "详情", "进度") && hasClinicalReference(value)) {
+            return new AgentSkillRoute(AgentSkillCode.CASE_CLINICAL_SUMMARY, 0.98, Map.of());
+        }
         if (containsAny(value, "待审核") && containsAny(value, "哪些", "列表", "查看", "今天", "最近")) {
             Map<String, String> arguments = searchArguments(value);
             arguments.put("clinicalState", "PENDING_REVIEW");
@@ -91,6 +94,10 @@ public class DefaultAgentSkillRouter implements AgentSkillRouter {
     private boolean containsAny(String value, String... fragments) {
         for (String fragment : fragments) if (value.contains(fragment)) return true;
         return false;
+    }
+
+    private boolean hasClinicalReference(String value) {
+        return value.matches("(?i).*(C[A-Z0-9-]{6,}|PT-[A-Z0-9-]{6,}).*");
     }
 
     private int parseIndex(String value) {

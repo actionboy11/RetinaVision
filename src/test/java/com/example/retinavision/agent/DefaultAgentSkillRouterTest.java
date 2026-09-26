@@ -64,4 +64,12 @@ class DefaultAgentSkillRouterTest {
         assertThat(router.route("最近有哪些任务失败？", null).skillCode())
                 .isEqualTo(AgentSkillCode.ASSIGNED_CASE_SEARCH);
     }
+
+    @Test
+    void routesExplicitCaseReferenceToClinicalSummary() {
+        assertThat(router.route("查看病例 C20260926083238176 的摘要", null).skillCode())
+                .isEqualTo(AgentSkillCode.CASE_CLINICAL_SUMMARY);
+        assertThat(router.route("查看匿名患者 PT-XE6V-93SR 的病例进度", null).skillCode())
+                .isEqualTo(AgentSkillCode.CASE_CLINICAL_SUMMARY);
+    }
 }

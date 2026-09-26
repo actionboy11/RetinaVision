@@ -120,6 +120,19 @@ class SchemaMigrationContractTest {
         assertThat(binding).doesNotContain("CONSTRAINT fk_agent_session_skill_version ");
     }
 
+    @Test
+    void doctorAgentEvaluationCorpusAddsInactiveStructuredV2Versions() throws IOException {
+        String corpus = resource("/db/migration/V17__doctor_agent_skill_evaluation_corpus.sql");
+
+        assertThat(corpus).contains(
+                "ASSIGNED_CASE_SEARCH",
+                "PENDING_REVIEW",
+                "LAST_30_DAYS",
+                "routing_negative_examples_json",
+                "version, routing_examples_json");
+        assertThat(corpus).doesNotContain("active_version_id =");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();
