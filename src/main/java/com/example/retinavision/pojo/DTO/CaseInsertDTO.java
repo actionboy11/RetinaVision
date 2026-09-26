@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CaseInsertDTO {
-    private String patientCode;
+    private Long patientId;
     private Integer patientAge;
     private PatientGender patientGender;
     private EyeSide eyeSide;
     private String diagnosisNote;
+    private Integer assignedDoctorId;
 }

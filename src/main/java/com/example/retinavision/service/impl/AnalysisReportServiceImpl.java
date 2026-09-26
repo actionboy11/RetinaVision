@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CorrectionStatus;
 import com.example.retinavision.enumeration.ReportStatus;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.ReviewStatus;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.exception.ConflictException;
@@ -242,6 +243,7 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
             if (reports.updateById(report) != 1) {
                 throw new IllegalStateException("signed report row was not updated");
             }
+            completeOwningCase(resultId, signedAt);
             if (clinicalLogs != null) {
                 clinicalLogs.appendResultEvent(resultId, "医生已签发正式 PDF 报告", "USER", doctorId);
             }
@@ -254,6 +256,19 @@ public class AnalysisReportServiceImpl implements AnalysisReportService {
             cleanup(finalPath);
             throw new BaseException(ErrorMessageSignal.FILE_STORAGE_ERROR, "报告签发失败");
         }
+    }
+
+    private void completeOwningCase(Long resultId, LocalDateTime completedAt) {
+        if (tasks == null || cases == null) return;
+        AnalysisResultEntity result = results.selectById(resultId);
+        if (result == null || result.getTaskId() == null) return;
+        TaskEntity task = tasks.selectById(result.getTaskId());
+        if (task == null || task.getCaseId() == null) return;
+        CaseEntity medicalCase = cases.selectById(task.getCaseId());
+        if (medicalCase == null) return;
+        medicalCase.setWorkflowStatus(CaseWorkflowStatus.COMPLETED);
+        medicalCase.setUpdatedAt(completedAt);
+        cases.updateById(medicalCase);
     }
 
     /**

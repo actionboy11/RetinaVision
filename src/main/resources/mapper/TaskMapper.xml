@@ -13,8 +13,11 @@
     -->
     <sql id="taskPageWhere">
         WHERE 1 = 1
-        <if test="ownerId != null">
-            AND c.created_by = #{ownerId}
+        <if test="creatorId != null">
+            AND c.created_by = #{creatorId}
+        </if>
+        <if test="doctorId != null">
+            AND c.assigned_doctor_id = #{doctorId}
         </if>
         <if test="query.status != null">
             AND t.status = #{query.status}
@@ -104,6 +107,35 @@
         LEFT JOIN image_file i ON i.id = t.image_file_id
         LEFT JOIN sys_user u ON u.id = t.submitted_by
         WHERE t.id = #{taskId}
+    </select>
+
+    <select id="selectCompletedVesselTasksForDoctor"
+            resultType="com.example.retinavision.pojo.Entity.TaskEntity">
+        SELECT t.*
+        FROM analysis_task t
+        INNER JOIN medical_case c ON c.id = t.case_id
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND t.status = 'SUCCESS'
+          AND t.task_type = 'VESSEL_SEGMENTATION'
+          AND t.finished_at IS NOT NULL
+        ORDER BY t.finished_at DESC
+    </select>
+
+    <select id="findAssignedTaskByReference"
+            resultType="com.example.retinavision.pojo.Entity.TaskEntity">
+        SELECT t.*
+        FROM analysis_task t
+        INNER JOIN medical_case c ON c.id = t.case_id
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND (
+            t.task_no = #{reference}
+            <if test="numericId != null">
+                OR t.id = #{numericId}
+            </if>
+          )
+        LIMIT 1
     </select>
 
     <!--

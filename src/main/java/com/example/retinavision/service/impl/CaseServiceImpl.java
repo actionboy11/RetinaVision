@@ -4,11 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.CaseMapper;
+import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mapper.UserRegisterMapper;
+import com.example.retinavision.pojo.DTO.CaseDoctorAssignmentDTO;
 import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.pojo.Entity.PatientProfileEntity;
+import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.pojo.DTO.CaseInsertDTO;
 import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
@@ -18,7 +25,9 @@ import com.example.retinavision.pojo.VO.CaseListItemVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.CaseService;
+import com.example.retinavision.service.PatientProfileService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -35,10 +44,17 @@ public class CaseServiceImpl implements CaseService {
 
     private final CaseMapper caseMapper;
     private final TaskMapper taskMapper;
+    private final UserRegisterMapper userMapper;
+    private final ImageMapper imageMapper;
+    private final PatientProfileService patientProfiles;
 
-    public CaseServiceImpl(CaseMapper caseMapper, TaskMapper taskMapper) {
+    public CaseServiceImpl(CaseMapper caseMapper, TaskMapper taskMapper, UserRegisterMapper userMapper,
+                           ImageMapper imageMapper, PatientProfileService patientProfiles) {
         this.caseMapper = caseMapper;
         this.taskMapper = taskMapper;
+        this.userMapper = userMapper;
+        this.imageMapper = imageMapper;
+        this.patientProfiles = patientProfiles;
     }
 
     @Override
@@ -54,9 +70,15 @@ public class CaseServiceImpl implements CaseService {
         safeQuery.setKeyword(normalizeKeyword(safeQuery.getKeyword()));
 
         // 3. 分页查询通常需要两条 SQL：total 用于分页器，records 用于当前页表格。
-        Integer ownerId = user.getRoleCode() == UserRole.USER ? user.getId() : null;
-        long total = caseMapper.countCasePage(safeQuery, ownerId);
-        List<CaseListItemVO> records = caseMapper.selectCasePage(safeQuery, ownerId, offset, pageSize);
+        requireCaseRole(user);
+        Integer patientAccountUserId = user.getRoleCode() == UserRole.USER ? user.getId() : null;
+        Integer doctorId = user.getRoleCode() == UserRole.DOCTOR ? user.getId() : null;
+        long total = caseMapper.countCasePage(safeQuery, patientAccountUserId, doctorId);
+        List<CaseListItemVO> records = caseMapper.selectCasePage(
+                safeQuery, patientAccountUserId, doctorId, offset, pageSize);
+        if (user.getRoleCode() == UserRole.USER) {
+            records.forEach(record -> record.setDiagnosisNote(null));
+        }
 
         // 4. PageResult 的字段要和前端 src/types/common.ts 保持一致：records/total/pageNo/pageSize。
         return new PageResult<>(records, total, pageNo, pageSize);
@@ -64,19 +86,10 @@ public class CaseServiceImpl implements CaseService {
 
 
     @Override
-    public CaseListItemVO addCase(CaseInsertDTO caseInsertDTO, Integer userid) {
+    public CaseListItemVO addCase(CaseInsertDTO caseInsertDTO, CurrentUserVO user) {
         // 补充：请求体为空时不能继续读取字段，否则会触发 NullPointerException 并变成 500。
         if (caseInsertDTO == null) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.PARAM_ERROR_MSG);
-        }
-
-        // 补充：patientCode 先统一 trim，避免 " P001 " 和 "P001" 被当成两个不同患者编号。
-        String patientCode = normalizePatientCode(caseInsertDTO.getPatientCode());
-        if (!StringUtils.hasText(patientCode)) {
-            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.CASE_CODE_REQUIRED);
-        }
-        if (patientCode.length() < 3 || patientCode.length() > 64) {
-            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.CASE_CODELENGTH_ERROR);
         }
 
         // 补充：创建病例时性别和眼别是业务必需字段，提前拦截可以让前端收到明确的 40000。
@@ -85,24 +98,32 @@ public class CaseServiceImpl implements CaseService {
         }
 
         validatePatientAge(caseInsertDTO.getPatientAge());
-
-        // 查询患者编号是否重复
-        LambdaQueryWrapper<CaseEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(CaseEntity::getPatientCode, patientCode);
-        // exists 也是 BaseMapper 自带的方法
-        if (caseMapper.exists(wrapper)) {
-            throw new BaseException(ErrorMessageSignal.CONFLICT, ErrorMessageContant.CASE_ALREADY_EXISTS);
+        requireCaseRole(user);
+        PatientProfileEntity profile;
+        Integer doctorId;
+        if (user.getRoleCode() == UserRole.USER) {
+            profile = patientProfiles.getOrCreateAccountProfile(user.getId());
+            doctorId = requireActiveDoctor(caseInsertDTO.getAssignedDoctorId()).getId();
+        } else {
+            if (caseInsertDTO.getPatientId() == null) {
+                throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请选择匿名患者");
+            }
+            profile = patientProfiles.requireDoctorAccessible(caseInsertDTO.getPatientId(), user.getId());
+            doctorId = user.getId();
         }
 
         CaseEntity caseEntity = new CaseEntity();
         String caseNo = generateCaseNo();
-        caseEntity.setPatientCode(patientCode);
+        caseEntity.setPatientId(profile.getId());
+        caseEntity.setPatientCode(profile.getPatientNo());
         caseEntity.setPatientAge(caseInsertDTO.getPatientAge());
         caseEntity.setPatientGender(caseInsertDTO.getPatientGender());
         caseEntity.setEyeSide(caseInsertDTO.getEyeSide());
         caseEntity.setDiagnosisNote(caseInsertDTO.getDiagnosisNote());
         caseEntity.setStatus(CaseStatus.ACTIVE);
-        caseEntity.setCreatedBy(userid);
+        caseEntity.setWorkflowStatus(CaseWorkflowStatus.DRAFT);
+        caseEntity.setCreatedBy(user.getId());
+        caseEntity.setAssignedDoctorId(doctorId);
         caseEntity.setCreatedAt(LocalDateTime.now());
         caseEntity.setUpdatedAt(LocalDateTime.now());
         caseEntity.setCaseNo(caseNo);
@@ -111,6 +132,35 @@ public class CaseServiceImpl implements CaseService {
         //返回病例信息VO
         CaseListItemVO caseListItemVO = caseMapper.getCaseById(caseEntity.getId());
         return caseListItemVO;
+    }
+
+    @Override
+    @Transactional
+    public CaseListItemVO assignDoctor(Integer caseId, CaseDoctorAssignmentDTO request, CurrentUserVO user) {
+        if (request == null || request.assignedDoctorId() == null) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请选择负责医生");
+        }
+        CaseEntity medicalCase = caseMapper.selectById(caseId);
+        if (medicalCase == null || medicalCase.getStatus() == CaseStatus.DELETED) {
+            throw new BaseException(ErrorMessageSignal.NOT_FOUND, ErrorMessageContant.CASE_NOT_EXISTS);
+        }
+        requirePatientOwns(medicalCase, user);
+        if (medicalCase.getWorkflowStatus() != CaseWorkflowStatus.DRAFT) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "病例提交后不能更换负责医生");
+        }
+        UserEntity doctor = requireActiveDoctor(request.assignedDoctorId());
+        if (medicalCase.getAssignedDoctorId() != null
+                && !medicalCase.getAssignedDoctorId().equals(doctor.getId())) {
+            Long taskCount = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
+                    .eq(TaskEntity::getCaseId, caseId.longValue()));
+            if (taskCount != null && taskCount > 0) {
+                throw new BaseException(ErrorMessageSignal.CONFLICT, "病例已产生分析任务，不能更换负责医生");
+            }
+        }
+        medicalCase.setAssignedDoctorId(doctor.getId());
+        medicalCase.setUpdatedAt(LocalDateTime.now());
+        caseMapper.updateById(medicalCase);
+        return caseMapper.getCaseById(caseId);
     }
 
 
@@ -129,7 +179,7 @@ public class CaseServiceImpl implements CaseService {
     }
 
     @Override
-    public CaseListItemVO updateCase(Integer caseId, CaseUpdateDTO caseUpdateDTO) {
+    public CaseListItemVO updateCase(Integer caseId, CaseUpdateDTO caseUpdateDTO, CurrentUserVO user) {
         // 补充：更新接口以路径中的 caseId 为准；请求体为空直接返回参数错误。
         if (caseUpdateDTO == null) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, ErrorMessageContant.PARAM_ERROR_MSG);
@@ -140,6 +190,10 @@ public class CaseServiceImpl implements CaseService {
         }
         if (caseEntity.getStatus() == CaseStatus.DELETED){
             throw new  BaseException(ErrorMessageSignal.NOT_FOUND,ErrorMessageContant.CASE_DELETED_MSG);
+        }
+        requireCaseAccessForMutation(caseEntity, user);
+        if (user.getRoleCode() == UserRole.USER && caseEntity.getWorkflowStatus() != CaseWorkflowStatus.DRAFT) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "病例提交后不能修改关键资料");
         }
 
         if (isEmptyUpdate(caseUpdateDTO)) {
@@ -175,7 +229,7 @@ public class CaseServiceImpl implements CaseService {
     }
 
     @Override
-    public void deleteCase(Integer caseId) {
+    public void deleteCase(Integer caseId, CurrentUserVO user) {
 
         CaseEntity caseEntity = caseMapper.selectById(caseId);
         if (caseEntity == null) {
@@ -183,6 +237,10 @@ public class CaseServiceImpl implements CaseService {
         }
         if (caseEntity.getStatus() == CaseStatus.DELETED) {
             throw new BaseException(ErrorMessageSignal.NOT_FOUND, ErrorMessageContant.CASE_DELETED_MSG);
+        }
+        requireCaseAccessForMutation(caseEntity, user);
+        if (user.getRoleCode() == UserRole.USER && caseEntity.getWorkflowStatus() != CaseWorkflowStatus.DRAFT) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "病例提交后不能删除");
         }
         // TODO 任务表完成后：删除前查询该病例是否存在 CREATED/WAITING/RUNNING/RETRYING 等未结束任务；存在则返回 40900。
         long activeTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
@@ -197,6 +255,49 @@ public class CaseServiceImpl implements CaseService {
         caseEntity.setUpdatedAt(LocalDateTime.now());
         caseMapper.updateById(caseEntity);
 
+    }
+
+    @Override
+    @Transactional
+    public CaseListItemVO submit(Integer caseId, CurrentUserVO user) {
+        CaseEntity medicalCase = requireActiveCase(caseId);
+        requirePatientOwns(medicalCase, user);
+        if (medicalCase.getWorkflowStatus() != CaseWorkflowStatus.DRAFT) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "只有草稿病例可以提交");
+        }
+        if (medicalCase.getAssignedDoctorId() == null) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请先选择负责医生");
+        }
+        Long imageCount = imageMapper.selectCount(new LambdaQueryWrapper<ImageFileEntity>()
+                .eq(ImageFileEntity::getCaseId, caseId.longValue())
+                .isNull(ImageFileEntity::getDeletedAt));
+        if (imageCount == null || imageCount == 0) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请至少上传一张有效图像后再提交");
+        }
+        medicalCase.setWorkflowStatus(CaseWorkflowStatus.SUBMITTED);
+        medicalCase.setUpdatedAt(LocalDateTime.now());
+        caseMapper.updateById(medicalCase);
+        return caseMapper.getCaseById(caseId);
+    }
+
+    @Override
+    @Transactional
+    public CaseListItemVO withdraw(Integer caseId, CurrentUserVO user) {
+        CaseEntity medicalCase = requireActiveCase(caseId);
+        requirePatientOwns(medicalCase, user);
+        if (medicalCase.getWorkflowStatus() != CaseWorkflowStatus.SUBMITTED) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "当前病例不能撤回");
+        }
+        Long analysisCount = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
+                .eq(TaskEntity::getCaseId, caseId.longValue())
+                .eq(TaskEntity::getTaskType, com.example.retinavision.enumeration.TaskType.VESSEL_SEGMENTATION));
+        if (analysisCount != null && analysisCount > 0) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "医生已开始分析，病例不能撤回");
+        }
+        medicalCase.setWorkflowStatus(CaseWorkflowStatus.WITHDRAWN);
+        medicalCase.setUpdatedAt(LocalDateTime.now());
+        caseMapper.updateById(medicalCase);
+        return caseMapper.getCaseById(caseId);
     }
 
     private int normalizePageNo(Integer pageNo) {
@@ -219,10 +320,6 @@ public class CaseServiceImpl implements CaseService {
         return StringUtils.hasText(keyword) ? keyword.trim() : null;
     }
 
-    private String normalizePatientCode(String patientCode) {
-        return StringUtils.hasText(patientCode) ? patientCode.trim() : null;
-    }
-
     private void validatePatientAge(Integer patientAge) {
         // 补充：patientAge 是 Integer，允许不传；只有传入时才做范围校验，避免空指针。
         if (patientAge != null && (patientAge < 0 || patientAge > 120)) {
@@ -236,6 +333,51 @@ public class CaseServiceImpl implements CaseService {
                 && caseUpdateDTO.getEyeSide() == null
                 && caseUpdateDTO.getDiagnosisNote() == null
                 && caseUpdateDTO.getStatus() == null;
+    }
+
+    private UserEntity requireActiveDoctor(Integer doctorId) {
+        if (doctorId == null) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请选择负责医生");
+        }
+        UserEntity doctor = userMapper.selectById(doctorId);
+        if (doctor == null || doctor.getRoleCode() != UserRole.DOCTOR
+                || doctor.getStatus() == null || doctor.getStatus() != 1) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "所选医生不可用");
+        }
+        return doctor;
+    }
+
+    private void requireCaseRole(CurrentUserVO user) {
+        if (user == null || (user.getRoleCode() != UserRole.USER && user.getRoleCode() != UserRole.DOCTOR)) {
+            throw new BaseException(ErrorMessageSignal.FORBIDDEN, "当前角色不能访问病例");
+        }
+    }
+
+    private CaseEntity requireActiveCase(Integer caseId) {
+        CaseEntity medicalCase = caseMapper.selectById(caseId);
+        if (medicalCase == null || medicalCase.getStatus() == CaseStatus.DELETED) {
+            throw new BaseException(ErrorMessageSignal.NOT_FOUND, "资源不存在");
+        }
+        return medicalCase;
+    }
+
+    private void requirePatientOwns(CaseEntity medicalCase, CurrentUserVO user) {
+        if (user == null || user.getRoleCode() != UserRole.USER) {
+            throw new BaseException(ErrorMessageSignal.FORBIDDEN, "仅患者本人可以执行此操作");
+        }
+        PatientProfileEntity profile = patientProfiles.getOrCreateAccountProfile(user.getId());
+        if (!profile.getId().equals(medicalCase.getPatientId())) {
+            throw new BaseException(ErrorMessageSignal.NOT_FOUND, "资源不存在");
+        }
+    }
+
+    private void requireCaseAccessForMutation(CaseEntity medicalCase, CurrentUserVO user) {
+        requireCaseRole(user);
+        if (user.getRoleCode() == UserRole.USER) {
+            requirePatientOwns(medicalCase, user);
+        } else if (!user.getId().equals(medicalCase.getAssignedDoctorId())) {
+            throw new BaseException(ErrorMessageSignal.NOT_FOUND, "资源不存在");
+        }
     }
 
     private String generateCaseNo() {

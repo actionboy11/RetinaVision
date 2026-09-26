@@ -4,17 +4,23 @@ import com.example.retinavision.enumeration.CorrectionStatus;
 import com.example.retinavision.enumeration.ReportStatus;
 import com.example.retinavision.enumeration.ReviewStatus;
 import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.AnalysisCorrectionMapper;
 import com.example.retinavision.mapper.AnalysisReportMapper;
 import com.example.retinavision.mapper.AnalysisResultMapper;
 import com.example.retinavision.mapper.AnalysisReviewMapper;
 import com.example.retinavision.mapper.UserRegisterMapper;
+import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mapper.CaseMapper;
+import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.pojo.Entity.AnalysisCorrectionEntity;
 import com.example.retinavision.pojo.Entity.AnalysisReportEntity;
 import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.Entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.service.ClinicalTaskLogService;
 import com.example.retinavision.service.ReportPdfDocument;
 import com.example.retinavision.service.ReportPdfRenderer;
@@ -79,6 +85,46 @@ class AnalysisReportServiceImplTest {
         assertThat(Files.readAllBytes(root.resolve(signed.getReportObjectKey())))
                 .isEqualTo("pdf".getBytes());
         verify(clinicalLogs).appendResultEvent(1L, "医生已签发正式 PDF 报告", "USER", 2);
+    }
+
+    @Test
+    void signingCompletesOwningCase() {
+        AnalysisResultEntity result = new AnalysisResultEntity();
+        result.setId(1L);
+        result.setTaskId(10L);
+        when(results.selectById(1L)).thenReturn(result);
+        when(reports.selectList(any())).thenReturn(List.of());
+        when(reports.updateById(any(AnalysisReportEntity.class))).thenReturn(1);
+        AnalysisReviewEntity review = new AnalysisReviewEntity();
+        review.setStatus(ReviewStatus.APPROVED);
+        review.setFindings("医生所见");
+        review.setConclusion("医生结论");
+        review.setRecommendation("医生建议");
+        when(reviews.selectOne(any())).thenReturn(review);
+        UserEntity doctor = new UserEntity();
+        doctor.setRealName("医生");
+        doctor.setProfessionalNo("DOC-1");
+        when(users.selectById(2)).thenReturn(doctor);
+        TaskMapper tasks = mock(TaskMapper.class);
+        CaseMapper cases = mock(CaseMapper.class);
+        ImageMapper images = mock(ImageMapper.class);
+        when(tasks.selectById(10L)).thenReturn(TaskEntity.builder().id(10L).caseId(20L).build());
+        CaseEntity medicalCase = CaseEntity.builder().id(20).workflowStatus(CaseWorkflowStatus.IN_REVIEW).build();
+        when(cases.selectById(20L)).thenReturn(medicalCase);
+        ReportPdfRenderer renderer = (document, path) -> {
+            try {
+                Files.createDirectories(path.getParent());
+                Files.writeString(path, "pdf");
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+        };
+
+        new AnalysisReportServiceImpl(results, reports, reviews, users, renderer,
+                tasks, cases, images, null, null, root.toString(), "uploads/images").sign(1L, 2);
+
+        assertThat(medicalCase.getWorkflowStatus()).isEqualTo(CaseWorkflowStatus.COMPLETED);
+        verify(cases).updateById(medicalCase);
     }
 
     @Test

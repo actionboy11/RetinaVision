@@ -9,4 +9,6 @@ public interface ClinicalAccessService {
     void assertCanAccessImage(CurrentUserVO user, Long imageId);
     void assertCanAccessTask(CurrentUserVO user, Long taskId);
     void assertCanAccessResult(CurrentUserVO user, Long resultId);
+    void assertCanModifyCase(CurrentUserVO user, Long caseId);
+    void assertCanModifyImage(CurrentUserVO user, Long imageId);
 }

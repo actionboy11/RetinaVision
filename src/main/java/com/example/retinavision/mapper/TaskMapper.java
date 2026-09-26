@@ -13,11 +13,14 @@ import java.util.List;
 public interface TaskMapper extends BaseMapper<TaskEntity> {
 
 
-    Long countTaskPage(@Param("query") TaskListQueryDTO safeQuery, @Param("ownerId") Integer ownerId);
+    Long countTaskPage(@Param("query") TaskListQueryDTO safeQuery,
+                       @Param("creatorId") Integer creatorId,
+                       @Param("doctorId") Integer doctorId);
 
     List<TaskListItemVO> selectTaskPage(
             @Param("query") TaskListQueryDTO safeQuery,
-            @Param("ownerId") Integer ownerId,
+            @Param("creatorId") Integer creatorId,
+            @Param("doctorId") Integer doctorId,
             @Param("offset") int offset,
             @Param("pageSize") int pageSize);
 
@@ -25,6 +28,12 @@ public interface TaskMapper extends BaseMapper<TaskEntity> {
 
     Long countUnfinishedTask(@Param("imageFileId") Long imageFileId,
                              @Param("taskType") TaskType taskType);
+
+    List<TaskEntity> selectCompletedVesselTasksForDoctor(@Param("doctorId") Integer doctorId);
+
+    TaskEntity findAssignedTaskByReference(@Param("reference") String reference,
+                                           @Param("numericId") Long numericId,
+                                           @Param("doctorId") Integer doctorId);
 
     int claimForExecution(@Param("taskId") Long taskId,
                           @Param("startedAt") LocalDateTime startedAt);

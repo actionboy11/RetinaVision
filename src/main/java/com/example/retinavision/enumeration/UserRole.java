@@ -15,8 +15,8 @@ public enum UserRole {
     /** 管理员 */
     ADMIN("ADMIN", "管理员"),
     
-    /** 普通用户 */
-    USER("USER", "普通用户"),
+    /** 患者账号；保留 USER 枚举值以兼容历史 JWT 与数据库。 */
+    USER("USER", "患者"),
     
     /** 医生 */
     DOCTOR("DOCTOR", "医生"),

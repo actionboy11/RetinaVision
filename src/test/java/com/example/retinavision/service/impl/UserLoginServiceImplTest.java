@@ -7,6 +7,7 @@ import com.example.retinavision.pojo.DTO.UserLoginDTO;
 import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.service.LoginAttemptService;
 import com.example.retinavision.service.JwtBlacklistService;
+import com.example.retinavision.service.PatientProfileService;
 import com.example.retinavision.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ class UserLoginServiceImplTest {
     @Mock private JwtUtil jwtUtil;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private JwtBlacklistService jwtBlacklistService;
+    @Mock private PatientProfileService patientProfileService;
     @Mock private Claims claims;
 
     private UserLoginServiceImpl service;
@@ -42,7 +44,8 @@ class UserLoginServiceImplTest {
                 passwordEncoder,
                 jwtUtil,
                 loginAttemptService,
-                jwtBlacklistService
+                jwtBlacklistService,
+                patientProfileService
         );
     }
 
@@ -66,12 +69,17 @@ class UserLoginServiceImplTest {
         dto.setRoleCode(UserRole.DOCTOR);
         when(userRegisterMapper.existsByUsername("newuser")).thenReturn(false);
         when(passwordEncoder.encode("secret1")).thenReturn("hash");
+        org.mockito.Mockito.doAnswer(invocation -> {
+            ((UserEntity) invocation.getArgument(0)).setId(12);
+            return 1;
+        }).when(userRegisterMapper).insert(any(UserEntity.class));
 
         service.UserRegister(dto);
 
         ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
         verify(userRegisterMapper).insert(captor.capture());
         org.assertj.core.api.Assertions.assertThat(captor.getValue().getRoleCode()).isEqualTo(UserRole.USER);
+        verify(patientProfileService).getOrCreateAccountProfile(12);
     }
 
     @Test
