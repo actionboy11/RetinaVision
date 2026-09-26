@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 
 @Mapper
 public interface PromptEvaluationRunMapper extends BaseMapper<PromptEvaluationRunEntity> {
-    @Update("UPDATE prompt_evaluation_run SET doctor_decision = #{decision}, doctor_score = #{score}, "
-            + "doctor_note = #{note}, reviewed_by = #{doctorId}, reviewed_at = #{reviewedAt} "
-            + "WHERE id = #{id} AND doctor_decision IS NULL AND status = 'COMPLETED'")
+    @Update("UPDATE prompt_evaluation_run SET review_decision = #{decision}, review_score = #{score}, "
+            + "review_note = #{note}, reviewed_by = #{reviewedBy}, reviewed_at = #{reviewedAt} "
+            + "WHERE id = #{id} AND review_decision IS NULL AND status = 'COMPLETED'")
     int saveReviewIfPending(@Param("id") Long id,
                             @Param("decision") String decision,
                             @Param("score") Integer score,
                             @Param("note") String note,
-                            @Param("doctorId") Integer doctorId,
+                            @Param("reviewedBy") Integer reviewedBy,
                             @Param("reviewedAt") LocalDateTime reviewedAt);
 }

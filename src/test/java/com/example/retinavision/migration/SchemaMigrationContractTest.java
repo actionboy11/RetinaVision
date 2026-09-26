@@ -53,6 +53,73 @@ class SchemaMigrationContractTest {
         assertThat(configuration).contains("embedding_model", "score_threshold");
     }
 
+    @Test
+    void springAiAgentMigrationPackagesReadOnlyConversationAuditAndPrompt() throws IOException {
+        String agent = resource("/db/migration/V10__spring_ai_agent.sql");
+        assertThat(agent).contains(
+                "CREATE TABLE agent_chat_session",
+                "CREATE TABLE agent_chat_message",
+                "CREATE TABLE agent_tool_call_log",
+                "CLINICAL_ASSISTANT_AGENT",
+                "只读工具");
+    }
+
+    @Test
+    void assignmentEvaluationGovernanceAndAgentV2MigrationsArePackaged() throws IOException {
+        String assignment = resource("/db/migration/V11__case_doctor_assignment.sql");
+        String governance = resource("/db/migration/V12__evaluation_review_governance.sql");
+        String agentV2 = resource("/db/migration/V13__clinical_agent_prompt_v2.sql");
+
+        assertThat(assignment).contains("assigned_doctor_id", "idx_case_assigned_doctor_status");
+        assertThat(governance).contains("review_decision", "review_score", "review_note");
+        assertThat(agentV2).contains("CLINICAL_ASSISTANT_AGENT", "version = 2", "匿名患者编号");
+    }
+
+    @Test
+    void patientIdentityMigrationKeepsLegacyCasesAndAddsWorkflowState() throws IOException {
+        String patientIdentity = resource("/db/migration/V14__patient_identity_and_case_workflow.sql");
+
+        assertThat(patientIdentity).contains(
+                "CREATE TABLE patient_profile",
+                "patient_no",
+                "account_user_id",
+                "legacy_patient_code",
+                "ADD COLUMN patient_id",
+                "ADD COLUMN workflow_status",
+                "SELECT DISTINCT patient_code",
+                "PATIENT_ASSISTANT_AGENT");
+    }
+
+    @Test
+    void doctorAgentSkillMigrationAddsVersionedSkillsContextAuditAndStructuredMessages() throws IOException {
+        String skills = resource("/db/migration/V15__doctor_agent_skills.sql");
+
+        assertThat(skills).contains(
+                "CREATE TABLE agent_skill",
+                "CREATE TABLE agent_skill_version",
+                "CREATE TABLE agent_query_context",
+                "CREATE TABLE agent_skill_execution_log",
+                "CREATE TABLE agent_skill_evaluation_run",
+                "structured_content_json",
+                "DOCTOR_WORKLOAD_OVERVIEW",
+                "ASSIGNED_CASE_SEARCH",
+                "CASE_CLINICAL_SUMMARY",
+                "CASE_FOLLOWUP_ANALYSIS",
+                "MEDICAL_KNOWLEDGE_QA");
+    }
+
+    @Test
+    void agentSessionBindsEachSkillVersionIndependently() throws IOException {
+        String binding = resource("/db/migration/V16__agent_session_skill_versions.sql");
+
+        assertThat(binding).contains(
+                "CREATE TABLE agent_session_skill_version",
+                "UNIQUE KEY uk_agent_session_skill (session_id, skill_code)",
+                "CONSTRAINT fk_agent_session_skill_binding_version",
+                "FOREIGN KEY (skill_version_id) REFERENCES agent_skill_version(id)");
+        assertThat(binding).doesNotContain("CONSTRAINT fk_agent_session_skill_version ");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();

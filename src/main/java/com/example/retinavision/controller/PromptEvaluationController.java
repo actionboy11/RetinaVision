@@ -54,7 +54,7 @@ public class PromptEvaluationController {
     @PutMapping("/prompt-evaluations/runs/{id}/review")
     public Result<PromptEvaluationRunVO> review(@PathVariable Long id, @RequestBody ReviewRequest request,
                                                  Authentication authentication) {
-        CurrentUserVO user = requireRole(authentication, UserRole.DOCTOR);
+        CurrentUserVO user = requireRole(authentication, UserRole.ADMIN);
         if (request == null || request.approved() == null || request.score() == null) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请选择审核结论并填写评分");
         }
@@ -74,14 +74,14 @@ public class PromptEvaluationController {
         return new PromptEvaluationRunVO(run.getId(), run.getTemplateCode(), run.getBaselineVersionId(),
                 run.getCandidateVersionId(), run.getSampleVersion(), run.getProvider(), run.getModel(),
                 run.getEmbeddingModel(), run.getScoreThreshold(),
-                run.getStatus(), run.getAutomatedPass(), run.getDoctorDecision(), run.getDoctorScore(),
-                run.getDoctorNote(), run.getReviewedBy(), run.getReviewedAt(), run.getCreatedBy(),
+                run.getStatus(), run.getAutomatedPass(), run.getReviewDecision(), run.getReviewScore(),
+                run.getReviewNote(), run.getReviewedBy(), run.getReviewedAt(), run.getCreatedBy(),
                 run.getCreatedAt(), run.getCompletedAt(), run.getFailureReason(), result);
     }
 
     private void requireViewer(Authentication authentication) {
         UserRole role = user(authentication).getRoleCode();
-        if (role != UserRole.DOCTOR && role != UserRole.ADMIN) {
+        if (role != UserRole.ADMIN) {
             throw new BaseException(ErrorMessageSignal.FORBIDDEN, "无权查看 Prompt 评测");
         }
     }

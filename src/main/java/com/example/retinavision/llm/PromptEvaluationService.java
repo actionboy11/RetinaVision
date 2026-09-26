@@ -116,7 +116,7 @@ public class PromptEvaluationService {
         if (approved && !Boolean.TRUE.equals(run.getAutomatedPass())) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "自动安全校验未通过，不能批准发布");
         }
-        if (run.getDoctorDecision() != null) {
+        if (run.getReviewDecision() != null) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "该评测已经复核，请重新运行评测");
         }
         String decision = approved ? "APPROVED" : "REJECTED";
@@ -125,9 +125,9 @@ public class PromptEvaluationService {
         if (runs.saveReviewIfPending(id, decision, score, safeNote, doctorId, reviewedAt) != 1) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "该评测已经复核，请重新运行评测");
         }
-        run.setDoctorDecision(decision);
-        run.setDoctorScore(score);
-        run.setDoctorNote(safeNote);
+        run.setReviewDecision(decision);
+        run.setReviewScore(score);
+        run.setReviewNote(safeNote);
         run.setReviewedBy(doctorId);
         run.setReviewedAt(reviewedAt);
         return run;

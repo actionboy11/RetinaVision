@@ -103,7 +103,7 @@ class PromptTemplateServiceImplTest {
         PromptEvaluationRunEntity run = new PromptEvaluationRunEntity();
         run.setStatus("COMPLETED");
         run.setAutomatedPass(true);
-        run.setDoctorDecision("APPROVED");
+        run.setReviewDecision("APPROVED");
         run.setBaselineVersionId(10L);
         run.setCandidateVersionId(20L);
         run.setProvider("qwen");
@@ -125,7 +125,7 @@ class PromptTemplateServiceImplTest {
         run.setBaselineVersionId(10L);
         run.setStatus("COMPLETED");
         run.setAutomatedPass(true);
-        run.setDoctorDecision("APPROVED");
+        run.setReviewDecision("APPROVED");
         run.setProvider("deepseek");
         run.setModel("other-model");
         run.setSampleVersion(PromptEvaluationService.SAMPLE_VERSION);
@@ -169,7 +169,7 @@ class PromptTemplateServiceImplTest {
         PromptEvaluationRunEntity run = new PromptEvaluationRunEntity();
         run.setStatus("COMPLETED");
         run.setAutomatedPass(true);
-        run.setDoctorDecision("APPROVED");
+        run.setReviewDecision("APPROVED");
         run.setBaselineVersionId(30L);
         run.setCandidateVersionId(40L);
         run.setProvider("qwen");
@@ -193,7 +193,7 @@ class PromptTemplateServiceImplTest {
         PromptEvaluationRunEntity run = new PromptEvaluationRunEntity();
         run.setStatus("COMPLETED");
         run.setAutomatedPass(true);
-        run.setDoctorDecision("APPROVED");
+        run.setReviewDecision("APPROVED");
         run.setBaselineVersionId(30L);
         run.setProvider("qwen");
         run.setModel("qwen-plus");

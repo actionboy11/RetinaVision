@@ -95,7 +95,7 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
             if (latest == null || !template.getActiveVersionId().equals(latest.getBaselineVersionId())
                     || !"COMPLETED".equals(latest.getStatus())
                     || !Boolean.TRUE.equals(latest.getAutomatedPass())
-                    || !"APPROVED".equals(latest.getDoctorDecision())
+                    || !"APPROVED".equals(latest.getReviewDecision())
                     || !llmProperties.getProvider().equals(latest.getProvider())
                     || !llmProperties.getModel().equals(latest.getModel())
                     || (RagEvaluationService.TEMPLATE_CODE.equals(templateCode)
@@ -106,7 +106,7 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
                             ? RagEvaluationService.SAMPLE_VERSION : PromptEvaluationService.SAMPLE_VERSION)
                             .equals(latest.getSampleVersion())) {
                 throw new BaseException(ErrorMessageSignal.PARAM_ERROR,
-                        "候选 Prompt 版本须先通过当前版本对照评测并经医生批准");
+                        "候选 Prompt 版本须先通过当前版本对照评测并经管理员批准");
             }
         }
         versions.update(null, new LambdaUpdateWrapper<PromptTemplateVersionEntity>()

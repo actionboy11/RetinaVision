@@ -23,9 +23,9 @@ public class PromptEvaluationRunEntity {
     private String status;
     private String resultJson;
     private Boolean automatedPass;
-    private String doctorDecision;
-    private Integer doctorScore;
-    private String doctorNote;
+    private String reviewDecision;
+    private Integer reviewScore;
+    private String reviewNote;
     private Integer reviewedBy;
     private LocalDateTime reviewedAt;
     private Integer createdBy;

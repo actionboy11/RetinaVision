@@ -6,6 +6,7 @@ import com.example.retinavision.pojo.Entity.PromptEvaluationRunEntity;
 import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
 import com.example.retinavision.rag.EmbeddingClient;
 import com.example.retinavision.rag.EmbeddingProperties;
+import com.example.retinavision.rag.KnowledgeDocumentRetriever;
 import com.example.retinavision.rag.QdrantClient;
 import com.example.retinavision.rag.QdrantProperties;
 import com.example.retinavision.rag.QdrantSearchHit;
@@ -15,6 +16,8 @@ import com.example.retinavision.service.PromptTemplateService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.Query;
 
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -34,6 +37,7 @@ class RagEvaluationServiceTest {
     private final PromptTemplateService templates = mock(PromptTemplateService.class);
     private final EmbeddingClient embeddings = mock(EmbeddingClient.class);
     private final QdrantClient qdrant = mock(QdrantClient.class);
+    private final KnowledgeDocumentRetriever retriever = mock(KnowledgeDocumentRetriever.class);
     private final EmbeddingProperties embeddingProperties = new EmbeddingProperties();
     private final LlmProperties llmProperties = new LlmProperties();
     private final QdrantProperties qdrantProperties = new QdrantProperties();
@@ -51,10 +55,9 @@ class RagEvaluationServiceTest {
         when(versions.selectById(10L)).thenReturn(version(10L, "baseline"));
         when(versions.selectById(20L)).thenReturn(version(20L, "candidate"));
         when(embeddings.embed(anyString())).thenReturn(new float[]{1, 0});
-        when(qdrant.search(eq("retina_rag_eval_v1"), any(), eq(3))).thenReturn(List.of(
-                new QdrantSearchHit("a", 0.9, 1001L, 1001L, "质量", "合成", "质量"),
-                new QdrantSearchHit("b", 0.8, 1002L, 1002L, "比例", "合成", "比例"),
-                new QdrantSearchHit("c", 0.7, 1004L, 1004L, "报告", "合成", "报告")));
+        when(retriever.retrieve(eq("retina_rag_eval_v1"), any(Query.class), eq(3))).thenReturn(List.of(
+                document("a", 0.9, 1001L, "质量"), document("b", 0.8, 1002L, "比例"),
+                document("c", 0.7, 1004L, "报告")));
         LlmClient client = (system, user) -> {
             try {
                 JsonNode context = json.readTree(user).path("contexts").get(0);
@@ -87,9 +90,16 @@ class RagEvaluationServiceTest {
         llmProperties.setEnabled(true);
         Executor executor = Runnable::run;
         return new RagEvaluationService(runs, versions, templates, embeddings, embeddingProperties,
-                qdrant, qdrantProperties, client, new PromptRenderService(),
+                qdrant, qdrantProperties, retriever, client, new PromptRenderService(),
                 new RagGroundingValidator(json, new LlmSafetyPolicy()), new RagEvaluationScorer(),
                 llmProperties, json, executor);
+    }
+
+    private Document document(String id, double score, long chunkId, String text) {
+        return Document.builder().id(id).text(text).score(score)
+                .metadata("documentId", chunkId).metadata("chunkId", chunkId)
+                .metadata("documentTitle", text).metadata("source", "合成")
+                .metadata("score", score).build();
     }
 
     private PromptTemplateVersionEntity version(Long id, String system) {

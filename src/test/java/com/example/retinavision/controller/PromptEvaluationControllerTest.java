@@ -28,10 +28,10 @@ class PromptEvaluationControllerTest {
     }
 
     @Test
-    void onlyDoctorCanReviewRuns() {
+    void doctorCannotReviewRuns() {
         BaseException error = catchThrowableOfType(
                 () -> controller.review(1L, new PromptEvaluationController.ReviewRequest(true, 5, "ok"),
-                        auth(UserRole.ADMIN)), BaseException.class);
+                        auth(UserRole.DOCTOR)), BaseException.class);
         assertThat(error.getCode()).isEqualTo(40300);
         verify(service, never()).review(1L, true, 5, "ok", 1);
     }

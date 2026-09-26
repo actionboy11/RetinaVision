@@ -51,8 +51,8 @@ class PromptEvaluationServiceTest {
 
         service.review(1L, true, 4, "措辞可用", 8);
 
-        assertThat(run.getDoctorDecision()).isEqualTo("APPROVED");
-        assertThat(run.getDoctorScore()).isEqualTo(4);
+        assertThat(run.getReviewDecision()).isEqualTo("APPROVED");
+        assertThat(run.getReviewScore()).isEqualTo(4);
         verify(runs).saveReviewIfPending(eq(1L), eq("APPROVED"), eq(4), eq("措辞可用"), eq(8), any());
     }
 
@@ -63,7 +63,7 @@ class PromptEvaluationServiceTest {
         run.setTemplateCode(PromptEvaluationService.TEMPLATE_CODE);
         run.setStatus("COMPLETED");
         run.setAutomatedPass(true);
-        run.setDoctorDecision("REJECTED");
+        run.setReviewDecision("REJECTED");
         when(runs.selectById(1L)).thenReturn(run);
 
         assertThatThrownBy(() -> service(runs).review(1L, true, 5, "改判", 8))

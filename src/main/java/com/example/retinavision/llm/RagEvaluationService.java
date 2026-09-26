@@ -9,18 +9,21 @@ import com.example.retinavision.pojo.Entity.PromptEvaluationRunEntity;
 import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
 import com.example.retinavision.rag.EmbeddingClient;
 import com.example.retinavision.rag.EmbeddingProperties;
+import com.example.retinavision.rag.KnowledgeDocumentRetriever;
 import com.example.retinavision.rag.QdrantClient;
 import com.example.retinavision.rag.QdrantProperties;
 import com.example.retinavision.rag.QdrantPoint;
 import com.example.retinavision.rag.QdrantSearchHit;
 import com.example.retinavision.rag.RagEvaluationScorer;
 import com.example.retinavision.rag.RagGroundingValidator;
+import com.example.retinavision.rag.RagDocumentSupport;
 import com.example.retinavision.service.PromptTemplateService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.ai.rag.Query;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -45,6 +48,7 @@ public class RagEvaluationService {
     private final EmbeddingProperties embeddingProperties;
     private final QdrantClient qdrant;
     private final QdrantProperties qdrantProperties;
+    private final KnowledgeDocumentRetriever retriever;
     private final LlmClient client;
     private final PromptRenderService renderer;
     private final RagGroundingValidator validator;
@@ -57,6 +61,7 @@ public class RagEvaluationService {
                                 PromptTemplateService templates, EmbeddingClient embeddings,
                                 EmbeddingProperties embeddingProperties, QdrantClient qdrant,
                                 QdrantProperties qdrantProperties,
+                                KnowledgeDocumentRetriever retriever,
                                 LlmClient client, PromptRenderService renderer, RagGroundingValidator validator,
                                 RagEvaluationScorer scorer, LlmProperties llmProperties, ObjectMapper json,
                                 @Qualifier("promptEvaluationExecutor") Executor executor) {
@@ -67,6 +72,7 @@ public class RagEvaluationService {
         this.embeddingProperties = embeddingProperties;
         this.qdrant = qdrant;
         this.qdrantProperties = qdrantProperties;
+        this.retriever = retriever;
         this.client = client;
         this.renderer = renderer;
         this.validator = validator;
@@ -136,7 +142,7 @@ public class RagEvaluationService {
         if (approved && !Boolean.TRUE.equals(run.getAutomatedPass())) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "检索或引用自动校验未通过，不能批准发布");
         }
-        if (run.getDoctorDecision() != null) {
+        if (run.getReviewDecision() != null) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "该评测已经复核，请重新运行评测");
         }
         LocalDateTime reviewedAt = LocalDateTime.now();
@@ -144,9 +150,9 @@ public class RagEvaluationService {
         if (runs.saveReviewIfPending(id, decision, score, note == null ? "" : note.trim(), doctorId, reviewedAt) != 1) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "该评测已经复核，请重新运行评测");
         }
-        run.setDoctorDecision(decision);
-        run.setDoctorScore(score);
-        run.setDoctorNote(note == null ? "" : note.trim());
+        run.setReviewDecision(decision);
+        run.setReviewScore(score);
+        run.setReviewNote(note == null ? "" : note.trim());
         run.setReviewedBy(doctorId);
         run.setReviewedAt(reviewedAt);
         return run;
@@ -193,7 +199,8 @@ public class RagEvaluationService {
             for (JsonNode testCase : sample.path("cases")) {
                 String question = testCase.path("question").asText();
                 long expectedId = testCase.path("expectedChunkId").asLong();
-                List<QdrantSearchHit> retrieved = qdrant.search(collection, embeddings.embed(question), 3);
+                List<QdrantSearchHit> retrieved = retriever.retrieve(collection, new Query(question), 3).stream()
+                        .map(RagDocumentSupport::toHit).toList();
                 int rank = scorer.rank(expectedId, retrieved);
                 if (rank > 0) hits++;
                 reciprocalRank += scorer.reciprocalRank(expectedId, retrieved);
