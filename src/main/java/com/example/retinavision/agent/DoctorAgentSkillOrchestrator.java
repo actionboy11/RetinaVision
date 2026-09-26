@@ -3,6 +3,7 @@ package com.example.retinavision.agent;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.EyeSide;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
@@ -77,6 +78,11 @@ public class DoctorAgentSkillOrchestrator {
         AgentQueryContextSnapshot previous = existing.orElse(null);
         int page = 1;
         SegmentationState state = state(route.arguments().get("segmentationState"));
+        DoctorClinicalState clinicalState = enumValue(DoctorClinicalState.class,
+                route.arguments().get("clinicalState"), DoctorClinicalState.ANY);
+        DoctorDateWindow dateWindow = enumValue(DoctorDateWindow.class,
+                route.arguments().get("dateWindow"), DoctorDateWindow.ANY);
+        EyeSide eyeSide = enumValue(EyeSide.class, route.arguments().get("eyeSide"), null);
         if (route.command() == AgentContextCommand.NEXT_PAGE || route.command() == AgentContextCommand.PREVIOUS_PAGE
                 || route.command() == AgentContextCommand.FILTER_FAILED) {
             if (previous == null || previous.currentSkill() != AgentSkillCode.ASSIGNED_CASE_SEARCH) {
@@ -84,15 +90,21 @@ public class DoctorAgentSkillOrchestrator {
             }
             state = route.command() == AgentContextCommand.FILTER_FAILED
                     ? SegmentationState.FAILED : previous.segmentationState();
+            clinicalState = previous.clinicalState();
+            dateWindow = previous.dateWindow();
+            eyeSide = previous.eyeSide();
             page = route.command() == AgentContextCommand.NEXT_PAGE ? previous.page() + 1
                     : route.command() == AgentContextCommand.PREVIOUS_PAGE ? Math.max(1, previous.page() - 1) : 1;
         }
-        var pageResult = queries.searchAssignedCases(new DoctorCaseSearchCriteria(state, null), page, 10, user);
+        DoctorCaseSearchCriteria criteria = new DoctorCaseSearchCriteria(
+                state, null, clinicalState, dateWindow, eyeSide);
+        var pageResult = queries.searchAssignedCases(criteria, page, 10, user);
         if (pageResult.getTotal() > 0 && pageResult.getRecords().isEmpty() && page > 1) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "已经是最后一页");
         }
         List<Integer> ids = pageResult.getRecords().stream().map(DoctorAgentCaseSummaryVO::getCaseId).toList();
         contexts.save(sessionId, new AgentQueryContextSnapshot(AgentSkillCode.ASSIGNED_CASE_SEARCH, state,
+                clinicalState, dateWindow, eyeSide,
                 pageResult.getPageNo(), pageResult.getPageSize(), pageResult.getTotal(), null, null, ids));
         Map<String, Object> payload = Map.of("cases", pageResult.getRecords());
         AgentPagination pagination = pagination(pageResult.getPageNo(), pageResult.getPageSize(), pageResult.getTotal());
@@ -166,6 +178,12 @@ public class DoctorAgentSkillOrchestrator {
         if (value == null || value.isBlank()) return SegmentationState.ANY;
         try { return SegmentationState.valueOf(value); }
         catch (IllegalArgumentException ignored) { return SegmentationState.ANY; }
+    }
+
+    private <T extends Enum<T>> T enumValue(Class<T> type, String value, T fallback) {
+        if (value == null || value.isBlank()) return fallback;
+        try { return Enum.valueOf(type, value); }
+        catch (IllegalArgumentException ignored) { return fallback; }
     }
 
     private String extractReference(String question) {

@@ -9,12 +9,30 @@
         )
     </sql>
 
+    <sql id="latestClinicalJoin">
+        LEFT JOIN analysis_result ar ON ar.task_id = st.id
+        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
+        LEFT JOIN analysis_report sr ON sr.id = (
+            SELECT sr0.id FROM analysis_report sr0
+            WHERE sr0.result_id = ar.id AND sr0.status = 'SIGNED'
+            ORDER BY sr0.signed_at DESC, sr0.id DESC LIMIT 1
+        )
+    </sql>
+
     <sql id="assignedCaseWhere">
         WHERE c.assigned_doctor_id = #{doctorId}
           AND c.status != 'DELETED'
         <if test="criteria.workflowStatus != null">
             AND c.workflow_status = #{criteria.workflowStatus}
         </if>
+        <if test="criteria.eyeSide != null">
+            AND c.eye_side = #{criteria.eyeSide}
+        </if>
+        <choose>
+            <when test="criteria.dateWindow.name() == 'TODAY'">AND c.updated_at &gt;= CURRENT_DATE</when>
+            <when test="criteria.dateWindow.name() == 'LAST_7_DAYS'">AND c.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)</when>
+            <when test="criteria.dateWindow.name() == 'LAST_30_DAYS'">AND c.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)</when>
+        </choose>
         <choose>
             <when test="criteria.segmentationState.name() == 'NOT_CREATED'">AND st.id IS NULL</when>
             <when test="criteria.segmentationState.name() == 'NOT_COMPLETED'">
@@ -25,6 +43,14 @@
             </when>
             <when test="criteria.segmentationState.name() == 'FAILED'">AND st.status = 'FAILED'</when>
             <when test="criteria.segmentationState.name() == 'SUCCESS'">AND st.status = 'SUCCESS'</when>
+        </choose>
+        <choose>
+            <when test="criteria.clinicalState.name() == 'PENDING_REVIEW'">
+                AND st.status = 'SUCCESS' AND (rv.id IS NULL OR rv.status IN ('PENDING','CHANGES_REQUESTED'))
+            </when>
+            <when test="criteria.clinicalState.name() == 'PENDING_REPORT'">
+                AND rv.status = 'APPROVED' AND sr.id IS NULL
+            </when>
         </choose>
     </sql>
 
@@ -40,19 +66,14 @@
             SUM(CASE WHEN rv.status = 'APPROVED' AND sr.id IS NULL THEN 1 ELSE 0 END) AS pendingReportCount
         FROM medical_case c
         <include refid="latestSegmentationJoin" />
-        LEFT JOIN analysis_result ar ON ar.task_id = st.id
-        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
-        LEFT JOIN analysis_report sr ON sr.id = (
-            SELECT sr0.id FROM analysis_report sr0
-            WHERE sr0.result_id = ar.id AND sr0.status = 'SIGNED'
-            ORDER BY sr0.signed_at DESC, sr0.id DESC LIMIT 1
-        )
+        <include refid="latestClinicalJoin" />
         WHERE c.assigned_doctor_id = #{doctorId} AND c.status != 'DELETED'
     </select>
 
     <select id="countAssignedCases" resultType="long">
         SELECT COUNT(*) FROM medical_case c
         <include refid="latestSegmentationJoin" />
+        <include refid="latestClinicalJoin" />
         <include refid="assignedCaseWhere" />
     </select>
 
@@ -63,10 +84,12 @@
                c.workflow_status AS workflowStatus,
                JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.qualityStatus')) AS qualityStatus,
                CAST(JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.score')) AS DECIMAL(10,2)) AS qualityScore,
-               st.status AS segmentationStatus, st.id AS latestTaskId, c.updated_at AS updatedAt
+               st.status AS segmentationStatus, rv.status AS reviewStatus, sr.status AS reportStatus,
+               st.id AS latestTaskId, c.updated_at AS updatedAt
         FROM medical_case c
         JOIN patient_profile p ON p.id = c.patient_id
         <include refid="latestSegmentationJoin" />
+        <include refid="latestClinicalJoin" />
         LEFT JOIN analysis_task qt ON qt.id = (
             SELECT qt0.id FROM analysis_task qt0
             WHERE qt0.case_id = c.id AND qt0.task_type = 'IMAGE_QUALITY_CHECK'

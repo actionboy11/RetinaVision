@@ -37,4 +37,31 @@ class DefaultAgentSkillRouterTest {
         assertThat(router.route("查看第三个", AgentSkillCode.ASSIGNED_CASE_SEARCH).selectedIndex())
                 .isEqualTo(3);
     }
+
+    @Test
+    void routesReviewAndReportQueuesAsCaseSearches() {
+        AgentSkillRoute pendingReview = router.route("今天有哪些待审核结果？", null);
+        assertThat(pendingReview.skillCode()).isEqualTo(AgentSkillCode.ASSIGNED_CASE_SEARCH);
+        assertThat(pendingReview.arguments())
+                .containsEntry("clinicalState", "PENDING_REVIEW")
+                .containsEntry("dateWindow", "TODAY");
+
+        AgentSkillRoute pendingReport = router.route("哪些结果已经审核但还没有签发？", null);
+        assertThat(pendingReport.skillCode()).isEqualTo(AgentSkillCode.ASSIGNED_CASE_SEARCH);
+        assertThat(pendingReport.arguments()).containsEntry("clinicalState", "PENDING_REPORT");
+    }
+
+    @Test
+    void extractsDateEyeSideAndFailureFiltersFromNaturalLanguage() {
+        AgentSkillRoute route = router.route("最近一个月右眼分割失败的病例", null);
+
+        assertThat(route.skillCode()).isEqualTo(AgentSkillCode.ASSIGNED_CASE_SEARCH);
+        assertThat(route.arguments())
+                .containsEntry("segmentationState", "FAILED")
+                .containsEntry("dateWindow", "LAST_30_DAYS")
+                .containsEntry("eyeSide", "RIGHT");
+
+        assertThat(router.route("最近有哪些任务失败？", null).skillCode())
+                .isEqualTo(AgentSkillCode.ASSIGNED_CASE_SEARCH);
+    }
 }

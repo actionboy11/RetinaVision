@@ -3,6 +3,8 @@ package com.example.retinavision.pojo.VO;
 import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.EyeSide;
 import com.example.retinavision.enumeration.PatientGender;
+import com.example.retinavision.enumeration.ReportStatus;
+import com.example.retinavision.enumeration.ReviewStatus;
 import com.example.retinavision.enumeration.TaskStatus;
 import lombok.Data;
 
@@ -21,6 +23,8 @@ public class DoctorAgentCaseSummaryVO {
     private String qualityStatus;
     private Double qualityScore;
     private TaskStatus segmentationStatus;
+    private ReviewStatus reviewStatus;
+    private ReportStatus reportStatus;
     private Long latestTaskId;
     private LocalDateTime updatedAt;
 }

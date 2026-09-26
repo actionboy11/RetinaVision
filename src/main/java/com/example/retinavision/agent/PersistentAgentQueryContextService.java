@@ -1,6 +1,7 @@
 package com.example.retinavision.agent;
 
 import com.example.retinavision.mapper.AgentQueryContextMapper;
+import com.example.retinavision.enumeration.EyeSide;
 import com.example.retinavision.pojo.Entity.AgentQueryContextEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +35,9 @@ public class PersistentAgentQueryContextService implements AgentQueryContextServ
             return Optional.of(new AgentQueryContextSnapshot(
                     AgentSkillCode.valueOf(entity.getCurrentSkillCode()),
                     SegmentationState.valueOf(filters.getOrDefault("segmentationState", "ANY")),
+                    DoctorClinicalState.valueOf(filters.getOrDefault("clinicalState", "ANY")),
+                    DoctorDateWindow.valueOf(filters.getOrDefault("dateWindow", "ANY")),
+                    enumValue(EyeSide.class, filters.get("eyeSide")),
                     entity.getCurrentPage(), entity.getPageSize(), entity.getTotal(),
                     entity.getSelectedCaseId(), entity.getSelectedTaskId(), references));
         } catch (Exception ignored) {
@@ -47,8 +51,12 @@ public class PersistentAgentQueryContextService implements AgentQueryContextServ
             AgentQueryContextEntity entity = new AgentQueryContextEntity();
             entity.setSessionId(sessionId);
             entity.setCurrentSkillCode(context.currentSkill().name());
-            entity.setCurrentFiltersJson(json.writeValueAsString(Map.of(
-                    "segmentationState", context.segmentationState().name())));
+            Map<String, String> filters = new java.util.LinkedHashMap<>();
+            filters.put("segmentationState", context.segmentationState().name());
+            filters.put("clinicalState", context.clinicalState().name());
+            filters.put("dateWindow", context.dateWindow().name());
+            if (context.eyeSide() != null) filters.put("eyeSide", context.eyeSide().name());
+            entity.setCurrentFiltersJson(json.writeValueAsString(filters));
             entity.setCurrentPage(context.page());
             entity.setPageSize(Math.min(context.pageSize(), 10));
             entity.setTotal(context.total());
@@ -60,6 +68,15 @@ public class PersistentAgentQueryContextService implements AgentQueryContextServ
             if (mapper.selectById(sessionId) == null) mapper.insert(entity); else mapper.updateById(entity);
         } catch (Exception exception) {
             throw new IllegalStateException("无法保存智能助手查询上下文", exception);
+        }
+    }
+
+    private <T extends Enum<T>> T enumValue(Class<T> type, String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return Enum.valueOf(type, value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
         }
     }
 }
