@@ -6,10 +6,10 @@ RetinaVision Backend 是系统的业务核心和浏览器 API 入口。它负责
 
 ## 当前能力
 
-- 用户注册、登录、当前用户、退出登录、JWT 黑名单和登录失败限流
-- 病例分页、详情、新建、更新、对象级访问控制和软删除
+- 患者注册自动创建匿名档案、登录、当前用户、退出登录、JWT 黑名单和登录失败限流
+- 患者检查申请、匿名线下患者、病例分页、负责医生分配、对象级访问控制和软删除
 - 眼底图像上传、本地存储、列表、预览、软删除、自动质量检测和幂等重检
-- 分析任务分页、创建、质量门控、详情、取消、重试、AI 配额和状态日志
+- 分析任务分页、创建、质量参考审计、详情、取消、重试、AI 配额和状态日志
 - RabbitMQ publisher confirm、JSON 消息、手动 ACK 和死信队列
 - 调用 FastAPI 图像质量检测与血管分割接口，保存质量投影、mask 和分析结果
 - 任务统计、队列统计和近期任务趋势
@@ -17,6 +17,8 @@ RetinaVision Backend 是系统的业务核心和浏览器 API 入口。它负责
 - 人工反馈、修正版本、医生审核、报告草稿、医生签发 PDF 和报告历史
 - 可通过配置接入 Qwen 或 DeepSeek，为医生生成报告草稿和结构化结果解释
 - RAG 医疗知识助手通过 Qwen Embedding 与 Qdrant 检索知识库，面向所有登录用户提供带引用的资料解释
+- Spring AI 1.1.8 模型适配、Qdrant DocumentRetriever，以及患者/医生/管理员角色化只读智能助手
+- 医生 Agent Skill 路由、结构化分页查询、多轮上下文、会话版本绑定、评测启用门槛和脱敏执行审计
 - Prompt 模板数据库版本管理、管理员启用版本切换和脱敏 LLM 调用审计
 - 管理员用户列表、角色授予、医生 professionalNo 维护和死信恢复
 
@@ -31,6 +33,7 @@ RetinaVision Backend 是系统的业务核心和浏览器 API 入口。它负责
 - MyBatis-Plus 3.5
 - MySQL 8
 - JJWT
+- Spring AI 1.1.8（OpenAI-compatible Chat、Embedding、Tool Calling）
 - 本地文件系统（当前主流程）
 
 Redis 已用于登录失败限流、JWT 登出黑名单和 AI 任务限流/配额。MinIO 客户端仍未进入核心业务链路。
@@ -247,9 +250,24 @@ retina:
 
 知识助手配置位于 `retina.embedding.*` 和 `retina.qdrant.*`。管理员通过 `/knowledge/documents` 录入纯文本或 Markdown，后端按 Markdown/段落感知切分后调用 Qwen Embedding，并将向量和引用 payload 写入 Qdrant。管理员可重建索引、启用/停用或删除文档；停用文档不参与检索，删除文档会同步删除 MySQL chunk 与 Qdrant points。所有已登录用户可通过 `/knowledge/chat` 提问，回答必须带引用来源和固定免责声明；该功能不替代医生诊断、治疗建议或 PDF 报告签发。
 
-引用现在只显示模型指认且可在本次检索 chunk 中逐字核验的摘录；没有可核验证据时，返回固定“依据不足”回答和空引用。Flyway `V8__rag_grounded_evaluation.sql` 新增未启用的 RAG v2 Prompt，要求返回 `answer` 与 `evidence[{chunkId,quote}]`。当前 v1 不强制提供 evidence，因此迁移到 v2 前部分问答会安全降级为“依据不足”，不会把所有检索命中伪装为引用。独立 `/rag-evaluations` 评测使用合成样本与 `retina_rag_eval_v1` collection，分别记录 Hit@3/MRR 和逐题回答引用校验；医生须判断引用是否真正支持回答。管理员只有在最新评测自动通过且医生批准后才能启用 v2。评测会调用真实 Embedding 和 LLM，可能产生费用，但不会写入正式知识库、病例或 PDF。
+引用现在只显示模型指认且可在本次检索 chunk 中逐字核验的摘录；没有可核验证据时，返回固定“依据不足”回答和空引用。Flyway `V8__rag_grounded_evaluation.sql` 新增未启用的 RAG v2 Prompt，要求返回 `answer` 与 `evidence[{chunkId,quote}]`。独立 `/rag-evaluations` 评测使用合成样本与 `retina_rag_eval_v1` collection，分别记录 Hit@3/MRR 和逐题回答引用校验；管理员完成人工评审后才能启用 v2。评测会调用真实 Embedding 和 LLM，可能产生费用，但不会写入正式知识库、病例或 PDF。
 
 `V9__rag_evaluation_configuration.sql` 为评测记录增加 Embedding 模型与相似度阈值快照；评测执行和候选版本启用时均会核对当前配置。V8 已应用的环境应继续执行 V9，不要修改 V8 或对 Flyway 历史执行 `repair`。
+
+### Spring AI 与只读智能助手
+
+Spring AI 1.1.8 通过现有 Qwen/DeepSeek OpenAI-compatible 地址提供 `ChatModel` 和 Qwen `EmbeddingModel`。`SpringAiLlmClient`、`SpringAiEmbeddingClient` 继续实现项目既有接口，因此报告草稿、趋势摘要、Prompt 版本管理与 `llm_call_log` 不需要改变业务契约。迁移期间可通过环境变量显式切换实现：
+
+```text
+RETINA_AI_FRAMEWORK=spring-ai   # 默认
+RETINA_AI_FRAMEWORK=legacy      # 临时回退到原 RestClient 实现
+```
+
+正式 RAG collection、point ID 和 payload 不迁移。`QdrantDocumentRetriever` 使用 Spring AI `EmbeddingModel` 生成查询向量，再调用项目既有 `QdrantClient`；文档入库、重建、停用和删除仍由原知识库服务负责。低相关阈值、ACTIVE 文档过滤、逐字引用校验和管理员评测发布门槛保持有效。
+
+`/agent` 是独立的只读助手，仅 `DOCTOR/ADMIN` 可访问。每次请求动态注册工具，模型内部自动工具执行被关闭，由后端最多编排 4 轮、6 次调用。管理员只注册知识检索与质控工具；医生只注册知识检索及本人负责病例的摘要、任务、时间线和结果对比工具。病例号、匿名患者编号和任务编号均可直接解析，且查询从 SQL 阶段限定当前医生。助手没有创建任务、保存审核、签发 PDF、删除数据、切换 Prompt 或管理知识文档的工具。
+
+Flyway `V10__spring_ai_agent.sql` 新增 Agent 会话、消息和工具调用审计表，并初始化 `CLINICAL_ASSISTANT_AGENT` Prompt。审计只记录工具名、脱敏参数摘要、成功状态、耗时和有限长度结果摘要，不保存 JWT、API Key、完整 Prompt、患者真实身份、文件路径或大段工具输出。
 
 ### Prompt Engineering 平台
 
@@ -259,7 +277,9 @@ Flyway `V6__prompt_engineering.sql` 初始化 `REPORT_DRAFT_GENERATION`、`RAG_K
 
 `llm_call_log` 不保存完整 system prompt、user context、API Key、token、患者真实身份、文件绝对路径或模型长响应。错误摘要只保留异常类型和通用错误说明，业务事务失败时审计记录通过独立事务保留。
 
-Flyway `V7__prompt_evaluation.sql` 为已存在数据库新增报告草稿评测记录、版本发布标记和未启用候选 v2；新环境随 Flyway 顺序自动执行 V6、V7。`POST /prompt-evaluations/runs` 仅管理员可用，会在独立单线程有界队列中对固定合成样本分别调用当前版和候选版。医生通过 `PUT /prompt-evaluations/runs/{id}/review` 对结果给出 1–5 分与批准/拒绝意见；管理员及医生通过 `GET /prompt-evaluations/runs` 和详情查看进度、自动校验及有限长度的合成输出。新版本发布前必须通过最新一轮与当前版对照的自动校验及医生批准；已发布版本可回滚。评测不会写入正式报告，也不能替代医生审核。运行真实评测需要配置可用的大模型并会产生 API 调用费用。
+Flyway `V7__prompt_evaluation.sql` 为已存在数据库新增报告草稿评测记录、版本发布标记和未启用候选 v2。评测运行、查看、人工评审和版本启用均仅管理员可用；新版本发布前必须通过最新一轮与当前版对照的自动校验和管理员人工批准。评测不会写入正式报告，也不能替代医生审核。运行真实评测需要配置可用的大模型并会产生 API 调用费用。
+
+Flyway `V11__case_doctor_assignment.sql` 增加病例负责医生，V14 新增 `patient_profile`、病例检查流程状态和知识受众。`USER` 表示患者本人，按绑定患者档案访问病例；医生按 `assigned_doctor_id` 访问；研究员临床能力关闭；管理员不能读取病例临床明细。患者只能管理草稿、上传图像、提交/撤回检查并查看脱敏进度和正式报告；技术任务、质量覆盖、审核与签发仅由负责医生操作。
 
 ## 启动与验证
 
@@ -318,6 +338,8 @@ mvn clean package
 | Admin | `/admin/users`、`/admin/users/{userId}/role`、`/admin/dead-letters/recover` |
 | Prompt | `/prompt-templates`、`/prompt-templates/{templateCode}/versions`、`active-version`、`/llm-call-logs` |
 | Prompt evaluation | `/prompt-evaluations/runs`、`/prompt-evaluations/runs/{id}`、`/prompt-evaluations/runs/{id}/review` |
+| Read-only agent | `/agent/sessions`、`/agent/sessions/{sessionId}/messages`、`/agent/chat` |
+| Agent Skill governance | `/agent-skills`、`/agent-skills/{skillCode}/versions`、`/agent-skill-executions` |
 | Log | `/analysis-tasks/{taskId}/logs`（兼容单数 `/log`） |
 | Dashboard | `/admin/statistics/tasks`、`queue`、`task-trend` |
 
