@@ -183,6 +183,8 @@ mvn clean package
 ## 安全约束
 
 - 不提交 `.env`、`application-dev.yaml`、`application-local.yaml`、API Key、JWT、数据库密码或患者数据。
+- GitHub Actions 会在 push、Pull Request 和手动触发时运行 Gitleaks，阻止新的凭据进入仓库。
+- Docker Compose 默认只将 MySQL、RabbitMQ、Redis、Qdrant 和 AI 服务绑定到 `127.0.0.1`。
 - 不向大模型发送原始图像、mask、文件绝对路径、JWT 或患者真实身份。
 - LLM 和工具审计仅保存脱敏摘要，不保存完整 Prompt、长响应或工具原始结果。
 - 文件路径在读写前必须规范化并校验仍位于配置根目录内。
