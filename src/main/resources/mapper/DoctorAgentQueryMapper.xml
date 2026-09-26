@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.retinavision.mapper.DoctorAgentQueryMapper">
+    <sql id="latestSegmentationJoin">
+        LEFT JOIN analysis_task st ON st.id = (
+            SELECT st0.id FROM analysis_task st0
+            WHERE st0.case_id = c.id AND st0.task_type = 'VESSEL_SEGMENTATION'
+            ORDER BY st0.updated_at DESC, st0.id DESC LIMIT 1
+        )
+    </sql>
+
+    <sql id="assignedCaseWhere">
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+        <if test="criteria.workflowStatus != null">
+            AND c.workflow_status = #{criteria.workflowStatus}
+        </if>
+        <choose>
+            <when test="criteria.segmentationState.name() == 'NOT_CREATED'">AND st.id IS NULL</when>
+            <when test="criteria.segmentationState.name() == 'NOT_COMPLETED'">
+                AND (st.id IS NULL OR st.status IN ('CREATED','WAITING','RUNNING','RETRYING','FAILED'))
+            </when>
+            <when test="criteria.segmentationState.name() == 'IN_PROGRESS'">
+                AND st.status IN ('CREATED','WAITING','RUNNING','RETRYING')
+            </when>
+            <when test="criteria.segmentationState.name() == 'FAILED'">AND st.status = 'FAILED'</when>
+            <when test="criteria.segmentationState.name() == 'SUCCESS'">AND st.status = 'SUCCESS'</when>
+        </choose>
+    </sql>
+
+    <select id="selectWorkload" resultType="com.example.retinavision.pojo.VO.DoctorWorkloadVO">
+        SELECT
+            COUNT(DISTINCT c.patient_id) AS patientCount,
+            COUNT(DISTINCT c.id) AS caseCount,
+            SUM(CASE WHEN st.id IS NULL THEN 1 ELSE 0 END) AS unsegmentedCaseCount,
+            SUM(CASE WHEN st.id IS NULL OR st.status IN ('CREATED','WAITING','RUNNING','RETRYING','FAILED') THEN 1 ELSE 0 END)
+                AS incompleteSegmentationCaseCount,
+            SUM(CASE WHEN st.status = 'SUCCESS' AND (rv.id IS NULL OR rv.status IN ('PENDING','CHANGES_REQUESTED')) THEN 1 ELSE 0 END)
+                AS pendingReviewCount,
+            SUM(CASE WHEN rv.status = 'APPROVED' AND sr.id IS NULL THEN 1 ELSE 0 END) AS pendingReportCount
+        FROM medical_case c
+        <include refid="latestSegmentationJoin" />
+        LEFT JOIN analysis_result ar ON ar.task_id = st.id
+        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
+        LEFT JOIN analysis_report sr ON sr.id = (
+            SELECT sr0.id FROM analysis_report sr0
+            WHERE sr0.result_id = ar.id AND sr0.status = 'SIGNED'
+            ORDER BY sr0.signed_at DESC, sr0.id DESC LIMIT 1
+        )
+        WHERE c.assigned_doctor_id = #{doctorId} AND c.status != 'DELETED'
+    </select>
+
+    <select id="countAssignedCases" resultType="long">
+        SELECT COUNT(*) FROM medical_case c
+        <include refid="latestSegmentationJoin" />
+        <include refid="assignedCaseWhere" />
+    </select>
+
+    <select id="selectAssignedCases" resultType="com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO">
+        SELECT c.id AS caseId, c.case_no AS caseNo, c.patient_id AS patientId,
+               p.patient_no AS patientNo, c.patient_age AS patientAge,
+               c.patient_gender AS patientGender, c.eye_side AS eyeSide,
+               c.workflow_status AS workflowStatus,
+               JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.qualityStatus')) AS qualityStatus,
+               CAST(JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.score')) AS DECIMAL(10,2)) AS qualityScore,
+               st.status AS segmentationStatus, st.id AS latestTaskId, c.updated_at AS updatedAt
+        FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
+        <include refid="latestSegmentationJoin" />
+        LEFT JOIN analysis_task qt ON qt.id = (
+            SELECT qt0.id FROM analysis_task qt0
+            WHERE qt0.case_id = c.id AND qt0.task_type = 'IMAGE_QUALITY_CHECK'
+            ORDER BY qt0.updated_at DESC, qt0.id DESC LIMIT 1
+        )
+        LEFT JOIN analysis_result qr ON qr.task_id = qt.id
+        <include refid="assignedCaseWhere" />
+        ORDER BY c.updated_at DESC, c.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+</mapper>

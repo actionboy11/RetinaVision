@@ -17,6 +17,8 @@ import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.DoctorReviewReminderVO;
+import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.enumeration.UserRole;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -51,13 +53,13 @@ class DoctorReviewReminderServiceImplTest {
         properties.setOverdueThresholdMinutes(120);
         TaskEntity task = task(1L, LocalDateTime.now().minusHours(3));
         AnalysisResultEntity result = result(11L, task.getId());
-        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+        when(taskMapper.selectCompletedVesselTasksForDoctor(20)).thenReturn(List.of(task));
         when(resultMapper.selectOne(any())).thenReturn(result);
         when(reviewMapper.selectOne(any())).thenReturn(null);
         when(caseMapper.selectById(2L)).thenReturn(caseEntity("CASE-001"));
         when(imageMapper.selectById(3L)).thenReturn(image("fundus.png"));
 
-        DoctorReviewReminderVO summary = service.getReminderSummary();
+        DoctorReviewReminderVO summary = service.getReminderSummary(doctor());
 
         assertThat(summary.getPendingReviewCount()).isEqualTo(1);
         assertThat(summary.getOverdueReviewCount()).isEqualTo(1);
@@ -71,7 +73,7 @@ class DoctorReviewReminderServiceImplTest {
     void pendingAndChangesRequestedReviewAreStillPendingReview() {
         TaskEntity first = task(1L, LocalDateTime.now().minusMinutes(10));
         TaskEntity second = task(2L, LocalDateTime.now().minusMinutes(10));
-        when(taskMapper.selectList(any())).thenReturn(List.of(first, second));
+        when(taskMapper.selectCompletedVesselTasksForDoctor(20)).thenReturn(List.of(first, second));
         when(resultMapper.selectOne(any()))
                 .thenReturn(result(11L, first.getId()))
                 .thenReturn(result(12L, second.getId()));
@@ -79,7 +81,7 @@ class DoctorReviewReminderServiceImplTest {
                 .thenReturn(review(ReviewStatus.PENDING))
                 .thenReturn(review(ReviewStatus.CHANGES_REQUESTED));
 
-        DoctorReviewReminderVO summary = service.getReminderSummary();
+        DoctorReviewReminderVO summary = service.getReminderSummary(doctor());
 
         assertThat(summary.getPendingReviewCount()).isEqualTo(2);
         assertThat(summary.getOverdueReviewCount()).isZero();
@@ -88,12 +90,12 @@ class DoctorReviewReminderServiceImplTest {
     @Test
     void approvedReviewWithoutSignedReportIsPendingReport() {
         TaskEntity task = task(1L, LocalDateTime.now().minusHours(3));
-        when(taskMapper.selectList(any())).thenReturn(List.of(task));
+        when(taskMapper.selectCompletedVesselTasksForDoctor(20)).thenReturn(List.of(task));
         when(resultMapper.selectOne(any())).thenReturn(result(11L, task.getId()));
         when(reviewMapper.selectOne(any())).thenReturn(review(ReviewStatus.APPROVED));
         when(reportMapper.selectCount(any())).thenReturn(0L);
 
-        DoctorReviewReminderVO summary = service.getReminderSummary();
+        DoctorReviewReminderVO summary = service.getReminderSummary(doctor());
 
         assertThat(summary.getPendingReviewCount()).isZero();
         assertThat(summary.getPendingReportCount()).isEqualTo(1);
@@ -105,7 +107,7 @@ class DoctorReviewReminderServiceImplTest {
     void signedReportAndRejectedReviewAreNotPending() {
         TaskEntity signed = task(1L, LocalDateTime.now().minusHours(3));
         TaskEntity rejected = task(2L, LocalDateTime.now().minusHours(3));
-        when(taskMapper.selectList(any())).thenReturn(List.of(signed, rejected));
+        when(taskMapper.selectCompletedVesselTasksForDoctor(20)).thenReturn(List.of(signed, rejected));
         when(resultMapper.selectOne(any()))
                 .thenReturn(result(11L, signed.getId()))
                 .thenReturn(result(12L, rejected.getId()));
@@ -114,7 +116,7 @@ class DoctorReviewReminderServiceImplTest {
                 .thenReturn(review(ReviewStatus.REJECTED));
         when(reportMapper.selectCount(any())).thenReturn(1L);
 
-        DoctorReviewReminderVO summary = service.getReminderSummary();
+        DoctorReviewReminderVO summary = service.getReminderSummary(doctor());
 
         assertThat(summary.getPendingReviewCount()).isZero();
         assertThat(summary.getPendingReportCount()).isZero();
@@ -155,5 +157,9 @@ class DoctorReviewReminderServiceImplTest {
         ImageFileEntity image = new ImageFileEntity();
         image.setOriginalFilename(filename);
         return image;
+    }
+
+    private CurrentUserVO doctor() {
+        return new CurrentUserVO(20, "doctor", "Doctor", UserRole.DOCTOR);
     }
 }

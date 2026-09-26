@@ -13,6 +13,7 @@ import com.example.retinavision.pojo.Entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.VO.ClinicalWorkflowVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.Result;
+import com.example.retinavision.service.AiReportDraftService;
 import com.example.retinavision.service.AnalysisReportService;
 import com.example.retinavision.service.ClinicalAccessService;
 import com.example.retinavision.service.ResultHumanWorkflowService;
@@ -55,15 +56,18 @@ public class ResultClinicalWorkflowController {
     private final ResultHumanWorkflowService humanService;
     private final ResultReviewService reviewService;
     private final AnalysisReportService reportService;
+    private final AiReportDraftService aiReportDraftService;
     private final ClinicalAccessService accessService;
 
     public ResultClinicalWorkflowController(ResultHumanWorkflowService humanService,
                                             ResultReviewService reviewService,
                                             AnalysisReportService reportService,
+                                            AiReportDraftService aiReportDraftService,
                                             ClinicalAccessService accessService) {
         this.humanService = humanService;
         this.reviewService = reviewService;
         this.reportService = reportService;
+        this.aiReportDraftService = aiReportDraftService;
         this.accessService = accessService;
     }
 
@@ -182,6 +186,16 @@ public class ResultClinicalWorkflowController {
                                                    Authentication authentication) {
         CurrentUserVO user = authorize(authentication, resultId);
         return Result.success(toReport(reportService.updateDraft(resultId, body, user.getId())));
+    }
+
+    @PostMapping("/report-draft/ai-generate")
+    public Result<ClinicalWorkflowVO.Report> generateDraft(@PathVariable Long resultId,
+                                                           Authentication authentication) {
+        CurrentUserVO user = authorize(authentication, resultId);
+        if (user.getRoleCode() != UserRole.DOCTOR) {
+            throw new BaseException(40300, "仅医生可以使用 AI 生成报告草稿");
+        }
+        return Result.success(toReport(aiReportDraftService.generateDraft(resultId, user.getId())));
     }
 
     /**

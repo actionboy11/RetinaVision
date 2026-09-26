@@ -45,11 +45,40 @@ retina:
       daily-limit: 500  # 每天最多提交 500 个任务
       zone-id: Asia/Shanghai
   ai:
+    framework: ${RETINA_AI_FRAMEWORK:spring-ai}
     base-url: http://127.0.0.1:8000
     connect-timeout: 5s
     read-timeout: 5m
     health-connect-timeout: 2s
     health-read-timeout: 3s
+  llm:
+    enabled: ${RETINA_LLM_ENABLED:false}
+    provider: ${RETINA_LLM_PROVIDER:qwen}
+    base-url: ${RETINA_LLM_BASE_URL:}
+    api-key: ${RETINA_LLM_API_KEY:}
+    model: ${RETINA_LLM_MODEL:qwen-plus}
+    connect-timeout: ${RETINA_LLM_CONNECT_TIMEOUT:5s}
+    read-timeout: ${RETINA_LLM_READ_TIMEOUT:60s}
+    temperature: ${RETINA_LLM_TEMPERATURE:0.2}
+    max-tokens: ${RETINA_LLM_MAX_TOKENS:800}
+  embedding:
+    enabled: ${RETINA_EMBEDDING_ENABLED:true}
+    provider: ${RETINA_EMBEDDING_PROVIDER:qwen}
+    base-url: ${RETINA_EMBEDDING_BASE_URL:https://llm-wdlg7k43wtn2533c.cn-beijing.maas.aliyuncs.com/compatible-mode/v1}
+    api-key: ${RETINA_EMBEDDING_API_KEY:}
+    model: ${RETINA_EMBEDDING_MODEL:text-embedding-v4}
+    dimension: ${RETINA_EMBEDDING_DIMENSION:1024}
+    connect-timeout: ${RETINA_EMBEDDING_CONNECT_TIMEOUT:5s}
+    read-timeout: ${RETINA_EMBEDDING_READ_TIMEOUT:60s}
+  qdrant:
+    base-url: ${RETINA_QDRANT_BASE_URL:http://127.0.0.1:6333}
+    api-key: ${RETINA_QDRANT_API_KEY:}
+    collection: ${RETINA_QDRANT_COLLECTION:retina_knowledge_chunks}
+    score-threshold: ${RETINA_QDRANT_SCORE_THRESHOLD:0.2}
+    top-k: ${RETINA_QDRANT_TOP_K:5}
+  agent:
+    max-rounds: ${RETINA_AGENT_MAX_ROUNDS:4}
+    max-tool-calls: ${RETINA_AGENT_MAX_TOOL_CALLS:6}
   jwt:
     secret: retina-vision-dev-secret-retina-vision-dev-secret
     expire-hours: 24

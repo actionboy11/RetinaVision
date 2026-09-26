@@ -20,6 +20,7 @@ import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.DoctorReviewReminderItemVO;
 import com.example.retinavision.pojo.VO.DoctorReviewReminderVO;
+import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.service.DoctorReviewReminderService;
 import org.springframework.stereotype.Service;
 
@@ -69,18 +70,15 @@ public class DoctorReviewReminderServiceImpl implements DoctorReviewReminderServ
     }
 
     @Override
-    public DoctorReviewReminderVO getReminderSummary() {
+    public DoctorReviewReminderVO getReminderSummary(CurrentUserVO doctor) {
         long thresholdMinutes = properties.getOverdueThresholdMinutes();
         LocalDateTime now = LocalDateTime.now();
         DoctorReviewReminderVO summary = new DoctorReviewReminderVO();
         summary.setOverdueThresholdMinutes(thresholdMinutes);
 
         // 只统计“已经成功完成的血管分割任务”，因为只有它们才会进入医生审核和报告签发流程。
-        List<TaskEntity> completedVesselTasks = taskMapper.selectList(new LambdaQueryWrapper<TaskEntity>()
-                .eq(TaskEntity::getStatus, TaskStatus.SUCCESS)
-                .eq(TaskEntity::getTaskType, TaskType.VESSEL_SEGMENTATION)
-                .isNotNull(TaskEntity::getFinishedAt)
-                .orderByDesc(TaskEntity::getFinishedAt));
+        List<TaskEntity> completedVesselTasks = taskMapper
+                .selectCompletedVesselTasksForDoctor(doctor.getId());
 
         for (TaskEntity task : completedVesselTasks) {
             AnalysisResultEntity result = findResult(task.getId());

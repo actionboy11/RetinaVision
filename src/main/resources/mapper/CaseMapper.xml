@@ -12,8 +12,11 @@
     -->
     <sql id="casePageWhere">
         WHERE 1 = 1
-        <if test="ownerId != null">
-            AND c.created_by = #{ownerId}
+        <if test="patientAccountUserId != null">
+            AND p.account_user_id = #{patientAccountUserId}
+        </if>
+        <if test="doctorId != null">
+            AND c.assigned_doctor_id = #{doctorId}
         </if>
         <if test="query.status == null">
             AND c.status != 'DELETED'
@@ -21,7 +24,8 @@
         <if test="query.keyword != null and query.keyword != ''">
             AND (
                 c.case_no LIKE CONCAT('%', #{query.keyword}, '%')
-                OR c.patient_code LIKE CONCAT('%', #{query.keyword}, '%')
+                OR p.patient_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR p.legacy_patient_code LIKE CONCAT('%', #{query.keyword}, '%')
             )
         </if>
         <if test="query.status != null">
@@ -36,6 +40,7 @@
     <select id="countCasePage" resultType="long">
         SELECT COUNT(*)
         FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
         <include refid="casePageWhere" />
     </select>
 
@@ -44,18 +49,26 @@
         SELECT
             c.id AS id,
             c.case_no AS caseNo,
+            c.patient_id AS patientId,
+            p.patient_no AS patientNo,
             c.patient_code AS patientCode,
             c.patient_age AS patientAge,
             c.patient_gender AS patientGender,
             c.eye_side AS eyeSide,
             c.status AS status,
+            c.workflow_status AS workflowStatus,
             c.diagnosis_note AS diagnosisNote,
             c.created_by AS createdBy,
             u.real_name AS createdByName,
+            c.assigned_doctor_id AS assignedDoctorId,
+            d.real_name AS assignedDoctorName,
+            d.professional_no AS assignedDoctorProfessionalNo,
             c.created_at AS createdAt,
             c.updated_at AS updatedAt
         FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
         LEFT JOIN sys_user u ON u.id = c.created_by
+        LEFT JOIN sys_user d ON d.id = c.assigned_doctor_id
         <include refid="casePageWhere" />
         ORDER BY c.created_at DESC, c.id DESC
         LIMIT #{offset}, #{pageSize}
@@ -64,18 +77,62 @@
         SELECT
             c.id AS id,
             c.case_no AS caseNo,
+            c.patient_id AS patientId,
+            p.patient_no AS patientNo,
             c.patient_code AS patientCode,
             c.patient_age AS patientAge,
             c.patient_gender AS patientGender,
             c.eye_side AS eyeSide,
             c.status AS status,
+            c.workflow_status AS workflowStatus,
             c.diagnosis_note AS diagnosisNote,
             c.created_by AS createdBy,
             u.real_name AS createdByName,
+            c.assigned_doctor_id AS assignedDoctorId,
+            d.real_name AS assignedDoctorName,
+            d.professional_no AS assignedDoctorProfessionalNo,
             c.created_at AS createdAt,
             c.updated_at AS updatedAt
         FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
         LEFT JOIN sys_user u ON u.id = c.created_by
+        LEFT JOIN sys_user d ON d.id = c.assigned_doctor_id
         WHERE c.id = #{id}
+    </select>
+    <select id="findAssignedCaseByReference" resultType="com.example.retinavision.pojo.VO.CaseListItemVO">
+        SELECT
+            c.id AS id,
+            c.case_no AS caseNo,
+            c.patient_id AS patientId,
+            p.patient_no AS patientNo,
+            c.patient_code AS patientCode,
+            c.patient_age AS patientAge,
+            c.patient_gender AS patientGender,
+            c.eye_side AS eyeSide,
+            c.status AS status,
+            c.workflow_status AS workflowStatus,
+            c.diagnosis_note AS diagnosisNote,
+            c.created_by AS createdBy,
+            u.real_name AS createdByName,
+            c.assigned_doctor_id AS assignedDoctorId,
+            d.real_name AS assignedDoctorName,
+            d.professional_no AS assignedDoctorProfessionalNo,
+            c.created_at AS createdAt,
+            c.updated_at AS updatedAt
+        FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
+        LEFT JOIN sys_user u ON u.id = c.created_by
+        LEFT JOIN sys_user d ON d.id = c.assigned_doctor_id
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND (
+            c.case_no = #{reference}
+            OR p.patient_no = #{reference}
+            OR p.legacy_patient_code = #{reference}
+            <if test="numericId != null">
+                OR c.id = #{numericId}
+            </if>
+          )
+        LIMIT 1
     </select>
 </mapper>

@@ -61,8 +61,8 @@ public class DoctorReviewController {
      */
     @GetMapping("/reminders")
     public Result<DoctorReviewReminderVO> reminders(Authentication authentication) {
-        currentUser(authentication);
-        return Result.success(reminderService.getReminderSummary());
+        CurrentUserVO doctor = currentUser(authentication);
+        return Result.success(reminderService.getReminderSummary(doctor));
     }
 
     /**
@@ -98,7 +98,7 @@ public class DoctorReviewController {
     public Result<AnalysisResultVO> detail(@PathVariable Long resultId, Authentication authentication) {
 
         CurrentUserVO doctor = currentUser(authentication);
-        // 医生、研究员、普通用户的数据访问范围不同；所有 resultId 入口都必须先走对象级权限校验。
+        // 所有 resultId 入口都必须先走负责医生的对象级权限校验。
         accessService.assertCanAccessResult(doctor, resultId);
         AnalysisResultEntity result = resultMapper.selectById(resultId);
         return Result.success(resultService.getAnalysisResult(result.getTaskId()));

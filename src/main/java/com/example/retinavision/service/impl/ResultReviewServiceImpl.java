@@ -15,6 +15,7 @@ import com.example.retinavision.pojo.DTO.SubmitReviewDTO;
 import com.example.retinavision.pojo.Entity.AnalysisCorrectionEntity;
 import com.example.retinavision.pojo.Entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.service.ClinicalTaskLogService;
 import com.example.retinavision.service.ResultReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -36,16 +37,26 @@ public class ResultReviewServiceImpl implements ResultReviewService {
     private final AnalysisReviewMapper reviewMapper;
     private final UserRegisterMapper userMapper;
     private final AnalysisCorrectionMapper correctionMapper;
+    private final ClinicalTaskLogService clinicalLogs;
 
     @Autowired
     public ResultReviewServiceImpl(AnalysisResultMapper resultMapper,
                                    AnalysisReviewMapper reviewMapper,
                                    UserRegisterMapper userMapper,
-                                   AnalysisCorrectionMapper correctionMapper) {
+                                   AnalysisCorrectionMapper correctionMapper,
+                                   ClinicalTaskLogService clinicalLogs) {
         this.resultMapper = resultMapper;
         this.reviewMapper = reviewMapper;
         this.userMapper = userMapper;
         this.correctionMapper = correctionMapper;
+        this.clinicalLogs = clinicalLogs;
+    }
+
+    public ResultReviewServiceImpl(AnalysisResultMapper resultMapper,
+                                   AnalysisReviewMapper reviewMapper,
+                                   UserRegisterMapper userMapper,
+                                   AnalysisCorrectionMapper correctionMapper) {
+        this(resultMapper, reviewMapper, userMapper, correctionMapper, null);
     }
 
     /**
@@ -54,7 +65,7 @@ public class ResultReviewServiceImpl implements ResultReviewService {
     public ResultReviewServiceImpl(AnalysisResultMapper resultMapper,
                                    AnalysisReviewMapper reviewMapper,
                                    UserRegisterMapper userMapper) {
-        this(resultMapper, reviewMapper, userMapper, null);
+        this(resultMapper, reviewMapper, userMapper, null, null);
     }
 
     /**
@@ -107,6 +118,7 @@ public class ResultReviewServiceImpl implements ResultReviewService {
                 throw conflict();
             }
             updateCorrectionStatus(selectedCorrection, request);
+            appendReviewLog(resultId, request.getStatus(), doctorId);
             return created;
         }
 
@@ -134,7 +146,28 @@ public class ResultReviewServiceImpl implements ResultReviewService {
         }
 
         updateCorrectionStatus(selectedCorrection, request);
+        appendReviewLog(resultId, request.getStatus(), doctorId);
         return fill(current, resultId, request, doctorId, doctor, current.getVersion() + 1, now);
+    }
+
+    private void appendReviewLog(Long resultId, ReviewStatus status, Integer doctorId) {
+        if (clinicalLogs == null) {
+            return;
+        }
+        clinicalLogs.appendResultEvent(resultId, "医生审核已保存：" + reviewStatusText(status), "USER", doctorId);
+    }
+
+    private String reviewStatusText(ReviewStatus status) {
+        if (status == ReviewStatus.APPROVED) {
+            return "通过";
+        }
+        if (status == ReviewStatus.CHANGES_REQUESTED) {
+            return "需修改";
+        }
+        if (status == ReviewStatus.REJECTED) {
+            return "拒绝";
+        }
+        return "待审核";
     }
 
     /**

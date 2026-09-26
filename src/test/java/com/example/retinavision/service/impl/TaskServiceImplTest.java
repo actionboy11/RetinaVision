@@ -5,6 +5,7 @@ import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventO
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.ImageStatus;
 import com.example.retinavision.enumeration.ImageQualityStatus;
 import com.example.retinavision.enumeration.UserRole;
@@ -18,11 +19,11 @@ import com.example.retinavision.mapper.TaskMapper;
 import com.example.retinavision.mapper.UserRegisterMapper;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.pojo.DTO.CreateTaskDTO;
+import com.example.retinavision.pojo.DTO.TaskListQueryDTO;
 import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
 import com.example.retinavision.pojo.Entity.LogEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.pojo.VO.CreateTaskVO;
 import com.example.retinavision.service.AiQuotaReservation;
 import com.example.retinavision.service.AiTaskQuotaService;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.eq;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceImplTest {
@@ -90,7 +92,9 @@ class TaskServiceImplTest {
     @Test
     void createTaskCommitsWaitingTaskAndOutboxEvent() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 5);
-        when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
+        CaseEntity medicalCase = CaseEntity.builder().id(10).status(CaseStatus.ACTIVE)
+                .workflowStatus(CaseWorkflowStatus.SUBMITTED).build();
+        when(caseMapper.selectById(10L)).thenReturn(medicalCase);
         when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
                 .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.PASS).build());
         when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
@@ -109,6 +113,8 @@ class TaskServiceImplTest {
         ArgumentCaptor<TaskEntity> insertedTask = ArgumentCaptor.forClass(TaskEntity.class);
         verify(taskMapper).insert(insertedTask.capture());
         assertThat(insertedTask.getValue().getStatus()).isEqualTo(TaskStatus.WAITING);
+        assertThat(medicalCase.getWorkflowStatus()).isEqualTo(CaseWorkflowStatus.IN_REVIEW);
+        verify(caseMapper).updateById(medicalCase);
 
         ArgumentCaptor<AnalysisTaskRequestedEvent> eventCaptor =
                 ArgumentCaptor.forClass(AnalysisTaskRequestedEvent.class);
@@ -130,7 +136,8 @@ class TaskServiceImplTest {
         verify(logMapper).insert(logCaptor.capture());
         assertThat(logCaptor.getValue().getFromStatus()).isNull();
         assertThat(logCaptor.getValue().getToStatus()).isEqualTo(TaskStatus.WAITING);
-        assertThat(logCaptor.getValue().getMessage()).isEqualTo("任务已创建并等待消息发布");
+        assertThat(logCaptor.getValue().getMessage()).isEqualTo(
+                "医生参考图像质量 PASS / 无有效评分 后创建任务；任务已创建并等待消息发布");
     }
 
     @Test
@@ -153,28 +160,31 @@ class TaskServiceImplTest {
     }
 
     @Test
-    void vesselTaskRejectsFailedQualityForOrdinaryUser() {
+    void vesselTaskAllowsFailedQualityAsDoctorReference() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 3);
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
         when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
-                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.FAIL).build());
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.FAIL)
+                .qualityScore(64.57).build());
+        when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
+        doAnswer(invocation -> { ((TaskEntity) invocation.getArgument(0)).setId(100L); return 1; })
+                .when(taskMapper).insert(any(TaskEntity.class));
 
-        assertThatThrownBy(() -> taskService.createTask(dto, 7))
-                .isInstanceOf(BaseException.class)
-                .extracting("code").isEqualTo(ErrorMessageSignal.CONFLICT);
-        verify(analysisTaskEventOutbox, never()).append(any(), any(), anyInt());
-        verify(analysisTaskMessagePublisher, never()).publish(any());
+        taskService.createTask(dto, 7);
+
+        verify(analysisTaskEventOutbox).append(any(), any(), anyInt());
+        ArgumentCaptor<LogEntity> logCaptor = ArgumentCaptor.forClass(LogEntity.class);
+        verify(logMapper).insert(logCaptor.capture());
+        assertThat(logCaptor.getValue().getMessage()).isEqualTo(
+                "医生参考图像质量 FAIL / 64.57 后创建任务；任务已创建并等待消息发布");
     }
 
     @Test
-    void doctorMayOverrideFailedQualityWithReason() {
+    void vesselTaskAllowsUnavailableQualityAsDoctorReference() {
         CreateTaskDTO dto = new CreateTaskDTO(10L, 20L, TaskType.VESSEL_SEGMENTATION, 3);
-        dto.setQualityOverride(true);
-        dto.setQualityOverrideReason("临床紧急，接受低质量风险");
         when(caseMapper.selectById(10L)).thenReturn(CaseEntity.builder().id(10).status(CaseStatus.ACTIVE).build());
         when(imageMapper.selectById(20L)).thenReturn(ImageFileEntity.builder().id(20L).caseId(10L)
-                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.FAIL).build());
-        when(userRegisterMapper.selectById(7)).thenReturn(user(7, UserRole.DOCTOR));
+                .status(ImageStatus.UPLOADED).qualityStatus(ImageQualityStatus.ERROR).build());
         when(taskMapper.countUnfinishedTask(20L, TaskType.VESSEL_SEGMENTATION)).thenReturn(0L);
         doAnswer(invocation -> { ((TaskEntity) invocation.getArgument(0)).setId(100L); return 1; })
                 .when(taskMapper).insert(any(TaskEntity.class));
@@ -187,8 +197,7 @@ class TaskServiceImplTest {
                 ArgumentCaptor.forClass(LogEntity.class);
         verify(logMapper).insert(logCaptor.capture());
         assertThat(logCaptor.getValue().getMessage()).isEqualTo(
-                "医生覆盖图像质量门控并创建任务，原因：临床紧急，接受低质量风险；"
-                        + "任务已创建并等待消息发布");
+                "医生参考图像质量 ERROR / 无有效评分 后创建任务；任务已创建并等待消息发布");
     }
 
     @Test
@@ -206,11 +215,18 @@ class TaskServiceImplTest {
         verify(aiTaskQuotaService, never()).reserve(any());
     }
 
-    private UserEntity user(int id, UserRole role) {
-        UserEntity user = new UserEntity();
-        user.setId(id);
-        user.setRoleCode(role);
-        return user;
+    @Test
+    void doctorTaskListIsScopedByAssignedDoctor() {
+        TaskListQueryDTO query = new TaskListQueryDTO();
+        when(taskMapper.countTaskPage(any(), eq(null), eq(20))).thenReturn(0L);
+        when(taskMapper.selectTaskPage(any(), eq(null), eq(20), eq(0), eq(10)))
+                .thenReturn(java.util.List.of());
+
+        taskService.getLTaskList(query, new com.example.retinavision.pojo.VO.CurrentUserVO(
+                20, "doctor", "Doctor", UserRole.DOCTOR));
+
+        verify(taskMapper).countTaskPage(any(), eq(null), eq(20));
+        verify(taskMapper).selectTaskPage(any(), eq(null), eq(20), eq(0), eq(10));
     }
 
     @Test

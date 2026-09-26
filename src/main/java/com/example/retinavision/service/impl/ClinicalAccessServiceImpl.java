@@ -2,14 +2,17 @@ package com.example.retinavision.service.impl;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.AnalysisResultMapper;
 import com.example.retinavision.mapper.CaseMapper;
 import com.example.retinavision.mapper.ImageMapper;
+import com.example.retinavision.mapper.PatientProfileMapper;
 import com.example.retinavision.mapper.TaskMapper;
 import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.pojo.Entity.PatientProfileEntity;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.service.ClinicalAccessService;
@@ -23,15 +26,18 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
     private final ImageMapper imageMapper;
     private final TaskMapper taskMapper;
     private final AnalysisResultMapper resultMapper;
+    private final PatientProfileMapper patientProfileMapper;
 
     public ClinicalAccessServiceImpl(CaseMapper caseMapper,
                                      ImageMapper imageMapper,
                                      TaskMapper taskMapper,
-                                     AnalysisResultMapper resultMapper) {
+                                     AnalysisResultMapper resultMapper,
+                                     PatientProfileMapper patientProfileMapper) {
         this.caseMapper = caseMapper;
         this.imageMapper = imageMapper;
         this.taskMapper = taskMapper;
         this.resultMapper = resultMapper;
+        this.patientProfileMapper = patientProfileMapper;
     }
 
     // 检验当前用户是否有临床访问权限
@@ -40,8 +46,8 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         if (user == null) {
             throw new BaseException(ErrorMessageSignal.UNAUTHORIZED, "请先登录");
         }
-        if (user.getRoleCode() == UserRole.ADMIN) {
-            throw new BaseException(ErrorMessageSignal.FORBIDDEN, "管理员不能访问临床数据");
+        if (user.getRoleCode() != UserRole.USER && user.getRoleCode() != UserRole.DOCTOR) {
+            throw new BaseException(ErrorMessageSignal.FORBIDDEN, "当前角色不能访问临床数据");
         }
     }
 
@@ -53,8 +59,15 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
         if (medicalCase == null || medicalCase.getDeletedAt() != null) {
             notFound();
         }
-        if (user.getRoleCode() == UserRole.USER
-                && !Objects.equals(medicalCase.getCreatedBy(), user.getId())) {
+        boolean allowed = switch (user.getRoleCode()) {
+            case USER -> {
+                PatientProfileEntity profile = patientProfileMapper.selectById(medicalCase.getPatientId());
+                yield profile != null && Objects.equals(profile.getAccountUserId(), user.getId());
+            }
+            case DOCTOR -> Objects.equals(medicalCase.getAssignedDoctorId(), user.getId());
+            case ADMIN, RESEARCHER -> false;
+        };
+        if (!allowed) {
             notFound();
         }
     }
@@ -89,6 +102,28 @@ public class ClinicalAccessServiceImpl implements ClinicalAccessService {
             notFound();
         }
         assertCanAccessTask(user, result.getTaskId());
+    }
+
+    @Override
+    public void assertCanModifyCase(CurrentUserVO user, Long caseId) {
+        assertCanAccessCase(user, caseId);
+        CaseEntity medicalCase = caseMapper.selectById(caseId);
+        if (user.getRoleCode() == UserRole.USER
+                && medicalCase.getWorkflowStatus() != CaseWorkflowStatus.DRAFT) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "病例提交后不能修改图像");
+        }
+        if (user.getRoleCode() == UserRole.DOCTOR
+                && (medicalCase.getWorkflowStatus() == CaseWorkflowStatus.COMPLETED
+                || medicalCase.getWorkflowStatus() == CaseWorkflowStatus.WITHDRAWN)) {
+            throw new BaseException(ErrorMessageSignal.CONFLICT, "当前病例状态不能修改图像");
+        }
+    }
+
+    @Override
+    public void assertCanModifyImage(CurrentUserVO user, Long imageId) {
+        assertCanAccessImage(user, imageId);
+        ImageFileEntity image = imageMapper.selectById(imageId);
+        assertCanModifyCase(user, image.getCaseId());
     }
 
     private void notFound() {

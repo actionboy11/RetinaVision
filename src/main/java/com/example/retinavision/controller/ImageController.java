@@ -3,6 +3,9 @@ package com.example.retinavision.controller;
 
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.pojo.VO.ImageFileItemVO;
+import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.ImageService;
 import com.example.retinavision.service.ClinicalAccessService;
@@ -44,7 +47,7 @@ public class ImageController {
     {
         // 上传文件由 MultipartFile 承接，字段名必须和前端 FormData.append("file", file) 保持一致。
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
-        accessService.assertCanAccessCase(tokenUser, caseId.longValue());
+        accessService.assertCanModifyCase(tokenUser, caseId.longValue());
         Integer userid = tokenUser.getId();
         ImageFileItemVO imageFileItemVO = imageService.uploadImage(caseId, file, userid);
         return Result.success(imageFileItemVO);
@@ -66,7 +69,7 @@ public class ImageController {
 
     @DeleteMapping("/images/{imageId}")
     public Result<Boolean> deleteImage(@PathVariable Long imageId, Authentication authentication) {
-        accessService.assertCanAccessImage(user(authentication), imageId);
+        accessService.assertCanModifyImage(user(authentication), imageId);
         return Result.success(imageService.deleteImage(imageId));
     }
 
@@ -74,6 +77,9 @@ public class ImageController {
     public Result<ImageFileItemVO> requestQualityCheck(@PathVariable Long imageId, Authentication authentication) {
         CurrentUserVO currentUser = user(authentication);
         accessService.assertCanAccessImage(currentUser, imageId);
+        if (currentUser.getRoleCode() != UserRole.DOCTOR) {
+            throw new BaseException(ErrorMessageSignal.FORBIDDEN, "图像质量复检仅由负责医生发起");
+        }
         return Result.success(imageService.requestQualityCheck(imageId, currentUser.getId()));
     }
 

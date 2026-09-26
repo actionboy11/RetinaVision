@@ -12,7 +12,11 @@ public class CreateTaskDTO {
     private  Long imageFileId;
     private TaskType taskType;
     private int priority;
+    /** @deprecated 图像质量已调整为医生决策参考，该字段仅保留请求兼容。 */
+    @Deprecated
     private Boolean qualityOverride = false;
+    /** @deprecated 图像质量已调整为医生决策参考，该字段仅保留请求兼容。 */
+    @Deprecated
     private String qualityOverrideReason;
 
     public CreateTaskDTO(Long caseId, Long imageFileId, TaskType taskType, int priority) {

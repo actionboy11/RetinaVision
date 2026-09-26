@@ -5,6 +5,9 @@ import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.UserRegisterMapper;
+import com.example.retinavision.mapper.CaseMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.example.retinavision.pojo.Entity.CaseEntity;
 import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
 import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.service.UserAdministrationService;
@@ -20,9 +23,11 @@ import com.example.retinavision.pojo.VO.AdminUserItemVO;
 // 用户管理服务实现类，提供用户角色分配和用户列表查询功能
 public class UserAdministrationServiceImpl implements UserAdministrationService {
     private final UserRegisterMapper userMapper;
+    private final CaseMapper caseMapper;
 
-    public UserAdministrationServiceImpl(UserRegisterMapper userMapper) {
+    public UserAdministrationServiceImpl(UserRegisterMapper userMapper, CaseMapper caseMapper) {
         this.userMapper = userMapper;
+        this.caseMapper = caseMapper;
     }
 
     @Override
@@ -35,6 +40,14 @@ public class UserAdministrationServiceImpl implements UserAdministrationService 
         }
         if (request == null || request.getRoleCode() == null || request.getRoleCode() == UserRole.ADMIN) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "仅可授予 USER、DOCTOR 或 RESEARCHER 角色");
+        }
+        if (user.getRoleCode() == UserRole.DOCTOR && request.getRoleCode() != UserRole.DOCTOR) {
+            Long assignedCases = caseMapper.selectCount(new LambdaQueryWrapper<CaseEntity>()
+                    .eq(CaseEntity::getAssignedDoctorId, userId)
+                    .isNull(CaseEntity::getDeletedAt));
+            if (assignedCases != null && assignedCases > 0) {
+                throw new BaseException(ErrorMessageSignal.CONFLICT, "该医生仍有负责病例，不能变更角色");
+            }
         }
 
         String professionalNo = StringUtils.hasText(request.getProfessionalNo())

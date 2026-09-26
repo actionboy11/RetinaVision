@@ -48,6 +48,15 @@ services:
       timeout: 3s
       retries: 5
 
+  qdrant:
+    image: qdrant/qdrant:v1.12.6
+    container_name: retina_qdrant
+    restart: always
+    ports:
+      - "6333:6333"
+    volumes:
+      - retina_qdrant_data:/qdrant/storage
+
   retinavision-ai:
     build:
       context: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}
@@ -82,3 +91,4 @@ volumes:
   retina_mysql_data:
   retina_rabbitmq_data:
   retina_redis_data:
+  retina_qdrant_data:

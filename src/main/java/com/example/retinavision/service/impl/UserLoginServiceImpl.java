@@ -14,11 +14,13 @@ import com.example.retinavision.pojo.VO.UserLoginVO;
 import com.example.retinavision.service.UserLoginService;
 import com.example.retinavision.service.LoginAttemptService;
 import com.example.retinavision.service.JwtBlacklistService;
+import com.example.retinavision.service.PatientProfileService;
 import com.example.retinavision.utils.JwtUtil;
 import com.example.retinavision.exception.BaseException;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -32,25 +34,28 @@ public class UserLoginServiceImpl implements UserLoginService {
     private JwtUtil jwtUtil;
     private final LoginAttemptService loginAttemptService;
     private final JwtBlacklistService jwtBlacklistService;
+    private final PatientProfileService patientProfileService;
 
     public UserLoginServiceImpl(UserRegisterMapper userRegisterMapper,
                                 PasswordEncoder passwordEncoder,
                                 JwtUtil jwtUtil,
                                 LoginAttemptService loginAttemptService,
-                                JwtBlacklistService jwtBlacklistService
+                                JwtBlacklistService jwtBlacklistService,
+                                PatientProfileService patientProfileService
     ) {
         this.userRegisterMapper = userRegisterMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.loginAttemptService = loginAttemptService;
         this.jwtBlacklistService = jwtBlacklistService;
+        this.patientProfileService = patientProfileService;
     }
 
 
     // 用户注册
     @Override
+    @Transactional
     public void UserRegister(UserRegisterDTO userRegisterDTO) {
-            System.out.println("用户注册");
         String username = normalizeBlank(userRegisterDTO.getUsername());
         String password = normalizeBlank(userRegisterDTO.getPassword());
         String realname = normalizeBlank(userRegisterDTO.getRealName());
@@ -77,6 +82,7 @@ public class UserLoginServiceImpl implements UserLoginService {
         userEntity.setCreatedAt(LocalDateTime.now());
         userEntity.setUpdatedAt(LocalDateTime.now());
         userRegisterMapper.insert(userEntity);
+        patientProfileService.getOrCreateAccountProfile(userEntity.getId());
 
     }
 

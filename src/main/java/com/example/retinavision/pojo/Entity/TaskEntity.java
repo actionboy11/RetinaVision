@@ -42,7 +42,7 @@ public class TaskEntity  {
     private String errorMessage;
     //这次任务是否绕过了质量检测失败限制
     private Boolean qualityOverride;
-    //医生为什么要绕过质量门控限制
+    // 历史兼容字段：质量检测改为医生决策参考后，新任务固定为 false/null。
     private String qualityOverrideReason;
     private Integer submittedBy;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")

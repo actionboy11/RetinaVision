@@ -4,6 +4,9 @@ import com.example.retinavision.pojo.DTO.CreateTaskDTO;
 import com.example.retinavision.pojo.DTO.TaskListQueryDTO;
 import com.example.retinavision.pojo.Entity.TaskEntity;
 import com.example.retinavision.pojo.VO.*;
+import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.TaskService;
@@ -28,7 +31,7 @@ public class TaskController {
     @GetMapping
     public Result<PageResult<TaskListItemVO>> getTaskPage(TaskListQueryDTO taskListQueryDTO, Authentication authentication) {
             CurrentUserVO currentUser = user(authentication);
-            accessService.assertClinicalRole(currentUser);
+            requireDoctor(currentUser);
             PageResult<TaskListItemVO> taskList=taskService.getLTaskList(taskListQueryDTO, currentUser);
             return Result.success(taskList);
     }
@@ -38,6 +41,7 @@ public class TaskController {
             @RequestBody CreateTaskDTO createTaskDTO,
             Authentication authentication) {
             CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+            requireDoctor(tokenUser);
             accessService.assertCanAccessImage(tokenUser, createTaskDTO.getImageFileId());
             Integer id = tokenUser.getId();
             CreateTaskVO createTaskVO= taskService.createTask(createTaskDTO,id);
@@ -50,6 +54,7 @@ public class TaskController {
             @PathVariable Integer taskId,
             Authentication authentication) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        requireDoctor(tokenUser);
         accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         TaskDetailVO taskDetailVO=taskService.getTaskDetail(taskId, id);
@@ -62,6 +67,7 @@ public class TaskController {
             @PathVariable Integer taskId,
             Authentication authentication) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        requireDoctor(tokenUser);
         accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         taskService.cancelTask(taskId,id);
@@ -74,6 +80,7 @@ public class TaskController {
             Authentication authentication
           ) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        requireDoctor(tokenUser);
         accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         RetryTaskVO tryTaskVO=taskService.retryTask(taskId,id);
@@ -86,6 +93,7 @@ public class TaskController {
             @PathVariable Integer taskId,
             Authentication authentication) {
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
+        requireDoctor(tokenUser);
         accessService.assertCanAccessTask(tokenUser, taskId.longValue());
         Integer id = tokenUser.getId();
         List<TaskLogVO> logList=taskService.getTaskLog(taskId,id);
@@ -94,6 +102,12 @@ public class TaskController {
 
     private CurrentUserVO user(Authentication authentication) {
         return (CurrentUserVO) authentication.getPrincipal();
+    }
+
+    private void requireDoctor(CurrentUserVO user) {
+        if (user == null || user.getRoleCode() != UserRole.DOCTOR) {
+            throw new BaseException(ErrorMessageSignal.FORBIDDEN, "仅负责医生可以操作分析任务");
+        }
     }
 
 

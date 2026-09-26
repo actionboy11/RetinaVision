@@ -8,13 +8,13 @@ import com.example.retinavision.common.Deletable;
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.CaseStatus;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.ImageStatus;
 import com.example.retinavision.enumeration.ImageQualityStatus;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.enumeration.TaskStatus;
 import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.exception.ConflictException;
 import com.example.retinavision.mapper.CaseMapper;
 import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.LogMapper;
@@ -102,9 +102,12 @@ public class TaskServiceImpl implements TaskService {
         safeQuery.setKeyword(normalizeKeyword(safeQuery.getKeyword()));
         safeQuery.setCaseNo(normalizeKeyword(safeQuery.getCaseNo()));
 
-        Integer ownerId = user.getRoleCode() == UserRole.USER ? user.getId() : null;
-        Long total = taskMapper.countTaskPage(safeQuery, ownerId);
-        List<TaskListItemVO> list = taskMapper.selectTaskPage(safeQuery, ownerId, offset, pageSize);
+        Integer creatorId = user.getRoleCode() == UserRole.USER || user.getRoleCode() == UserRole.RESEARCHER
+                ? user.getId() : null;
+        Integer doctorId = user.getRoleCode() == UserRole.DOCTOR ? user.getId() : null;
+        Long total = taskMapper.countTaskPage(safeQuery, creatorId, doctorId);
+        List<TaskListItemVO> list = taskMapper.selectTaskPage(
+                safeQuery, creatorId, doctorId, offset, pageSize);
         return new PageResult<>(list, total, pageNo, pageSize);
     }
 
@@ -119,8 +122,6 @@ public class TaskServiceImpl implements TaskService {
         ImageFileEntity imageFileEntity = imageMapper.selectById(imageFileId);
         // 校验病例和图像的有效性和关联性，确保它们存在且未被删除，并且图像确实属于该病例。同时还检查病例状态是否允许创建任务。
         validateCaseAndImageForTask(caseEntity, imageFileEntity, caseId);
-        validateQualityGate(createTaskDTO, imageFileEntity, submittedBy);
-
         // 同一图像同一任务类型的任务只能有一个未完成的，避免重复提交导致资源浪费和结果冲突。
         Long unfinishedTaskCount = taskMapper.countUnfinishedTask(imageFileId, createTaskDTO.getTaskType());
         if (unfinishedTaskCount != null && unfinishedTaskCount > 0) {
@@ -144,13 +145,19 @@ public class TaskServiceImpl implements TaskService {
                 .retryCount(0)
                 .maxRetryCount(DEFAULT_MAX_RETRY_COUNT)
                 .errorMessage(null)
-                .qualityOverride(Boolean.TRUE.equals(createTaskDTO.getQualityOverride()))
-                .qualityOverrideReason(normalizeKeyword(createTaskDTO.getQualityOverrideReason()))
+                .qualityOverride(false)
+                .qualityOverrideReason(null)
                 .submittedBy(submittedBy)
                 .submittedAt(now)
                 .updatedAt(now)
                 .build();
         taskMapper.insert(taskEntity);
+        if (taskEntity.getTaskType() == TaskType.VESSEL_SEGMENTATION
+                && caseEntity.getWorkflowStatus() != CaseWorkflowStatus.COMPLETED) {
+            caseEntity.setWorkflowStatus(CaseWorkflowStatus.IN_REVIEW);
+            caseEntity.setUpdatedAt(now);
+            caseMapper.updateById(caseEntity);
+        }
         analysisTaskEventOutbox.append(
                 new AnalysisTaskRequestedEvent(
                         taskEntity.getId(),
@@ -169,14 +176,7 @@ public class TaskServiceImpl implements TaskService {
             imageFileEntity.setUpdatedAt(now);
             imageMapper.updateById(imageFileEntity);
         }
-        String creationAuditMessage =
-                taskEntity.getTaskType() == TaskType.VESSEL_SEGMENTATION
-                        && imageFileEntity.getQualityStatus() == ImageQualityStatus.FAIL
-                        && Boolean.TRUE.equals(taskEntity.getQualityOverride())
-                        ? "医生覆盖图像质量门控并创建任务，原因："
-                                + taskEntity.getQualityOverrideReason()
-                                + "；任务已创建并等待消息发布"
-                        : "任务已创建并等待消息发布";
+        String creationAuditMessage = buildCreationAuditMessage(taskEntity, imageFileEntity);
         insertTaskLog(
                 taskEntity.getId(),
                 null,
@@ -337,27 +337,16 @@ public class TaskServiceImpl implements TaskService {
         }
     }
 
-    private void validateQualityGate(CreateTaskDTO dto, ImageFileEntity image, Integer userId) {
-        if (dto.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
-            return;
+    private String buildCreationAuditMessage(TaskEntity task, ImageFileEntity image) {
+        if (task.getTaskType() != TaskType.VESSEL_SEGMENTATION) {
+            return "任务已创建并等待消息发布";
         }
-        ImageQualityStatus status = image.getQualityStatus() == null
+        ImageQualityStatus qualityStatus = image.getQualityStatus() == null
                 ? ImageQualityStatus.NOT_CHECKED : image.getQualityStatus();
-        if (status == ImageQualityStatus.PASS || status == ImageQualityStatus.WARNING) {
-            return;
-        }
-        if (status == ImageQualityStatus.FAIL && Boolean.TRUE.equals(dto.getQualityOverride())) {
-            UserEntity user = userRegisterMapper.selectById(userId);
-            if (user == null || user.getRoleCode() != UserRole.DOCTOR
-                    || !StringUtils.hasText(dto.getQualityOverrideReason())) {
-                throw new BaseException(ErrorMessageSignal.FORBIDDEN, "只有医生填写原因后才能覆盖质量门控");
-            }
-            return;
-        }
-        String message = status == ImageQualityStatus.FAIL
-                ? "图像质量不合格，禁止创建血管分割任务"
-                : "图像质量检测尚未完成或执行失败";
-        throw new ConflictException(message);
+        String qualityScore = image.getQualityScore() == null
+                ? "无有效评分" : image.getQualityScore().toString();
+        return "医生参考图像质量 " + qualityStatus.name() + " / " + qualityScore
+                + " 后创建任务；任务已创建并等待消息发布";
     }
 
     private void validateCaseAndImageForRetry(CaseEntity caseEntity, ImageFileEntity imageFileEntity) {

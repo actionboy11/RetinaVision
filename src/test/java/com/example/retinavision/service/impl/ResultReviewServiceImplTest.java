@@ -9,6 +9,7 @@ import com.example.retinavision.pojo.DTO.SubmitReviewDTO;
 import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.Entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.service.ClinicalTaskLogService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -23,7 +24,8 @@ class ResultReviewServiceImplTest {
     private final AnalysisResultMapper resultMapper = mock(AnalysisResultMapper.class);
     private final AnalysisReviewMapper reviewMapper = mock(AnalysisReviewMapper.class);
     private final UserRegisterMapper userMapper = mock(UserRegisterMapper.class);
-    private final ResultReviewServiceImpl service = new ResultReviewServiceImpl(resultMapper, reviewMapper, userMapper);
+    private final ClinicalTaskLogService clinicalLogs = mock(ClinicalTaskLogService.class);
+    private final ResultReviewServiceImpl service = new ResultReviewServiceImpl(resultMapper, reviewMapper, userMapper, null, clinicalLogs);
 
     @Test
     void firstReviewCapturesDoctorIdentitySnapshot() {
@@ -41,6 +43,7 @@ class ResultReviewServiceImplTest {
         assertThat(captor.getValue().getReviewerNameSnapshot()).isEqualTo("张医生");
         assertThat(captor.getValue().getProfessionalNoSnapshot()).isEqualTo("DOC-001");
         assertThat(captor.getValue().getVersion()).isEqualTo(1);
+        verify(clinicalLogs).appendResultEvent(3L, "医生审核已保存：通过", "USER", 7);
     }
 
     @Test

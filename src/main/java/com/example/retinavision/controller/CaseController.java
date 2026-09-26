@@ -2,16 +2,25 @@ package com.example.retinavision.controller;
 
 
 import com.example.retinavision.pojo.DTO.CaseInsertDTO;
+import com.example.retinavision.pojo.DTO.CaseDoctorAssignmentDTO;
 import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
 import com.example.retinavision.pojo.DTO.CaseUpdateDTO;
+import com.example.retinavision.enumeration.EyeSide;
+import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.VO.CaseListItemVO;
+import com.example.retinavision.pojo.VO.CaseTrendSummaryVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
+import com.example.retinavision.service.CaseAnalysisTimelineService;
 import com.example.retinavision.service.CaseService;
 import com.example.retinavision.service.ClinicalAccessService;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/cases")
@@ -19,10 +28,14 @@ public class CaseController {
 
     private final CaseService caseService;
     private final ClinicalAccessService accessService;
+    private final CaseAnalysisTimelineService timelineService;
 
-    public CaseController(CaseService caseService, ClinicalAccessService accessService) {
+    public CaseController(CaseService caseService,
+                          ClinicalAccessService accessService,
+                          CaseAnalysisTimelineService timelineService) {
         this.caseService = caseService;
         this.accessService = accessService;
+        this.timelineService = timelineService;
     }
 
     @GetMapping
@@ -44,9 +57,17 @@ public class CaseController {
         // 补充：当前登录用户由 JwtAuthenticationFilter 放入 Authentication，这里只取用户 id 作为 createdBy。
         CurrentUserVO tokenUser = (CurrentUserVO)authentication.getPrincipal();
         accessService.assertClinicalRole(tokenUser);
-        Integer userid = tokenUser.getId();
-        CaseListItemVO caseListItemVO =caseService.addCase(caseInsertDTO,userid);
+        CaseListItemVO caseListItemVO = caseService.addCase(caseInsertDTO, tokenUser);
         return Result.success(caseListItemVO);
+    }
+
+    @PutMapping("/{caseId}/doctor-assignment")
+    public Result<CaseListItemVO> assignDoctor(@PathVariable Integer caseId,
+                                               @RequestBody CaseDoctorAssignmentDTO request,
+                                               Authentication authentication) {
+        CurrentUserVO currentUser = user(authentication);
+        accessService.assertCanAccessCase(currentUser, caseId.longValue());
+        return Result.success(caseService.assignDoctor(caseId, request, currentUser));
     }
 
     // 获取病例详情
@@ -55,22 +76,59 @@ public class CaseController {
             //检验当前用户是否有权限访问该病例详情
             accessService.assertCanAccessCase(user(authentication), caseId.longValue());
             CaseListItemVO caseListItemVO =caseService.getCaseById(caseId);
+            if (user(authentication).getRoleCode() == com.example.retinavision.enumeration.UserRole.USER) {
+                caseListItemVO.setDiagnosisNote(null);
+            }
             return Result.success(caseListItemVO);
 
+    }
+
+    @GetMapping("/{caseId}/analysis-timeline")
+    public Result<CaseAnalysisTimelineVO> analysisTimeline(@PathVariable Integer caseId,
+                                                          @RequestParam(required = false) EyeSide eyeSide,
+                                                          @RequestParam(required = false) TaskType taskType,
+                                                          @RequestParam(required = false)
+                                                          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                          LocalDateTime startTime,
+                                                          @RequestParam(required = false)
+                                                          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                          LocalDateTime endTime,
+                                                          Authentication authentication) {
+        accessService.assertCanAccessCase(user(authentication), caseId.longValue());
+        return Result.success(timelineService.timeline(caseId.longValue(), eyeSide, taskType, startTime, endTime));
+    }
+
+    @PostMapping("/{caseId}/trend-summary/ai-generate")
+    public Result<CaseTrendSummaryVO> generateTrendSummary(@PathVariable Integer caseId,
+                                                           @RequestParam(required = false) EyeSide eyeSide,
+                                                           @RequestParam(required = false) TaskType taskType,
+                                                           Authentication authentication) {
+        accessService.assertCanAccessCase(user(authentication), caseId.longValue());
+        return Result.success(timelineService.generateTrendSummary(caseId.longValue(), eyeSide, taskType));
+    }
+
+    @PostMapping("/{caseId}/submit")
+    public Result<CaseListItemVO> submit(@PathVariable Integer caseId, Authentication authentication) {
+        return Result.success(caseService.submit(caseId, user(authentication)));
+    }
+
+    @PostMapping("/{caseId}/withdraw")
+    public Result<CaseListItemVO> withdraw(@PathVariable Integer caseId, Authentication authentication) {
+        return Result.success(caseService.withdraw(caseId, user(authentication)));
     }
     // 更新病例信息
     @PutMapping("/{caseId}")
     public  Result<CaseListItemVO> updateCase(@PathVariable Integer caseId,
                                               @RequestBody CaseUpdateDTO  caseUpdateDTO, Authentication authentication){
         accessService.assertCanAccessCase(user(authentication), caseId.longValue());
-        CaseListItemVO caseListItemVO =caseService.updateCase(caseId,caseUpdateDTO);
+        CaseListItemVO caseListItemVO =caseService.updateCase(caseId,caseUpdateDTO,user(authentication));
         return Result.success(caseListItemVO);
     }
 
     @DeleteMapping("/{caseId}")
     public  Result<Void> deleteCase(@PathVariable Integer caseId, Authentication authentication){
         accessService.assertCanAccessCase(user(authentication), caseId.longValue());
-        caseService.deleteCase(caseId);
+        caseService.deleteCase(caseId, user(authentication));
         return Result.success();
     }
 
