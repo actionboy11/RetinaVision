@@ -3,7 +3,9 @@ package com.example.retinavision.llm;
 public enum PromptScenario {
     REPORT_DRAFT_GENERATION,
     RAG_KNOWLEDGE_CHAT,
-    CASE_TREND_SUMMARY;
+    CASE_TREND_SUMMARY,
+    CLINICAL_ASSISTANT_AGENT,
+    PATIENT_ASSISTANT_AGENT;
 
     public static PromptScenario fromTemplateCode(String templateCode) {
         try {
