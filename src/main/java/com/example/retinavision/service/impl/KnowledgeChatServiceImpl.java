@@ -13,9 +13,11 @@ import com.example.retinavision.pojo.DTO.KnowledgeChatRequestDTO;
 import com.example.retinavision.pojo.Entity.KnowledgeChatMessageEntity;
 import com.example.retinavision.pojo.Entity.KnowledgeChatSessionEntity;
 import com.example.retinavision.pojo.VO.KnowledgeChatResponseVO;
-import com.example.retinavision.rag.EmbeddingClient;
-import com.example.retinavision.rag.QdrantClient;
+import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.rag.KnowledgeDocumentRetriever;
+import com.example.retinavision.rag.KnowledgeAudiencePolicy;
 import com.example.retinavision.rag.QdrantSearchHit;
+import com.example.retinavision.rag.RagDocumentSupport;
 import com.example.retinavision.rag.RagGroundingValidator;
 import com.example.retinavision.service.KnowledgeChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ai.rag.Query;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -38,11 +41,11 @@ public class KnowledgeChatServiceImpl implements KnowledgeChatService {
 
     private final KnowledgeChatSessionMapper sessions;
     private final KnowledgeChatMessageMapper messages;
-    private final EmbeddingClient embeddings;
-    private final QdrantClient qdrant;
+    private final KnowledgeDocumentRetriever retriever;
     private final LlmOrchestrationService llm;
     private final LlmSafetyPolicy safetyPolicy;
     private final RagGroundingValidator groundingValidator;
+    private final KnowledgeAudiencePolicy audiencePolicy;
     private final String llmProvider;
     private final String llmModel;
     private final ObjectMapper json = new ObjectMapper();
@@ -50,32 +53,32 @@ public class KnowledgeChatServiceImpl implements KnowledgeChatService {
     @Autowired
     public KnowledgeChatServiceImpl(KnowledgeChatSessionMapper sessions,
                                     KnowledgeChatMessageMapper messages,
-                                    EmbeddingClient embeddings,
-                                    QdrantClient qdrant,
+                                    KnowledgeDocumentRetriever retriever,
                                     LlmOrchestrationService llm,
                                     LlmSafetyPolicy safetyPolicy,
                                     RagGroundingValidator groundingValidator,
+                                    KnowledgeAudiencePolicy audiencePolicy,
                                     com.example.retinavision.llm.LlmProperties llmProperties) {
-        this(sessions, messages, embeddings, qdrant, llm, safetyPolicy, groundingValidator,
+        this(sessions, messages, retriever, llm, safetyPolicy, groundingValidator, audiencePolicy,
                 llmProperties.getProvider(), llmProperties.getModel());
     }
 
     KnowledgeChatServiceImpl(KnowledgeChatSessionMapper sessions,
                              KnowledgeChatMessageMapper messages,
-                             EmbeddingClient embeddings,
-                             QdrantClient qdrant,
+                             KnowledgeDocumentRetriever retriever,
                              LlmOrchestrationService llm,
                              LlmSafetyPolicy safetyPolicy,
                              RagGroundingValidator groundingValidator,
+                             KnowledgeAudiencePolicy audiencePolicy,
                              String llmProvider,
                              String llmModel) {
         this.sessions = sessions;
         this.messages = messages;
-        this.embeddings = embeddings;
-        this.qdrant = qdrant;
+        this.retriever = retriever;
         this.llm = llm;
         this.safetyPolicy = safetyPolicy;
         this.groundingValidator = groundingValidator;
+        this.audiencePolicy = audiencePolicy;
         this.llmProvider = llmProvider;
         this.llmModel = llmModel;
     }
@@ -110,6 +113,16 @@ public class KnowledgeChatServiceImpl implements KnowledgeChatService {
     @Override
     @Transactional
     public KnowledgeChatResponseVO chat(KnowledgeChatRequestDTO request, Integer userId) {
+        return chatInternal(request, userId, null);
+    }
+
+    @Override
+    public KnowledgeChatResponseVO chat(KnowledgeChatRequestDTO request, CurrentUserVO user) {
+        return chatInternal(request, user.getId(), user.getRoleCode());
+    }
+
+    private KnowledgeChatResponseVO chatInternal(KnowledgeChatRequestDTO request, Integer userId,
+                                                  com.example.retinavision.enumeration.UserRole role) {
         if (request == null || request.question() == null || request.question().isBlank()) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "问题不能为空");
         }
@@ -121,10 +134,14 @@ public class KnowledgeChatServiceImpl implements KnowledgeChatService {
         saveMessage(session.getId(), userId, "USER", question, null);
 
         long start = System.nanoTime();
-        long embeddingStart = System.nanoTime();
-        float[] vector = embeddings.embed(question);
+        long retrievalStart = System.nanoTime();
         long searchStart = System.nanoTime();
-        List<QdrantSearchHit> hits = qdrant.search(vector, 5);
+        List<org.springframework.ai.document.Document> retrieved = retriever.retrieve(new Query(question));
+        if (audiencePolicy != null && role != null) {
+            retrieved = audiencePolicy.filter(retrieved, role);
+        }
+        List<QdrantSearchHit> hits = retrieved.stream()
+                .map(RagDocumentSupport::toHit).toList();
         long llmStart = System.nanoTime();
 
         List<KnowledgeChatResponseVO.Citation> citations = List.of();
@@ -138,7 +155,7 @@ public class KnowledgeChatServiceImpl implements KnowledgeChatService {
         }
         long end = System.nanoTime();
         log.info("Knowledge chat completed sessionId={} userId={} embeddingMs={} searchMs={} llmMs={} totalMs={} hits={}",
-                session.getId(), userId, millis(searchStart - embeddingStart), millis(llmStart - searchStart),
+                session.getId(), userId, millis(searchStart - retrievalStart), millis(llmStart - searchStart),
                 millis(end - llmStart), millis(end - start), hits.size());
 
         String citationsJson = toJson(citations);

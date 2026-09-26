@@ -67,6 +67,8 @@ public class KnowledgeIngestionServiceImpl implements KnowledgeIngestionService 
         document.setContentType("markdown");
         document.setOriginalContent(request.content().trim());
         document.setCategory(normalizeCategory(request.category()));
+        document.setAudience(request.audience() == null
+                ? com.example.retinavision.enumeration.KnowledgeAudience.PUBLIC : request.audience());
         document.setStatus("INDEXING");
         document.setVersion(1);
         document.setUploadedBy(userId);

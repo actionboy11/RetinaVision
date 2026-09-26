@@ -10,12 +10,12 @@ import com.example.retinavision.pojo.DTO.KnowledgeChatRequestDTO;
 import com.example.retinavision.pojo.Entity.KnowledgeChatMessageEntity;
 import com.example.retinavision.pojo.Entity.KnowledgeChatSessionEntity;
 import com.example.retinavision.pojo.VO.KnowledgeChatResponseVO;
-import com.example.retinavision.rag.EmbeddingClient;
-import com.example.retinavision.rag.QdrantClient;
-import com.example.retinavision.rag.QdrantSearchHit;
+import com.example.retinavision.rag.KnowledgeDocumentRetriever;
 import com.example.retinavision.rag.RagGroundingValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.rag.Query;
 
 import java.util.List;
 
@@ -33,15 +33,12 @@ class KnowledgeChatServiceImplTest {
 
     private final KnowledgeChatSessionMapper sessions = mock(KnowledgeChatSessionMapper.class);
     private final KnowledgeChatMessageMapper messages = mock(KnowledgeChatMessageMapper.class);
-    private final EmbeddingClient embeddings = mock(EmbeddingClient.class);
-    private final QdrantClient qdrant = mock(QdrantClient.class);
+    private final KnowledgeDocumentRetriever retriever = mock(KnowledgeDocumentRetriever.class);
 
     @Test
     void answersWithCitationsAndFixedDisclaimer() {
-        when(embeddings.embed("血管面积比是什么意思")).thenReturn(new float[]{0.1f, 0.2f});
-        when(qdrant.search(any(), eq(5))).thenReturn(List.of(
-                new QdrantSearchHit("p1", 0.92, 1L, 2L, "眼底指标说明", "院内规范", "血管面积比是辅助分析指标")
-        ));
+        when(retriever.retrieve(any(Query.class))).thenReturn(List.of(document(
+                "p1", 0.92, 1L, 2L, "眼底指标说明", "院内规范", "血管面积比是辅助分析指标")));
         LlmOrchestrationService llm = (templateCode, user) -> {
             assertThat(templateCode).isEqualTo("RAG_KNOWLEDGE_CHAT");
             assertThat(user).contains("血管面积比是辅助分析指标").contains("血管面积比是什么意思");
@@ -65,8 +62,7 @@ class KnowledgeChatServiceImplTest {
 
     @Test
     void emptyRetrievalDoesNotCallLlmOrInventAnswer() {
-        when(embeddings.embed("如何确诊糖网")).thenReturn(new float[]{0.1f, 0.2f});
-        when(qdrant.search(any(), eq(5))).thenReturn(List.of());
+        when(retriever.retrieve(any(Query.class))).thenReturn(List.of());
         LlmOrchestrationService llm = mock(LlmOrchestrationService.class);
         KnowledgeChatServiceImpl service = service(llm);
 
@@ -79,10 +75,8 @@ class KnowledgeChatServiceImplTest {
 
     @Test
     void unsafeDiagnosticAnswerIsRejected() {
-        when(embeddings.embed("我是不是患病")).thenReturn(new float[]{0.1f, 0.2f});
-        when(qdrant.search(any(), eq(5))).thenReturn(List.of(
-                new QdrantSearchHit("p1", 0.92, 1L, 2L, "资料", "来源", "仅供参考")
-        ));
+        when(retriever.retrieve(any(Query.class))).thenReturn(List.of(
+                document("p1", 0.92, 1L, 2L, "资料", "来源", "仅供参考")));
         LlmOrchestrationService llm = (templateCode, user) -> generated(
                 "{\"answer\":\"可以确诊糖尿病视网膜病变，无需复查。\"}");
         KnowledgeChatServiceImpl service = service(llm);
@@ -94,9 +88,8 @@ class KnowledgeChatServiceImplTest {
 
     @Test
     void unverifiedModelEvidenceReturnsInsufficientAnswerWithoutCitations() {
-        when(embeddings.embed("如何理解结果")).thenReturn(new float[]{0.1f, 0.2f});
-        when(qdrant.search(any(), eq(5))).thenReturn(List.of(
-                new QdrantSearchHit("p1", 0.92, 1L, 2L, "资料", "来源", "仅供参考的指标说明")));
+        when(retriever.retrieve(any(Query.class))).thenReturn(List.of(
+                document("p1", 0.92, 1L, 2L, "资料", "来源", "仅供参考的指标说明")));
         KnowledgeChatServiceImpl service = service((templateCode, user) ->
                 generated("{\"answer\":\"模型编造的解释。\",\"evidence\":[{\"chunkId\":2,\"quote\":\"不存在的原文引句\"}]}"));
 
@@ -107,9 +100,17 @@ class KnowledgeChatServiceImplTest {
     }
 
     private KnowledgeChatServiceImpl service(LlmOrchestrationService llm) {
-        return new KnowledgeChatServiceImpl(sessions, messages, embeddings, qdrant, llm,
+        return new KnowledgeChatServiceImpl(sessions, messages, retriever, llm,
                 new LlmSafetyPolicy(), new RagGroundingValidator(new ObjectMapper(), new LlmSafetyPolicy()),
-                "qwen", "qwen-plus");
+                null, "qwen", "qwen-plus");
+    }
+
+    private Document document(String id, double score, long documentId, long chunkId,
+                              String title, String source, String text) {
+        return Document.builder().id(id).text(text).score(score)
+                .metadata("documentId", documentId).metadata("chunkId", chunkId)
+                .metadata("documentTitle", title).metadata("source", source)
+                .metadata("score", score).build();
     }
 
     private LlmGenerationResult generated(String content) {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import com.example.retinavision.enumeration.KnowledgeAudience;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +17,7 @@ public class KnowledgeDocumentEntity {
     private String source;
     private String contentType;
     private String category;
+    private KnowledgeAudience audience;
     private String originalContent;
     private String status;
     private Integer version;

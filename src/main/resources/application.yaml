@@ -45,6 +45,7 @@ retina:
       daily-limit: 500  # 每天最多提交 500 个任务
       zone-id: Asia/Shanghai
   ai:
+    framework: ${RETINA_AI_FRAMEWORK:spring-ai}
     base-url: http://127.0.0.1:8000
     connect-timeout: 5s
     read-timeout: 5m
@@ -74,6 +75,10 @@ retina:
     api-key: ${RETINA_QDRANT_API_KEY:}
     collection: ${RETINA_QDRANT_COLLECTION:retina_knowledge_chunks}
     score-threshold: ${RETINA_QDRANT_SCORE_THRESHOLD:0.2}
+    top-k: ${RETINA_QDRANT_TOP_K:5}
+  agent:
+    max-rounds: ${RETINA_AGENT_MAX_ROUNDS:4}
+    max-tool-calls: ${RETINA_AGENT_MAX_TOOL_CALLS:6}
   jwt:
     secret: retina-vision-dev-secret-retina-vision-dev-secret
     expire-hours: 24

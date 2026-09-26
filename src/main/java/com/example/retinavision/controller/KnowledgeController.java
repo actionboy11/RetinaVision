@@ -97,7 +97,7 @@ public class KnowledgeController {
 
     @PostMapping("/chat")
     public Result<KnowledgeChatResponseVO> chat(@RequestBody KnowledgeChatRequestDTO request, Authentication authentication) {
-        return Result.success(chatService.chat(request, currentUser(authentication).getId()));
+        return Result.success(chatService.chat(request, currentUser(authentication)));
     }
 
     private CurrentUserVO currentUser(Authentication authentication) {
@@ -111,7 +111,7 @@ public class KnowledgeController {
     }
 
     private KnowledgeDocumentVO toDocument(KnowledgeDocumentEntity entity) {
-        return new KnowledgeDocumentVO(entity.getId(), entity.getTitle(), entity.getSource(), entity.getCategory(),
+        return new KnowledgeDocumentVO(entity.getId(), entity.getTitle(), entity.getSource(), entity.getCategory(), entity.getAudience(),
                 entity.getStatus(), entity.getVersion(), entity.getChunkCount(), entity.getFailureReason(),
                 entity.getLastIndexedAt(), entity.getCreatedAt(), entity.getUpdatedAt());
     }
