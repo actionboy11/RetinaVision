@@ -1,13 +1,10 @@
 package com.example.retinavision.agent;
 
-import org.springframework.stereotype.Component;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Component
 public class DefaultAgentSkillRouter implements AgentSkillRouter {
     private static final Pattern INDEX = Pattern.compile("(?:查看|打开|看一下)第?([一二三四五六七八九十\\d]+)个");
 
