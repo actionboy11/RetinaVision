@@ -118,6 +118,7 @@ class AgentChatServiceImplTest {
 
         verify(skillLogs).insert(argThat((AgentSkillExecutionLogEntity log) ->
                 !Boolean.TRUE.equals(log.getSuccess()) && "BaseException".equals(log.getErrorType())));
+        verify(messages, times(0)).insert(any(AgentChatMessageEntity.class));
     }
 
     private AgentChatServiceImpl service() {

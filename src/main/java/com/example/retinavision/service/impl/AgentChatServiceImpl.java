@@ -122,7 +122,6 @@ public class AgentChatServiceImpl implements AgentChatService {
                 ? createSession(user) : requireOwnedSession(request.sessionId(), user);
         String question = request.question().trim();
         List<AgentConversationMessage> history = recentHistory(session.getId());
-        saveMessage(session.getId(), user.getId(), "USER", question, null);
         history.add(new AgentConversationMessage("USER", question));
 
         long skillStartedAt = System.nanoTime();
@@ -134,6 +133,7 @@ public class AgentChatServiceImpl implements AgentChatService {
             throw exception;
         }
         if (skillResult.isPresent()) {
+            saveMessage(session.getId(), user.getId(), "USER", question, null);
             return completeStructuredSkill(session, user, question, skillResult.get(), elapsedMillis(skillStartedAt));
         }
 
@@ -170,6 +170,7 @@ public class AgentChatServiceImpl implements AgentChatService {
             throw exception;
         }
 
+        saveMessage(session.getId(), user.getId(), "USER", question, null);
         saveMessage(session.getId(), user.getId(), "ASSISTANT", answer, null);
         session.setTitle(question.length() > 30 ? question.substring(0, 30) : question);
         session.setUpdatedAt(LocalDateTime.now());
