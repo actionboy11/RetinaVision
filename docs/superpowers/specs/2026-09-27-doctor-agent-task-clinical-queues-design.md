@@ -13,7 +13,8 @@
 - 列表默认按最近业务时间倒序，每页最多 10 条。
 - 支持任务编号、当前页序号、分页和状态筛选。
 - 从结构化卡片跳转任务详情或临床审核步骤，不执行任意模型 URL。
-- 普通结构化查询不调用 LLM，目标 P95 小于 1 秒。
+- 开放式自然语言先由 LLM Router 基于启用的 Skill 定义选择 `skillCode` 并提取参数；“继续、上一页、查看第三个”等上下文命令由 Java 确定性解析。
+- `DIRECT` Skill 路由完成后不再调用 LLM，查询服务自身目标 P95 小于 1 秒；`TOOL_CALLING` Skill 才进入受控工具循环。
 
 ## 2. 非目标
 
@@ -75,14 +76,23 @@
 
 ### 5.1 路由和编排
 
-`AgentSkillCode` 增加两个编码。确定性 Router 在病例搜索之前识别任务和临床队列表达：
+`AgentSkillCode` 增加两个编码，Java 中为每个 Skill 固定声明 `DIRECT` 或 `TOOL_CALLING` 执行模式。数据库 Skill 版本提供路由说明、正反例和参数契约，但不能扩大执行模式、角色权限、工具白名单或字段白名单。
+
+初始开放式问题由 LLM Router 处理。Router 只接收用户问题、当前角色可用的 Skill 目录和受控 JSON 输出契约，不注册业务工具；输出仅允许 `skillCode`、`confidence` 和 `arguments`。Java 对 Skill 编码、角色、枚举参数和默认值进行二次校验。
+
+确定性上下文解析在 LLM Router 之前执行：
 
 1. 上下文命令和序号表达。
 2. 待审核、待签发语义。
 3. 任务编号、任务状态、任务类型语义。
-4. 现有病例、随访和知识语义。
+4. 上下文类型不匹配时直接返回重新查询提示，不让模型猜测旧引用。
 
-`DoctorAgentSkillOrchestrator` 分别执行任务查询和临床队列查询。查询结果直接组装固定摘要与结构化数据，不经过 LLM；知识问答仍使用 Spring AI 和 RAG。
+`DoctorAgentSkillOrchestrator` 根据 Java 固定的执行模式分流：
+
+- `DIRECT`：工作量、病例筛选、病例摘要、随访比较、任务查询和临床队列由 Orchestrator 直接调用 Java Service，结果组装为固定事实摘要和结构化数据，不再次发送给 LLM。
+- `TOOL_CALLING`：医学知识问答进入第二次 LLM 调用，并且只注册该 Skill 允许的 `searchMedicalKnowledge` 工具；工具结果返回模型后生成带引用回答。
+
+模型路由失败、返回未知 Skill 或参数协议异常时返回可读错误，不降级为全工具调用，也不让模型直接生成业务查询结果。
 
 ### 5.2 查询服务
 
