@@ -280,6 +280,8 @@ public class AgentChatServiceImpl implements AgentChatService {
             case "ASSIGNED_CASE_SEARCH" -> "负责病例筛选";
             case "CASE_CLINICAL_SUMMARY" -> "病例临床摘要";
             case "CASE_FOLLOWUP_ANALYSIS" -> "病例随访比较";
+            case "DOCTOR_TASK_SEARCH" -> "分析任务查询";
+            case "DOCTOR_CLINICAL_QUEUE" -> "临床待办队列";
             default -> "医学知识检索";
         };
     }
