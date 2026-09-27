@@ -133,6 +133,20 @@ class SchemaMigrationContractTest {
         assertThat(corpus).doesNotContain("active_version_id =");
     }
 
+    @Test
+    void doctorAgentNaturalLanguageBaselineAddsInactiveV3Versions() throws IOException {
+        String corpus = resource("/db/migration/V18__doctor_agent_natural_language_baseline.sql");
+
+        assertThat(corpus).contains(
+                "SELECT id, 3",
+                "名下患者有多少",
+                "没跑血管分割的病例",
+                "打开第三个病例",
+                "这个病例的趋势怎么样",
+                "已审核但PDF还没出的病例");
+        assertThat(corpus).doesNotContain("active_version_id =");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();
