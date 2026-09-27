@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class AgentSkillCatalogService {
@@ -37,6 +38,34 @@ public class AgentSkillCatalogService {
             if (versionId == null) continue;
             AgentSkillVersionEntity version = versions.selectById(versionId);
             if (version != null) result.add(definition(skill, version));
+        }
+        return List.copyOf(result);
+    }
+
+    public List<AgentSkillDefinition> forEvaluation(AgentSkillEntity candidateSkill,
+                                                    AgentSkillVersionEntity candidateVersion) {
+        List<AgentSkillEntity> all = skills.selectList(
+                new LambdaQueryWrapper<AgentSkillEntity>().orderByAsc(AgentSkillEntity::getId));
+        List<AgentSkillDefinition> result = new ArrayList<>();
+        for (AgentSkillEntity skill : all) {
+            AgentSkillCode code = parseCode(skill.getSkillCode());
+            if (code == null || !registry.isAvailable(code, com.example.retinavision.enumeration.UserRole.DOCTOR)) {
+                continue;
+            }
+            AgentSkillVersionEntity version;
+            if (Objects.equals(skill.getId(), candidateSkill.getId())) {
+                version = candidateVersion;
+            } else {
+                if (!"ACTIVE".equals(skill.getStatus()) || skill.getActiveVersionId() == null) continue;
+                version = versions.selectById(skill.getActiveVersionId());
+            }
+            if (version != null) result.add(definition(skill, version));
+        }
+        if (result.stream().noneMatch(item -> item.code().name().equals(candidateSkill.getSkillCode()))) {
+            AgentSkillCode code = parseCode(candidateSkill.getSkillCode());
+            if (code != null && registry.isAvailable(code, com.example.retinavision.enumeration.UserRole.DOCTOR)) {
+                result.add(definition(candidateSkill, candidateVersion));
+            }
         }
         return List.copyOf(result);
     }

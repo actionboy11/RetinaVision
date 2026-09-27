@@ -44,7 +44,8 @@ class DoctorAgentSkillOrchestratorTest {
         when(versions.resolve(9L, AgentSkillCode.DOCTOR_WORKLOAD_OVERVIEW))
                 .thenReturn(new AgentSkillRuntimeVersion(101L, 3));
         DoctorAgentSkillOrchestrator orchestrator = new DoctorAgentSkillOrchestrator(
-                new DefaultAgentSkillRouter(), queries, contexts,
+                (question, current) -> new AgentSkillRoute(
+                        AgentSkillCode.DOCTOR_WORKLOAD_OVERVIEW, 0.98, Map.of()), queries, contexts,
                 mock(AgentClinicalReferenceService.class), mock(CaseAnalysisTimelineService.class), versions);
 
         Optional<DoctorAgentSkillResult> result = orchestrator.handle(9L, "我有多少名患者？", doctor);
@@ -67,7 +68,12 @@ class DoctorAgentSkillOrchestratorTest {
         AgentSkillVersionBindingService versions = mock(AgentSkillVersionBindingService.class);
         when(versions.resolve(9L, AgentSkillCode.ASSIGNED_CASE_SEARCH))
                 .thenReturn(new AgentSkillRuntimeVersion(102L, 1));
-        DoctorAgentSkillOrchestrator orchestrator = orchestrator(queries, contexts, versions);
+        AgentSkillRouter searchRouter = (question, current) -> new AgentSkillRoute(
+                AgentSkillCode.ASSIGNED_CASE_SEARCH, 0.98,
+                Map.of("clinicalState", "PENDING_REVIEW", "dateWindow", "TODAY", "eyeSide", "RIGHT"));
+        DoctorAgentSkillOrchestrator orchestrator = new DoctorAgentSkillOrchestrator(
+                searchRouter, queries, contexts, mock(AgentClinicalReferenceService.class),
+                mock(CaseAnalysisTimelineService.class), versions);
 
         orchestrator.handle(9L, "今天有哪些右眼待审核结果？", doctor);
 
@@ -252,7 +258,7 @@ class DoctorAgentSkillOrchestratorTest {
     private DoctorAgentSkillOrchestrator orchestrator(DoctorAgentQueryService queries,
                                                         AgentQueryContextService contexts,
                                                         AgentSkillVersionBindingService versions) {
-        return new DoctorAgentSkillOrchestrator(new DefaultAgentSkillRouter(), queries, contexts,
+        return new DoctorAgentSkillOrchestrator(mock(AgentSkillRouter.class), queries, contexts,
                 mock(AgentClinicalReferenceService.class), mock(CaseAnalysisTimelineService.class), versions);
     }
 
