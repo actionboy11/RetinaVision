@@ -124,10 +124,10 @@ public class DoctorAgentSkillOrchestrator {
             AgentQueryContextSnapshot context = existing.orElseThrow(() ->
                     new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文已过期，请重新查询病例列表"));
             int index = route.selectedIndex() == null ? -1 : route.selectedIndex();
-            if (index < 1 || index > context.recentCaseIds().size()) {
+            if (index < 1 || index > context.recentReferenceIds().size()) {
                 throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "所选序号不在当前页范围内");
             }
-            reference = String.valueOf(context.recentCaseIds().get(index - 1));
+            reference = String.valueOf(context.recentReferenceIds().get(index - 1));
         }
         var item = references.resolveCase(reference, user);
         Map<String, Object> detail = new LinkedHashMap<>();

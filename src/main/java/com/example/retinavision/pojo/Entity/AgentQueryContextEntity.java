@@ -13,6 +13,7 @@ public class AgentQueryContextEntity {
     private Long sessionId;
     private Long skillVersionId;
     private String currentSkillCode;
+    private String referenceType;
     private String currentFiltersJson;
     private Integer currentPage;
     private Integer pageSize;
