@@ -1,7 +1,11 @@
 package com.example.retinavision.mapper;
 
 import com.example.retinavision.agent.DoctorCaseSearchCriteria;
+import com.example.retinavision.agent.DoctorTaskSearchCriteria;
 import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
+import com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO;
+import com.example.retinavision.pojo.VO.DoctorAgentTaskLogVO;
+import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
 import com.example.retinavision.pojo.VO.DoctorWorkloadVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -19,4 +23,19 @@ public interface DoctorAgentQueryMapper {
                                                        @Param("criteria") DoctorCaseSearchCriteria criteria,
                                                        @Param("offset") int offset,
                                                        @Param("pageSize") int pageSize);
+
+    long countTasks(@Param("doctorId") Integer doctorId,
+                    @Param("criteria") DoctorTaskSearchCriteria criteria);
+
+    List<DoctorAgentTaskSummaryVO> selectTasks(@Param("doctorId") Integer doctorId,
+                                               @Param("criteria") DoctorTaskSearchCriteria criteria,
+                                               @Param("offset") int offset,
+                                               @Param("pageSize") int pageSize);
+
+    DoctorAgentTaskDetailVO selectTaskDetail(@Param("doctorId") Integer doctorId,
+                                             @Param("taskReference") String taskReference,
+                                             @Param("taskId") Long taskId);
+
+    List<DoctorAgentTaskLogVO> selectTaskLogs(@Param("doctorId") Integer doctorId,
+                                              @Param("taskId") Long taskId);
 }

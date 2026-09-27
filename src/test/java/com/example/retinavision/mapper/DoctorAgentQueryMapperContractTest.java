@@ -32,6 +32,34 @@ class DoctorAgentQueryMapperContractTest {
         assertThat(mapper).contains("AS reviewStatus", "AS reportStatus");
     }
 
+    @Test
+    void taskQueriesAreDoctorScopedAndUseExpectedStatusSemantics() throws IOException {
+        String mapper = resource("/mapper/DoctorAgentQueryMapper.xml");
+
+        assertThat(mapper).contains(
+                "id=\"countTasks\"",
+                "id=\"selectTasks\"",
+                "id=\"selectTaskDetail\"",
+                "id=\"selectTaskLogs\"",
+                "JOIN medical_case c ON c.id = t.case_id",
+                "c.assigned_doctor_id = #{doctorId}",
+                "('CREATED','WAITING')",
+                "('RUNNING','RETRYING')",
+                "ORDER BY t.updated_at DESC, t.id DESC");
+    }
+
+    @Test
+    void taskReferenceAndLogsStayInsideDoctorScopedSql() throws IOException {
+        String mapper = resource("/mapper/DoctorAgentQueryMapper.xml");
+
+        assertThat(mapper).contains(
+                "t.task_no = #{taskReference}",
+                "t.id = #{taskId}",
+                "JOIN analysis_task t ON t.id = l.task_id",
+                "ORDER BY l.created_at DESC, l.id DESC",
+                "LIMIT 5");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).isNotNull();

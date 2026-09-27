@@ -100,4 +100,69 @@
         ORDER BY c.updated_at DESC, c.id DESC
         LIMIT #{offset}, #{pageSize}
     </select>
+
+    <sql id="doctorTaskFrom">
+        FROM analysis_task t
+        JOIN medical_case c ON c.id = t.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+    </sql>
+
+    <sql id="doctorTaskWhere">
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND t.task_type = #{criteria.taskType}
+        <choose>
+            <when test="criteria.status.name() == 'WAITING'">AND t.status IN ('CREATED','WAITING')</when>
+            <when test="criteria.status.name() == 'RUNNING'">AND t.status IN ('RUNNING','RETRYING')</when>
+            <when test="criteria.status.name() == 'FAILED'">AND t.status = 'FAILED'</when>
+            <when test="criteria.status.name() == 'SUCCESS'">AND t.status = 'SUCCESS'</when>
+        </choose>
+        <choose>
+            <when test="criteria.dateWindow.name() == 'TODAY'">AND t.updated_at &gt;= CURRENT_DATE</when>
+            <when test="criteria.dateWindow.name() == 'LAST_7_DAYS'">AND t.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)</when>
+            <when test="criteria.dateWindow.name() == 'LAST_30_DAYS'">AND t.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)</when>
+        </choose>
+    </sql>
+
+    <sql id="doctorTaskColumns">
+        t.id AS taskId, t.task_no AS taskNo, c.id AS caseId, c.case_no AS caseNo,
+        p.patient_no AS patientNo, t.task_type AS taskType, t.status AS status,
+        t.retry_count AS retryCount, t.max_retry_count AS maxRetryCount,
+        t.error_message AS errorSummary, t.submitted_at AS submittedAt,
+        t.started_at AS startedAt, t.finished_at AS finishedAt, t.updated_at AS updatedAt
+    </sql>
+
+    <select id="countTasks" resultType="long">
+        SELECT COUNT(*)
+        <include refid="doctorTaskFrom" />
+        <include refid="doctorTaskWhere" />
+    </select>
+
+    <select id="selectTasks" resultType="com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO">
+        SELECT <include refid="doctorTaskColumns" />
+        <include refid="doctorTaskFrom" />
+        <include refid="doctorTaskWhere" />
+        ORDER BY t.updated_at DESC, t.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectTaskDetail" resultType="com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO">
+        SELECT <include refid="doctorTaskColumns" />
+        <include refid="doctorTaskFrom" />
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND (t.task_no = #{taskReference} OR (#{taskId} IS NOT NULL AND t.id = #{taskId}))
+        LIMIT 1
+    </select>
+
+    <select id="selectTaskLogs" resultType="com.example.retinavision.pojo.VO.DoctorAgentTaskLogVO">
+        SELECT l.from_status AS fromStatus, l.to_status AS toStatus, l.message,
+               l.operator_type AS operatorType, l.created_at AS createdAt
+        FROM task_log l
+        JOIN analysis_task t ON t.id = l.task_id
+        JOIN medical_case c ON c.id = t.case_id
+        WHERE c.assigned_doctor_id = #{doctorId} AND t.id = #{taskId}
+        ORDER BY l.created_at DESC, l.id DESC
+        LIMIT 5
+    </select>
 </mapper>
