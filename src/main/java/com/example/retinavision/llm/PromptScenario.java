@@ -5,7 +5,8 @@ public enum PromptScenario {
     RAG_KNOWLEDGE_CHAT,
     CASE_TREND_SUMMARY,
     CLINICAL_ASSISTANT_AGENT,
-    PATIENT_ASSISTANT_AGENT;
+    PATIENT_ASSISTANT_AGENT,
+    AGENT_SKILL_ROUTER;
 
     public static PromptScenario fromTemplateCode(String templateCode) {
         try {

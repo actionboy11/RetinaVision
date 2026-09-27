@@ -49,7 +49,7 @@ public class DoctorAgentSkillOrchestrator {
             case ASSIGNED_CASE_SEARCH -> Optional.of(search(sessionId, route, existing, user));
             case CASE_CLINICAL_SUMMARY -> Optional.of(summary(sessionId, question, route, existing, user));
             case CASE_FOLLOWUP_ANALYSIS -> Optional.of(followup(sessionId, question, existing, user));
-            case MEDICAL_KNOWLEDGE_QA -> Optional.empty();
+            case DOCTOR_TASK_SEARCH, DOCTOR_CLINICAL_QUEUE, MEDICAL_KNOWLEDGE_QA -> Optional.empty();
         };
         if (result.isEmpty()) return result;
         AgentSkillRuntimeVersion version = versions.resolve(sessionId, route.skillCode());

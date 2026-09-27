@@ -147,6 +147,25 @@ class SchemaMigrationContractTest {
         assertThat(corpus).doesNotContain("active_version_id =");
     }
 
+    @Test
+    void doctorAgentTaskQueueMigrationAddsRouterPromptSkillsAndTypedContext() throws IOException {
+        String migration = resource("/db/migration/V19__doctor_agent_task_clinical_queues.sql");
+
+        assertThat(migration).contains(
+                "reference_type",
+                "DEFAULT 'CASE'",
+                "AGENT_SKILL_ROUTER",
+                "DOCTOR_TASK_SEARCH",
+                "DOCTOR_CLINICAL_QUEUE",
+                "routing_examples_json",
+                "skillCode",
+                "confidence",
+                "arguments");
+        assertThat(migration).doesNotContain(
+                "WHERE skill_code IN ('DOCTOR_TASK_SEARCH', 'DOCTOR_CLINICAL_QUEUE')",
+                "UPDATE agent_skill");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();

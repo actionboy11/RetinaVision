@@ -170,7 +170,8 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
     private boolean isReadOnlySkill(AgentSkillCode skillCode) {
         return switch (skillCode) {
             case DOCTOR_WORKLOAD_OVERVIEW, ASSIGNED_CASE_SEARCH, CASE_CLINICAL_SUMMARY,
-                    CASE_FOLLOWUP_ANALYSIS, MEDICAL_KNOWLEDGE_QA -> true;
+                    CASE_FOLLOWUP_ANALYSIS, DOCTOR_TASK_SEARCH, DOCTOR_CLINICAL_QUEUE,
+                    MEDICAL_KNOWLEDGE_QA -> true;
         };
     }
 
