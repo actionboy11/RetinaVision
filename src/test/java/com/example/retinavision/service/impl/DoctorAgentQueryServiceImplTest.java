@@ -2,6 +2,8 @@ package com.example.retinavision.service.impl;
 
 import com.example.retinavision.agent.DoctorCaseSearchCriteria;
 import com.example.retinavision.agent.DoctorDateWindow;
+import com.example.retinavision.agent.DoctorClinicalQueueCriteria;
+import com.example.retinavision.agent.DoctorClinicalQueueType;
 import com.example.retinavision.agent.DoctorTaskSearchCriteria;
 import com.example.retinavision.agent.DoctorTaskStatusFilter;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
@@ -14,6 +16,7 @@ import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskLogVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
+import com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -144,6 +147,53 @@ class DoctorAgentQueryServiceImplTest {
         assertThatThrownBy(() -> service.searchTasks(null, 1, 10, patient))
                 .isInstanceOf(BaseException.class);
         assertThatThrownBy(() -> service.getTaskDetail("T1", patient))
+                .isInstanceOf(BaseException.class);
+    }
+
+    @Test
+    void clinicalQueueCapsPageSizeAndForwardsQueueType() {
+        DoctorAgentQueryMapper mapper = mock(DoctorAgentQueryMapper.class);
+        DoctorAgentQueryServiceImpl service = new DoctorAgentQueryServiceImpl(mapper);
+        DoctorClinicalQueueCriteria criteria = new DoctorClinicalQueueCriteria(
+                DoctorClinicalQueueType.PENDING_REVIEW, DoctorDateWindow.TODAY);
+        when(mapper.countClinicalQueue(27, criteria)).thenReturn(1L);
+        when(mapper.selectClinicalQueue(27, criteria, 0, 10))
+                .thenReturn(List.of(new DoctorClinicalQueueItemVO()));
+
+        var result = service.searchClinicalQueue(criteria, 0, 99, doctor(27));
+
+        verify(mapper).countClinicalQueue(27, criteria);
+        verify(mapper).selectClinicalQueue(27, criteria, 0, 10);
+        assertThat(result.getPageNo()).isEqualTo(1);
+        assertThat(result.getPageSize()).isEqualTo(10);
+    }
+
+    @Test
+    void pendingReportQueueAndEmptyResultsAreReturnedWithoutNulls() {
+        DoctorAgentQueryMapper mapper = mock(DoctorAgentQueryMapper.class);
+        DoctorAgentQueryServiceImpl service = new DoctorAgentQueryServiceImpl(mapper);
+        DoctorClinicalQueueCriteria criteria = new DoctorClinicalQueueCriteria(
+                DoctorClinicalQueueType.PENDING_REPORT, DoctorDateWindow.ANY);
+        when(mapper.countClinicalQueue(27, criteria)).thenReturn(0L);
+        when(mapper.selectClinicalQueue(27, criteria, 0, 10)).thenReturn(null);
+
+        var result = service.searchClinicalQueue(criteria, 1, 10, doctor(27));
+
+        assertThat(result.getRecords()).isEmpty();
+        assertThat(result.getTotal()).isZero();
+        verify(mapper).countClinicalQueue(27, criteria);
+    }
+
+    @Test
+    void clinicalQueueRequiresDoctorRole() {
+        DoctorAgentQueryMapper mapper = mock(DoctorAgentQueryMapper.class);
+        DoctorAgentQueryServiceImpl service = new DoctorAgentQueryServiceImpl(mapper);
+        CurrentUserVO patient = new CurrentUserVO();
+        patient.setId(5);
+        patient.setRoleCode(UserRole.USER);
+
+        assertThatThrownBy(() -> service.searchClinicalQueue(
+                new DoctorClinicalQueueCriteria(DoctorClinicalQueueType.PENDING_REVIEW, null), 1, 10, patient))
                 .isInstanceOf(BaseException.class);
     }
 

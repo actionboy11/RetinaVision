@@ -165,4 +165,67 @@
         ORDER BY l.created_at DESC, l.id DESC
         LIMIT 5
     </select>
+
+    <sql id="clinicalQueueFrom">
+        FROM analysis_task t
+        JOIN medical_case c ON c.id = t.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+        JOIN analysis_result ar ON ar.task_id = t.id
+        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
+        LEFT JOIN analysis_task qt ON qt.id = (
+            SELECT qt0.id FROM analysis_task qt0
+            WHERE qt0.image_file_id = t.image_file_id AND qt0.task_type = 'IMAGE_QUALITY_CHECK'
+            ORDER BY qt0.updated_at DESC, qt0.id DESC LIMIT 1
+        )
+        LEFT JOIN analysis_result qr ON qr.task_id = qt.id
+    </sql>
+
+    <sql id="clinicalQueueWhere">
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND t.task_type = 'VESSEL_SEGMENTATION'
+          AND t.status = 'SUCCESS'
+          AND ar.id IS NOT NULL
+        <choose>
+            <when test="criteria.queueType.name() == 'PENDING_REVIEW'">
+                AND (rv.id IS NULL OR rv.status IN ('PENDING','CHANGES_REQUESTED'))
+            </when>
+            <when test="criteria.queueType.name() == 'PENDING_REPORT'">
+                AND rv.status = 'APPROVED'
+                AND NOT EXISTS (
+                    SELECT 1 FROM analysis_report signed_report
+                    WHERE signed_report.result_id = ar.id AND signed_report.status = 'SIGNED'
+                )
+            </when>
+        </choose>
+        <choose>
+            <when test="criteria.dateWindow.name() == 'TODAY'">AND COALESCE(t.finished_at, ar.created_at) &gt;= CURRENT_DATE</when>
+            <when test="criteria.dateWindow.name() == 'LAST_7_DAYS'">AND COALESCE(t.finished_at, ar.created_at) &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)</when>
+            <when test="criteria.dateWindow.name() == 'LAST_30_DAYS'">AND COALESCE(t.finished_at, ar.created_at) &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)</when>
+        </choose>
+    </sql>
+
+    <select id="countClinicalQueue" resultType="long">
+        SELECT COUNT(DISTINCT t.id)
+        <include refid="clinicalQueueFrom" />
+        <include refid="clinicalQueueWhere" />
+    </select>
+
+    <select id="selectClinicalQueue" resultType="com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO">
+        SELECT DISTINCT
+            t.id AS taskId, t.task_no AS taskNo, ar.id AS resultId,
+            c.id AS caseId, c.case_no AS caseNo, p.patient_no AS patientNo,
+            c.eye_side AS eyeSide, ar.result_type AS resultType,
+            JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.qualityStatus')) AS qualityStatus,
+            CAST(JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.score')) AS DECIMAL(10,2)) AS qualityScore,
+            rv.status AS reviewStatus,
+            (SELECT report0.status FROM analysis_report report0
+             WHERE report0.result_id = ar.id
+             ORDER BY report0.version DESC, report0.id DESC LIMIT 1) AS reportStatus,
+            t.finished_at AS finishedAt, ar.created_at AS resultCreatedAt
+        <include refid="clinicalQueueFrom" />
+        <include refid="clinicalQueueWhere" />
+        ORDER BY COALESCE(t.finished_at, ar.created_at) DESC, t.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
 </mapper>

@@ -60,6 +60,34 @@ class DoctorAgentQueryMapperContractTest {
                 "LIMIT 5");
     }
 
+    @Test
+    void clinicalQueuesUseDistinctRowsAndStrictReviewSemantics() throws IOException {
+        String mapper = resource("/mapper/DoctorAgentQueryMapper.xml");
+
+        assertThat(mapper).contains(
+                "id=\"countClinicalQueue\"",
+                "id=\"selectClinicalQueue\"",
+                "SELECT COUNT(DISTINCT t.id)",
+                "SELECT DISTINCT",
+                "t.task_type = 'VESSEL_SEGMENTATION'",
+                "t.status = 'SUCCESS'",
+                "ar.id IS NOT NULL",
+                "rv.id IS NULL OR rv.status IN ('PENDING','CHANGES_REQUESTED')",
+                "rv.status = 'APPROVED'");
+    }
+
+    @Test
+    void pendingReportUsesSignedHistoryExistenceAndClinicalSort() throws IOException {
+        String mapper = resource("/mapper/DoctorAgentQueryMapper.xml");
+
+        assertThat(mapper).contains(
+                "NOT EXISTS",
+                "analysis_report signed_report",
+                "signed_report.status = 'SIGNED'",
+                "COALESCE(t.finished_at, ar.created_at) DESC, t.id DESC",
+                "c.assigned_doctor_id = #{doctorId}");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).isNotNull();

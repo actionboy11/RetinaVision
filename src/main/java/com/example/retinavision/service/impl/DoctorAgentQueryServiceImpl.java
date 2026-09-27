@@ -2,6 +2,7 @@ package com.example.retinavision.service.impl;
 
 import com.example.retinavision.agent.DoctorCaseSearchCriteria;
 import com.example.retinavision.agent.DoctorTaskSearchCriteria;
+import com.example.retinavision.agent.DoctorClinicalQueueCriteria;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
@@ -11,6 +12,7 @@ import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
 import com.example.retinavision.pojo.VO.DoctorWorkloadVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
+import com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.DoctorAgentQueryService;
 import org.springframework.stereotype.Service;
@@ -78,6 +80,24 @@ public class DoctorAgentQueryServiceImpl implements DoctorAgentQueryService {
         logs.forEach(log -> log.setMessage(sanitizeSummary(log.getMessage())));
         detail.setLogs(logs);
         return detail;
+    }
+
+    @Override
+    public PageResult<DoctorClinicalQueueItemVO> searchClinicalQueue(DoctorClinicalQueueCriteria criteria,
+                                                                     Integer page,
+                                                                     Integer pageSize,
+                                                                     CurrentUserVO doctor) {
+        requireDoctor(doctor);
+        if (criteria == null) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "临床队列类型不能为空");
+        }
+        int safePage = page == null || page < 1 ? 1 : page;
+        int safeSize = pageSize == null || pageSize < 1 ? PAGE_SIZE : Math.min(pageSize, PAGE_SIZE);
+        long total = mapper.countClinicalQueue(doctor.getId(), criteria);
+        var records = mapper.selectClinicalQueue(doctor.getId(), criteria,
+                (safePage - 1) * safeSize, safeSize);
+        if (records == null) records = java.util.List.of();
+        return new PageResult<>(records, total, safePage, safeSize);
     }
 
     private Long parseTaskId(String reference) {
