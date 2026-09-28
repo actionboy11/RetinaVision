@@ -12,7 +12,7 @@ RetinaVision Backend 是眼底图像 AI 辅助分析平台的业务中枢。系�
 - **Python 推理集成**：通过 HTTP multipart 调用图像质量检测和血管分割服务，持久化结构化指标与 mask。
 - **Redis 安全控制**：登录失败限流、JWT 登出黑名单和基于 Lua 的 AI 任务配额。
 - **RAG 知识助手**：Spring AI Embedding、Qdrant 检索、知识受众过滤、引用校验和低相关兜底。
-- **只读临床 Agent**：Skill Router、受控 Function Calling、服务端多轮上下文、结构化分页和对象级鉴权。
+- **只读临床 Agent**：LLM Skill Router、Java Native Skill、受控 Function Calling、服务端多轮上下文、结构化分页和对象级鉴权。
 - **AI 治理**：Prompt 版本、RAG/Prompt 评测、调用审计、模型质控和管理员发布门槛。
 
 ## 角色边界
@@ -61,7 +61,11 @@ RabbitMQ 消费者运行在 Java 后端进程中。Python 服务只负责模型�
 
 知识助手负责“基于知识库回答医学资料问题”：文档切分后写入 Qdrant，提问时通过 `DocumentRetriever` 检索，回答必须引用本轮真实命中的知识片段。
 
-临床 Agent 负责“用自然语言查询业务数据”：先由 Skill Router 识别工作量、病例筛选、病例摘要、随访比较或知识检索，再只注册该 Skill 允许的只读工具。医生可组合分割状态、待审核/待签发、时间窗口和眼别条件；查询在 SQL 阶段限定 `assigned_doctor_id`，列表按最近更新时间倒序且每页最多 10 条，翻页会保留完整筛选。Skill 版本使用带预期参数和反例的语料评测，未达路由、参数与安全阈值不能启用。Agent 没有创建任务、修改病例、审核或签发工具。
+临床 Agent 负责“用自然语言查询业务数据”，采用两阶段执行。第一阶段把用户问题、当前角色可见的版本化 Skill 定义和 JSON 输出契约交给 LLM Router，模型只返回 `skillCode`、置信度和参数；该阶段不注册 Function Calling 工具，也不发送病例、任务或临床队列数据。
+
+第二阶段由 Java 校验角色、置信度和参数后选择执行模式：工作量、病例筛选、病例摘要、随访比较、任务查询和待审核/待签发队列走 Native `DIRECT` Skill，由 Service/Mapper 查询后直接组装固定摘要与结构化数据，不把查询结果再次发送给 LLM；医学知识问答走 `TOOL_CALLING`，医生侧只注册 `searchMedicalKnowledge`。任务、病例和临床队列查询均在 SQL 阶段限定 `assigned_doctor_id`，列表按最近更新时间倒序且每页最多 10 条，翻页会保留筛选与带类型的本页引用。
+
+Skill 版本使用带预期参数和反例的语料评测，候选版本未达到路由准确率 90%、参数准确率 95% 和全部安全检查前不能启用。Agent 没有创建任务、修改病例、审核或签发工具；任务和队列响应只返回匿名编号、状态、时间及脱敏错误摘要，不返回原图、mask、路径、完整结果 JSON 或未签发报告正文。
 
 ## 技术栈
 
