@@ -15,7 +15,6 @@ import java.util.Map;
 
 @Component
 public class LlmAgentSkillRouter implements AgentSkillRouter {
-    private static final double MIN_CONFIDENCE = 0.65;
     private final LlmOrchestrationService llm;
     private final ObjectMapper json;
     private final AgentSkillRegistry registry;
@@ -51,9 +50,6 @@ public class LlmAgentSkillRouter implements AgentSkillRouter {
                 throw new BaseException(ErrorMessageSignal.FORBIDDEN, "LLM 选择的 Skill 当前不可用");
             }
             double confidence = Math.max(0, Math.min(1, root.path("confidence").asDouble(0)));
-            if (confidence < MIN_CONFIDENCE) {
-                throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "请说明您要查询任务、临床待办还是医学知识");
-            }
             Map<String, String> arguments = new LinkedHashMap<>();
             JsonNode argumentNode = root.path("arguments");
             if (!argumentNode.isMissingNode() && !argumentNode.isObject()) {

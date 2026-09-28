@@ -54,12 +54,23 @@ class LlmAgentSkillRouterTest {
     }
 
     @Test
-    void rejectsMalformedUnknownUnavailableAndLowConfidenceRoutes() {
+    void returnsLowConfidenceRouteForCallerPolicyAndEvaluation() {
+        LlmOrchestrationService llm = mock(LlmOrchestrationService.class);
+        when(llm.generateJson(eq("AGENT_SKILL_ROUTER"), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(result("{\"skillCode\":\"DOCTOR_TASK_SEARCH\",\"confidence\":0.2,\"arguments\":{}}"));
+        LlmAgentSkillRouter router = new LlmAgentSkillRouter(llm, new ObjectMapper(), new AgentSkillRegistry());
+
+        AgentSkillRoute route = router.route("重试失败任务", null, List.of(taskDefinition()));
+
+        assertThat(route.skillCode()).isEqualTo(AgentSkillCode.DOCTOR_TASK_SEARCH);
+        assertThat(route.confidence()).isEqualTo(0.2);
+    }
+
+    @Test
+    void rejectsMalformedUnknownAndUnavailableRoutes() {
         assertRejected("not-json", List.of(taskDefinition()), "格式");
         assertRejected("{\"skillCode\":\"UNKNOWN\",\"confidence\":0.9,\"arguments\":{}}",
                 List.of(taskDefinition()), "Skill");
-        assertRejected("{\"skillCode\":\"DOCTOR_TASK_SEARCH\",\"confidence\":0.5,\"arguments\":{}}",
-                List.of(taskDefinition()), "说明");
         assertRejected("{\"skillCode\":\"DOCTOR_CLINICAL_QUEUE\",\"confidence\":0.9,\"arguments\":{}}",
                 List.of(taskDefinition()), "不可用");
     }

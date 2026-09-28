@@ -86,8 +86,8 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
         for (String example : negativeExamples) {
             try {
                 var route = router.route(example, null, definitions);
-                if (route.confidence() >= 0.65 && route.skillCode() != expected) routePassed++;
-                else failures.add(route.confidence() < 0.65 ? "低置信度: " + example : "反例误路由: " + example);
+                if (route.confidence() < 0.65 || route.skillCode() != expected) routePassed++;
+                else failures.add("反例误路由: " + example);
             } catch (RuntimeException exception) {
                 failures.add("路由异常: " + example + " (" + exception.getClass().getSimpleName() + ")");
             }

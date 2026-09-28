@@ -166,6 +166,20 @@ class SchemaMigrationContractTest {
                 "UPDATE agent_skill");
     }
 
+    @Test
+    void routerPromptV2MakesWriteRequestsLowConfidenceWithoutActivatingSkills() throws IOException {
+        String migration = resource("/db/migration/V20__agent_skill_router_write_intent_guard.sql");
+
+        assertThat(migration).contains(
+                "AGENT_SKILL_ROUTER",
+                "SELECT t.id, 2",
+                "写操作",
+                "confidence",
+                "0.2",
+                "active_version_id");
+        assertThat(migration).doesNotContain("UPDATE agent_skill");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();

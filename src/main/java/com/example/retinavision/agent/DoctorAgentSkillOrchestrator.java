@@ -23,6 +23,7 @@ import java.util.Optional;
 
 @Component
 public class DoctorAgentSkillOrchestrator {
+    private static final double MIN_ROUTE_CONFIDENCE = 0.65;
     private final AgentSkillRouter router;
     private final DoctorAgentQueryService queries;
     private final AgentQueryContextService contexts;
@@ -74,6 +75,10 @@ public class DoctorAgentSkillOrchestrator {
                         ? router.route(question, existing.map(AgentQueryContextSnapshot::currentSkill).orElse(null))
                         : router.route(question, existing.map(AgentQueryContextSnapshot::currentSkill).orElse(null),
                         catalog.availableFor(sessionId, user)));
+        if (route.confidence() < MIN_ROUTE_CONFIDENCE) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR,
+                    "请说明您要查询任务、临床待办还是医学知识");
+        }
         Map<String, String> normalized = registry.validateAndNormalize(
                 route.skillCode(), user.getRoleCode(), route.arguments());
         route = new AgentSkillRoute(route.skillCode(), route.confidence(), normalized,

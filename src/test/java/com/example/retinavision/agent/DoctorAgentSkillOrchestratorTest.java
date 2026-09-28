@@ -35,6 +35,23 @@ import org.mockito.ArgumentCaptor;
 class DoctorAgentSkillOrchestratorTest {
 
     @Test
+    void rejectsLowConfidenceRouteBeforeExecutingNativeQuery() {
+        DoctorAgentQueryService queries = mock(DoctorAgentQueryService.class);
+        AgentQueryContextService contexts = mock(AgentQueryContextService.class);
+        when(contexts.load(9L)).thenReturn(Optional.empty());
+        AgentSkillRouter router = (question, current) -> new AgentSkillRoute(
+                AgentSkillCode.DOCTOR_TASK_SEARCH, 0.2, Map.of());
+        DoctorAgentSkillOrchestrator orchestrator = new DoctorAgentSkillOrchestrator(
+                router, queries, contexts, mock(AgentClinicalReferenceService.class),
+                mock(CaseAnalysisTimelineService.class), mock(AgentSkillVersionBindingService.class));
+
+        assertThatThrownBy(() -> orchestrator.handle(9L, "重试失败任务", doctor()))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("说明");
+        verify(queries, never()).searchTasks(any(), any(), any(), any());
+    }
+
+    @Test
     void workloadQuestionReturnsTrustedStructuredMetrics() {
         DoctorAgentQueryService queries = mock(DoctorAgentQueryService.class);
         AgentQueryContextService contexts = mock(AgentQueryContextService.class);

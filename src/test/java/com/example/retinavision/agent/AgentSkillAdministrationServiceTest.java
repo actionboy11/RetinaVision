@@ -123,4 +123,40 @@ class AgentSkillAdministrationServiceTest {
         assertThat(run.getValue().getFailureSamplesJson()).contains("路由异常", "低置信度");
         verify(skills, never()).updateById(any(AgentSkillEntity.class));
     }
+
+    @Test
+    void lowConfidenceNegativeExampleCountsAsSuccessfulRejection() {
+        AgentSkillMapper skills = mock(AgentSkillMapper.class);
+        AgentSkillVersionMapper versions = mock(AgentSkillVersionMapper.class);
+        AgentSkillEvaluationRunMapper evaluations = mock(AgentSkillEvaluationRunMapper.class);
+        AgentSkillEntity skill = new AgentSkillEntity();
+        skill.setId(2L); skill.setSkillCode("DOCTOR_TASK_SEARCH");
+        AgentSkillVersionEntity version = new AgentSkillVersionEntity();
+        version.setId(22L); version.setSkillId(2L); version.setVersion(1);
+        version.setWorkflowPrompt("只读查询任务");
+        version.setRoutingExamplesJson("[{\"query\":\"查询我的任务\",\"arguments\":{}}]");
+        version.setRoutingNegativeExamplesJson("[\"重试失败任务\"]");
+        when(skills.selectOne(any())).thenReturn(skill);
+        when(versions.selectById(22L)).thenReturn(version);
+        AgentSkillDefinition candidate = new AgentSkillDefinition(AgentSkillCode.DOCTOR_TASK_SEARCH,
+                "医生任务查询", "查询任务", 1, version.getRoutingExamplesJson(), version.getWorkflowPrompt());
+        AgentSkillCatalogService catalog = mock(AgentSkillCatalogService.class);
+        when(catalog.forEvaluation(skill, version)).thenReturn(List.of(candidate));
+        AgentSkillRouter router = mock(AgentSkillRouter.class);
+        when(router.route("查询我的任务", null, List.of(candidate))).thenReturn(
+                new AgentSkillRoute(AgentSkillCode.DOCTOR_TASK_SEARCH, 0.95, Map.of()));
+        when(router.route("重试失败任务", null, List.of(candidate))).thenReturn(
+                new AgentSkillRoute(AgentSkillCode.DOCTOR_TASK_SEARCH, 0.2, Map.of()));
+        var service = new AgentSkillAdministrationServiceImpl(skills, versions, evaluations,
+                router, catalog, new ObjectMapper());
+
+        service.evaluate("DOCTOR_TASK_SEARCH", 22L, 7);
+
+        ArgumentCaptor<AgentSkillEvaluationRunEntity> run = ArgumentCaptor.forClass(AgentSkillEvaluationRunEntity.class);
+        verify(evaluations).insert(run.capture());
+        assertThat(run.getValue().getRoutePassedCount()).isEqualTo(2);
+        assertThat(run.getValue().getRoutingAccuracy()).isEqualTo(1.0);
+        assertThat(run.getValue().getParameterAccuracy()).isEqualTo(1.0);
+        assertThat(run.getValue().getFailureSamplesJson()).isEqualTo("[]");
+    }
 }
