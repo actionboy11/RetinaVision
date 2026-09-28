@@ -11,6 +11,10 @@ import java.util.regex.Pattern;
 public class AgentContextCommandParser {
     private static final Pattern INDEX = Pattern.compile("(?:查看|打开|看一下)第?([一二三四五六七八九十\\d]+)个");
 
+    public boolean isSelectionCommand(String question) {
+        return question != null && INDEX.matcher(question.trim()).find();
+    }
+
     public Optional<AgentSkillRoute> parse(String question, AgentQueryContextSnapshot context) {
         if (context == null) return Optional.empty();
         String value = question == null ? "" : question.trim();

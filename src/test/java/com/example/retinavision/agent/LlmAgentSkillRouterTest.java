@@ -75,6 +75,14 @@ class LlmAgentSkillRouterTest {
                 List.of(taskDefinition()), "不可用");
     }
 
+    @Test
+    void rejectsOutOfRangeConfidenceInsteadOfClampingIt() {
+        assertRejected("{\"skillCode\":\"DOCTOR_TASK_SEARCH\",\"confidence\":2,\"arguments\":{}}",
+                List.of(taskDefinition()), "置信度");
+        assertRejected("{\"skillCode\":\"DOCTOR_TASK_SEARCH\",\"confidence\":-0.1,\"arguments\":{}}",
+                List.of(taskDefinition()), "置信度");
+    }
+
     private void assertRejected(String json, List<AgentSkillDefinition> definitions, String message) {
         LlmOrchestrationService llm = mock(LlmOrchestrationService.class);
         when(llm.generateJson(eq("AGENT_SKILL_ROUTER"), org.mockito.ArgumentMatchers.anyString()))

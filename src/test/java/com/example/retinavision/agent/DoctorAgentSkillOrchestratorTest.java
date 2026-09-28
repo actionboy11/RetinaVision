@@ -228,6 +228,30 @@ class DoctorAgentSkillOrchestratorTest {
     }
 
     @Test
+    void taskTypeIsDeterministicallyNormalizedFromQuestion() {
+        DoctorAgentQueryService queries = mock(DoctorAgentQueryService.class);
+        AgentQueryContextService contexts = mock(AgentQueryContextService.class);
+        AgentSkillRouter router = mock(AgentSkillRouter.class);
+        when(contexts.load(9L)).thenReturn(Optional.empty());
+        when(queries.searchTasks(any(), eq(1), eq(10), any()))
+                .thenReturn(new PageResult<>(List.of(), 0, 1, 10));
+        when(router.route(eq("查询我的任务"), eq(null), any())).thenReturn(new AgentSkillRoute(
+                AgentSkillCode.DOCTOR_TASK_SEARCH, 0.96,
+                Map.of("taskType", "IMAGE_QUALITY_CHECK")));
+        when(router.route(eq("查询图像质检任务"), eq(null), any())).thenReturn(new AgentSkillRoute(
+                AgentSkillCode.DOCTOR_TASK_SEARCH, 0.96, Map.of()));
+        DoctorAgentSkillOrchestrator orchestrator = orchestrator(router, queries, contexts);
+
+        orchestrator.handle(9L, "查询我的任务", doctor());
+        orchestrator.handle(9L, "查询图像质检任务", doctor());
+
+        ArgumentCaptor<DoctorTaskSearchCriteria> criteria = ArgumentCaptor.forClass(DoctorTaskSearchCriteria.class);
+        verify(queries, org.mockito.Mockito.times(2)).searchTasks(criteria.capture(), eq(1), eq(10), any());
+        assertThat(criteria.getAllValues().get(0).taskType()).isEqualTo(AnalysisTaskType.VESSEL_SEGMENTATION);
+        assertThat(criteria.getAllValues().get(1).taskType()).isEqualTo(AnalysisTaskType.IMAGE_QUALITY_CHECK);
+    }
+
+    @Test
     void clinicalSelectionBuildsOnlyControlledReviewPath() {
         DoctorAgentQueryService queries = mock(DoctorAgentQueryService.class);
         AgentQueryContextService contexts = mock(AgentQueryContextService.class);
@@ -270,6 +294,23 @@ class DoctorAgentSkillOrchestratorTest {
                 .isInstanceOf(BaseException.class).hasMessageContaining("序号");
         assertThatThrownBy(() -> orchestrator.handle(9L, "查看第三个任务", doctor()))
                 .isInstanceOf(BaseException.class).hasMessageContaining("序号");
+    }
+
+    @Test
+    void ordinalSelectionRequiresFreshMatchingContext() {
+        DoctorAgentQueryService queries = mock(DoctorAgentQueryService.class);
+        AgentQueryContextService contexts = mock(AgentQueryContextService.class);
+        when(contexts.load(9L)).thenReturn(Optional.empty());
+        DoctorAgentSkillOrchestrator orchestrator = orchestrator(mock(AgentSkillRouter.class), queries, contexts);
+
+        assertThatThrownBy(() -> orchestrator.handle(9L, "查看第三个", doctor()))
+                .isInstanceOf(BaseException.class).hasMessageContaining("重新查询");
+
+        when(contexts.load(9L)).thenReturn(Optional.of(taskContext(List.of(81L, 82L, 83L))));
+        assertThatThrownBy(() -> orchestrator.handle(9L, "查看第三个病例", doctor()))
+                .isInstanceOf(BaseException.class).hasMessageContaining("病例列表");
+
+        verify(queries, never()).getTaskDetail(any(), any());
     }
 
     private DoctorAgentSkillOrchestrator orchestrator(DoctorAgentQueryService queries,

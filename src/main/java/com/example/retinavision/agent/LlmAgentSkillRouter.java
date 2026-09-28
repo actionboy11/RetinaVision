@@ -49,7 +49,14 @@ public class LlmAgentSkillRouter implements AgentSkillRouter {
             if (availableSkills.stream().noneMatch(item -> item.code() == code)) {
                 throw new BaseException(ErrorMessageSignal.FORBIDDEN, "LLM 选择的 Skill 当前不可用");
             }
-            double confidence = Math.max(0, Math.min(1, root.path("confidence").asDouble(0)));
+            JsonNode confidenceNode = root.path("confidence");
+            if (!confidenceNode.isNumber()) {
+                throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 路由置信度格式无效");
+            }
+            double confidence = confidenceNode.asDouble();
+            if (!Double.isFinite(confidence) || confidence < 0 || confidence > 1) {
+                throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 路由置信度超出有效范围");
+            }
             Map<String, String> arguments = new LinkedHashMap<>();
             JsonNode argumentNode = root.path("arguments");
             if (!argumentNode.isMissingNode() && !argumentNode.isObject()) {

@@ -70,6 +70,9 @@ public class DoctorAgentSkillOrchestrator {
         if (user == null || user.getRoleCode() != UserRole.DOCTOR) return Optional.empty();
         Optional<AgentQueryContextSnapshot> existing = contexts.load(sessionId);
         validateTypedReferenceCommand(question, existing.orElse(null));
+        if (existing.isEmpty() && commandParser.isSelectionCommand(question)) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文已过期，请重新查询列表");
+        }
         AgentSkillRoute route = existing.flatMap(context -> commandParser.parse(question, context))
                 .orElseGet(() -> catalog == null
                         ? router.route(question, existing.map(AgentQueryContextSnapshot::currentSkill).orElse(null))
@@ -88,7 +91,7 @@ public class DoctorAgentSkillOrchestrator {
             case ASSIGNED_CASE_SEARCH -> Optional.of(search(sessionId, route, existing, user));
             case CASE_CLINICAL_SUMMARY -> Optional.of(summary(sessionId, question, route, existing, user));
             case CASE_FOLLOWUP_ANALYSIS -> Optional.of(followup(sessionId, question, existing, user));
-            case DOCTOR_TASK_SEARCH -> Optional.of(tasks(sessionId, route, existing, user));
+            case DOCTOR_TASK_SEARCH -> Optional.of(tasks(sessionId, question, route, existing, user));
             case DOCTOR_CLINICAL_QUEUE -> Optional.of(clinicalQueue(sessionId, route, existing, user));
             case MEDICAL_KNOWLEDGE_QA -> Optional.empty();
         };
@@ -99,7 +102,7 @@ public class DoctorAgentSkillOrchestrator {
                 value.answer(), value.data(), value.pagination(), value.actions()));
     }
 
-    private DoctorAgentSkillResult tasks(Long sessionId, AgentSkillRoute route,
+    private DoctorAgentSkillResult tasks(Long sessionId, String question, AgentSkillRoute route,
                                          Optional<AgentQueryContextSnapshot> existing, CurrentUserVO user) {
         AgentQueryContextSnapshot previous = existing.orElse(null);
         if (route.command() == AgentContextCommand.SELECT_INDEX) {
@@ -115,8 +118,7 @@ public class DoctorAgentSkillOrchestrator {
         }
 
         int page = 1;
-        AnalysisTaskType taskType = enumValue(AnalysisTaskType.class,
-                route.arguments().get("taskType"), AnalysisTaskType.VESSEL_SEGMENTATION);
+        AnalysisTaskType taskType = taskTypeFromQuestion(question);
         DoctorTaskStatusFilter status = enumValue(DoctorTaskStatusFilter.class,
                 route.arguments().get("status"), DoctorTaskStatusFilter.ANY);
         DoctorDateWindow dateWindow = enumValue(DoctorDateWindow.class,
@@ -246,7 +248,10 @@ public class DoctorAgentSkillOrchestrator {
     }
 
     private void validateTypedReferenceCommand(String question, AgentQueryContextSnapshot context) {
-        if (context == null || question == null || !question.matches(".*第?[零一二三四五六七八九十\\d]+个.*")) return;
+        if (context == null || !commandParser.isSelectionCommand(question)) return;
+        if (question.contains("病例") && context.referenceType() != AgentReferenceType.CASE) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文不匹配，请重新查询病例列表");
+        }
         if (question.contains("任务") && context.referenceType() != AgentReferenceType.TASK) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文不匹配，请重新查询任务列表");
         }
@@ -254,6 +259,15 @@ public class DoctorAgentSkillOrchestrator {
                 && context.referenceType() != AgentReferenceType.CLINICAL_QUEUE) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文不匹配，请重新查询临床队列");
         }
+    }
+
+    private AnalysisTaskType taskTypeFromQuestion(String question) {
+        String value = question == null ? "" : question;
+        if (value.contains("图像质检") || value.contains("图像质量")
+                || value.contains("质量检测") || value.contains("质检任务")) {
+            return AnalysisTaskType.IMAGE_QUALITY_CHECK;
+        }
+        return AnalysisTaskType.VESSEL_SEGMENTATION;
     }
 
     private DoctorAgentSkillResult workload(CurrentUserVO user, AgentSkillRoute route) {
