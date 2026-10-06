@@ -54,6 +54,18 @@ mybatis-plus:
 
 
 retina:
+  mq:
+    analysis-exchange: retina.analysis.exchange
+    analysis-routing-key: retina.analysis.task.created
+    analysis-queue: retina.analysis.task.queue
+    analysis-retry-exchange: retina.analysis.retry.exchange
+    analysis-retry-routing-key: retina.analysis.task.retry
+    analysis-retry-queue: retina.analysis.task.retry.queue
+    analysis-retry-delay-ms: 10000
+    analysis-max-auto-retries: 3
+    analysis-dead-letter-exchange: retina.analysis.dlx
+    analysis-dead-letter-routing-key: retina.analysis.task.dead
+    analysis-dead-letter-queue: retina.analysis.task.dead.queue
   redis:
     key-prefix: rv
     login:
