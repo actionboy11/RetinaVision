@@ -30,6 +30,9 @@ if ($backend) {
     Require-Text $backend '3307:3306' 'Backend CI must expose MySQL on 3307'
     Require-Text $backend '6379:6379' 'Backend CI must expose Redis on 6379'
     Require-Text $backend '5672:5672' 'Backend CI must expose RabbitMQ on 5672'
+    Require-Text $backend 'ALTER DATABASE retina_vision CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci' 'Backend CI must normalize the empty database collation before Flyway'
+    Require-Text $backend 'RETINA_REPORT_FONT_PATH' 'Backend CI must configure the report font path'
+    Require-Text $backend 'fonts-noto-cjk' 'Backend CI must install a Chinese report font'
     Require-Text $backend 'src/**' 'Backend CI must trigger for backend source changes'
     Require-Text $backend 'pom.xml' 'Backend CI must trigger for pom.xml changes'
     foreach ($trigger in $sharedTriggers) {
@@ -70,6 +73,7 @@ if ($ai) {
 $secretScan = Read-Workflow 'secret-scan.yml'
 if ($secretScan) {
     Require-Text $secretScan 'fetch-depth: 0' 'Secret Scan must fetch full history'
+    Require-Text $secretScan 'pull-requests: read' 'Secret Scan must be able to inspect pull request commits'
     if ($secretScan -match '(?m)^\s+paths(?:-ignore)?:') {
         $errors.Add('Secret Scan must not use path filters')
     }

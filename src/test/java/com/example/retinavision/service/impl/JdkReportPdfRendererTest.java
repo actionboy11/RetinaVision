@@ -61,11 +61,18 @@ class JdkReportPdfRendererTest {
         );
 
         Path pdf = outputDirectory.resolve("sample-polished-report.pdf");
-        new JdkReportPdfRenderer("C:/Windows/Fonts/simhei.ttf").render(document, pdf);
+        new JdkReportPdfRenderer(reportFontPath()).render(document, pdf);
 
         assertThat(pdf).isRegularFile();
         assertThat(Files.readAllBytes(pdf)).startsWith("%PDF-1.4".getBytes());
         assertThat(Files.size(pdf)).isGreaterThan(20_000);
+    }
+
+    private String reportFontPath() {
+        String configured = System.getenv("RETINA_REPORT_FONT_PATH");
+        return configured == null || configured.isBlank()
+                ? "C:/Windows/Fonts/simhei.ttf"
+                : configured;
     }
 
     private void writeSampleImage(Path path, Color background, Color foreground) throws Exception {
