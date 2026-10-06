@@ -12,6 +12,7 @@ import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AgentSkillVersionBindingService {
@@ -47,6 +48,14 @@ public class AgentSkillVersionBindingService {
         created.setCreatedAt(LocalDateTime.now());
         bindings.insert(created);
         return version;
+    }
+
+    public Optional<Long> findVersionId(Long sessionId, AgentSkillCode skillCode) {
+        AgentSessionSkillVersionEntity binding = bindings.selectOne(
+                new LambdaQueryWrapper<AgentSessionSkillVersionEntity>()
+                        .eq(AgentSessionSkillVersionEntity::getSessionId, sessionId)
+                        .eq(AgentSessionSkillVersionEntity::getSkillCode, skillCode.name()));
+        return binding == null ? Optional.empty() : Optional.of(binding.getSkillVersionId());
     }
 
     private AgentSkillRuntimeVersion runtimeVersion(Long versionId) {

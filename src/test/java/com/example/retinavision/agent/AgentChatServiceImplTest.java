@@ -28,9 +28,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.argThat;
 
@@ -103,8 +105,42 @@ class AgentChatServiceImplTest {
         assertThat(response.skill().code()).isEqualTo("DOCTOR_WORKLOAD_OVERVIEW");
         assertThat(response.data().type()).isEqualTo("METRICS");
         verify(gateway, times(0)).generate(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any(), any());
         verify(messages, times(2)).insert(any(AgentChatMessageEntity.class));
         verify(skillLogs).insert(any(AgentSkillExecutionLogEntity.class));
+    }
+
+    @Test
+    void doctorTaskNativeSkillDoesNotInvokeModelOrToolFactory() {
+        DoctorAgentSkillResult skillResult = new DoctorAgentSkillResult(
+                AgentSkillCode.DOCTOR_TASK_SEARCH, 1, 0.98, "共找到 2 个任务。",
+                new AgentStructuredData("TASK_LIST", Map.of("tasks", List.of())),
+                new AgentPagination(1, 10, 2, false, false), List.of());
+        when(skillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "查询失败任务"), doctor());
+
+        assertThat(response.data().type()).isEqualTo("TASK_LIST");
+        verify(gateway, never()).generate(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any(), any());
+    }
+
+    @Test
+    void doctorKnowledgeRouteRegistersOnlyKnowledgeTool() {
+        PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
+        version.setSystemPrompt("医学知识问答");
+        when(prompts.requireActiveVersion("CLINICAL_ASSISTANT_AGENT")).thenReturn(version);
+        when(skillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.empty());
+        when(tools.create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge"))))
+                .thenReturn(new AgentToolBundle(new ToolCallback[0]));
+        when(gateway.generate(any(), any(), any())).thenReturn("基于知识库引用回答。");
+        when(skillVersions.resolve(any(), eq(AgentSkillCode.MEDICAL_KNOWLEDGE_QA)))
+                .thenReturn(new AgentSkillRuntimeVersion(51L, 2));
+
+        service().chat(new AgentChatRequestDTO(null, "血管分割有什么作用？"), doctor());
+
+        verify(tools).create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge")));
+        verify(gateway).generate(any(), any(), any());
     }
 
     @Test
@@ -118,6 +154,7 @@ class AgentChatServiceImplTest {
 
         verify(skillLogs).insert(argThat((AgentSkillExecutionLogEntity log) ->
                 !Boolean.TRUE.equals(log.getSuccess()) && "BaseException".equals(log.getErrorType())));
+        verify(messages, times(0)).insert(any(AgentChatMessageEntity.class));
     }
 
     private AgentChatServiceImpl service() {

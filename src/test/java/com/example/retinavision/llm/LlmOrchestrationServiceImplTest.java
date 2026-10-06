@@ -88,6 +88,31 @@ class LlmOrchestrationServiceImplTest {
         assertThat(captor.getValue().getSuccess()).isFalse();
     }
 
+    @Test
+    void validatesRequiredFieldsUsingTheirDeclaredJsonTypes() {
+        PromptTemplateService templates = mock(PromptTemplateService.class);
+        LlmClient client = mock(LlmClient.class);
+        LlmCallLogService logs = mock(LlmCallLogService.class);
+        PromptTemplateVersionEntity version = version();
+        version.setTemplateCode("AGENT_SKILL_ROUTER");
+        version.setOutputContract("{\"required\":[\"skillCode\",\"confidence\",\"arguments\"],"
+                + "\"properties\":{\"skillCode\":{\"type\":\"string\"},"
+                + "\"confidence\":{\"type\":\"number\"},\"arguments\":{\"type\":\"object\"}}}");
+        when(templates.requireActiveVersion("AGENT_SKILL_ROUTER")).thenReturn(version);
+        when(client.generateJson("database system prompt", "sanitized context"))
+                .thenReturn("{\"skillCode\":\"DOCTOR_TASK_SEARCH\",\"confidence\":0.2,\"arguments\":{}}");
+        LlmOrchestrationServiceImpl service = new LlmOrchestrationServiceImpl(
+                templates, new PromptRenderService(), client, logs, properties(),
+                new LlmSafetyPolicy(), new ObjectMapper());
+
+        LlmGenerationResult result = service.generateJson("AGENT_SKILL_ROUTER", "sanitized context");
+
+        assertThat(result.content()).contains("\"confidence\":0.2", "\"arguments\":{}");
+        ArgumentCaptor<LlmCallLogEntity> captor = ArgumentCaptor.forClass(LlmCallLogEntity.class);
+        verify(logs).record(captor.capture());
+        assertThat(captor.getValue().getSuccess()).isTrue();
+    }
+
     private PromptTemplateVersionEntity version() {
         PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
         version.setId(12L);

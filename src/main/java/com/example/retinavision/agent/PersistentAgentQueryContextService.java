@@ -1,6 +1,8 @@
 package com.example.retinavision.agent;
 
 import com.example.retinavision.mapper.AgentQueryContextMapper;
+import com.example.retinavision.enumeration.EyeSide;
+import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.pojo.Entity.AgentQueryContextEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,11 +31,18 @@ public class PersistentAgentQueryContextService implements AgentQueryContextServ
         try {
             Map<String, String> filters = entity.getCurrentFiltersJson() == null ? Map.of()
                     : json.readValue(entity.getCurrentFiltersJson(), new TypeReference<>() {});
-            List<Integer> references = entity.getRecentResultReferencesJson() == null ? List.of()
+            List<Long> references = entity.getRecentResultReferencesJson() == null ? List.of()
                     : json.readValue(entity.getRecentResultReferencesJson(), new TypeReference<>() {});
             return Optional.of(new AgentQueryContextSnapshot(
                     AgentSkillCode.valueOf(entity.getCurrentSkillCode()),
+                    enumValue(AgentReferenceType.class, entity.getReferenceType(), AgentReferenceType.CASE),
                     SegmentationState.valueOf(filters.getOrDefault("segmentationState", "ANY")),
+                    DoctorClinicalState.valueOf(filters.getOrDefault("clinicalState", "ANY")),
+                    enumValue(AnalysisTaskType.class, filters.get("taskType"), AnalysisTaskType.VESSEL_SEGMENTATION),
+                    enumValue(DoctorTaskStatusFilter.class, filters.get("taskStatus"), DoctorTaskStatusFilter.ANY),
+                    enumValue(DoctorClinicalQueueType.class, filters.get("queueType"), null),
+                    DoctorDateWindow.valueOf(filters.getOrDefault("dateWindow", "ANY")),
+                    enumValue(EyeSide.class, filters.get("eyeSide")),
                     entity.getCurrentPage(), entity.getPageSize(), entity.getTotal(),
                     entity.getSelectedCaseId(), entity.getSelectedTaskId(), references));
         } catch (Exception ignored) {
@@ -47,19 +56,42 @@ public class PersistentAgentQueryContextService implements AgentQueryContextServ
             AgentQueryContextEntity entity = new AgentQueryContextEntity();
             entity.setSessionId(sessionId);
             entity.setCurrentSkillCode(context.currentSkill().name());
-            entity.setCurrentFiltersJson(json.writeValueAsString(Map.of(
-                    "segmentationState", context.segmentationState().name())));
+            entity.setReferenceType(context.referenceType().name());
+            Map<String, String> filters = new java.util.LinkedHashMap<>();
+            filters.put("segmentationState", context.segmentationState().name());
+            filters.put("clinicalState", context.clinicalState().name());
+            filters.put("dateWindow", context.dateWindow().name());
+            if (context.taskType() != null) filters.put("taskType", context.taskType().name());
+            filters.put("taskStatus", context.taskStatus().name());
+            if (context.queueType() != null) filters.put("queueType", context.queueType().name());
+            if (context.eyeSide() != null) filters.put("eyeSide", context.eyeSide().name());
+            entity.setCurrentFiltersJson(json.writeValueAsString(filters));
             entity.setCurrentPage(context.page());
             entity.setPageSize(Math.min(context.pageSize(), 10));
             entity.setTotal(context.total());
             entity.setSelectedCaseId(context.selectedCaseId());
             entity.setSelectedTaskId(context.selectedTaskId());
-            entity.setRecentResultReferencesJson(json.writeValueAsString(context.recentCaseIds()));
+            entity.setRecentResultReferencesJson(json.writeValueAsString(
+                    context.recentReferenceIds().stream().limit(10).toList()));
             entity.setExpiresAt(LocalDateTime.now().plusHours(EXPIRY_HOURS));
             entity.setUpdatedAt(LocalDateTime.now());
             if (mapper.selectById(sessionId) == null) mapper.insert(entity); else mapper.updateById(entity);
         } catch (Exception exception) {
             throw new IllegalStateException("无法保存智能助手查询上下文", exception);
         }
+    }
+
+    private <T extends Enum<T>> T enumValue(Class<T> type, String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return Enum.valueOf(type, value);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+
+    private <T extends Enum<T>> T enumValue(Class<T> type, String value, T fallback) {
+        T parsed = enumValue(type, value);
+        return parsed == null ? fallback : parsed;
     }
 }

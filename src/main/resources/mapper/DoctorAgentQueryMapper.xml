@@ -9,12 +9,30 @@
         )
     </sql>
 
+    <sql id="latestClinicalJoin">
+        LEFT JOIN analysis_result ar ON ar.task_id = st.id
+        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
+        LEFT JOIN analysis_report sr ON sr.id = (
+            SELECT sr0.id FROM analysis_report sr0
+            WHERE sr0.result_id = ar.id AND sr0.status = 'SIGNED'
+            ORDER BY sr0.signed_at DESC, sr0.id DESC LIMIT 1
+        )
+    </sql>
+
     <sql id="assignedCaseWhere">
         WHERE c.assigned_doctor_id = #{doctorId}
           AND c.status != 'DELETED'
         <if test="criteria.workflowStatus != null">
             AND c.workflow_status = #{criteria.workflowStatus}
         </if>
+        <if test="criteria.eyeSide != null">
+            AND c.eye_side = #{criteria.eyeSide}
+        </if>
+        <choose>
+            <when test="criteria.dateWindow.name() == 'TODAY'">AND c.updated_at &gt;= CURRENT_DATE</when>
+            <when test="criteria.dateWindow.name() == 'LAST_7_DAYS'">AND c.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)</when>
+            <when test="criteria.dateWindow.name() == 'LAST_30_DAYS'">AND c.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)</when>
+        </choose>
         <choose>
             <when test="criteria.segmentationState.name() == 'NOT_CREATED'">AND st.id IS NULL</when>
             <when test="criteria.segmentationState.name() == 'NOT_COMPLETED'">
@@ -25,6 +43,14 @@
             </when>
             <when test="criteria.segmentationState.name() == 'FAILED'">AND st.status = 'FAILED'</when>
             <when test="criteria.segmentationState.name() == 'SUCCESS'">AND st.status = 'SUCCESS'</when>
+        </choose>
+        <choose>
+            <when test="criteria.clinicalState.name() == 'PENDING_REVIEW'">
+                AND st.status = 'SUCCESS' AND (rv.id IS NULL OR rv.status IN ('PENDING','CHANGES_REQUESTED'))
+            </when>
+            <when test="criteria.clinicalState.name() == 'PENDING_REPORT'">
+                AND rv.status = 'APPROVED' AND sr.id IS NULL
+            </when>
         </choose>
     </sql>
 
@@ -40,19 +66,14 @@
             SUM(CASE WHEN rv.status = 'APPROVED' AND sr.id IS NULL THEN 1 ELSE 0 END) AS pendingReportCount
         FROM medical_case c
         <include refid="latestSegmentationJoin" />
-        LEFT JOIN analysis_result ar ON ar.task_id = st.id
-        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
-        LEFT JOIN analysis_report sr ON sr.id = (
-            SELECT sr0.id FROM analysis_report sr0
-            WHERE sr0.result_id = ar.id AND sr0.status = 'SIGNED'
-            ORDER BY sr0.signed_at DESC, sr0.id DESC LIMIT 1
-        )
+        <include refid="latestClinicalJoin" />
         WHERE c.assigned_doctor_id = #{doctorId} AND c.status != 'DELETED'
     </select>
 
     <select id="countAssignedCases" resultType="long">
         SELECT COUNT(*) FROM medical_case c
         <include refid="latestSegmentationJoin" />
+        <include refid="latestClinicalJoin" />
         <include refid="assignedCaseWhere" />
     </select>
 
@@ -63,10 +84,12 @@
                c.workflow_status AS workflowStatus,
                JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.qualityStatus')) AS qualityStatus,
                CAST(JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.score')) AS DECIMAL(10,2)) AS qualityScore,
-               st.status AS segmentationStatus, st.id AS latestTaskId, c.updated_at AS updatedAt
+               st.status AS segmentationStatus, rv.status AS reviewStatus, sr.status AS reportStatus,
+               st.id AS latestTaskId, c.updated_at AS updatedAt
         FROM medical_case c
         JOIN patient_profile p ON p.id = c.patient_id
         <include refid="latestSegmentationJoin" />
+        <include refid="latestClinicalJoin" />
         LEFT JOIN analysis_task qt ON qt.id = (
             SELECT qt0.id FROM analysis_task qt0
             WHERE qt0.case_id = c.id AND qt0.task_type = 'IMAGE_QUALITY_CHECK'
@@ -75,6 +98,134 @@
         LEFT JOIN analysis_result qr ON qr.task_id = qt.id
         <include refid="assignedCaseWhere" />
         ORDER BY c.updated_at DESC, c.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <sql id="doctorTaskFrom">
+        FROM analysis_task t
+        JOIN medical_case c ON c.id = t.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+    </sql>
+
+    <sql id="doctorTaskWhere">
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND t.task_type = #{criteria.taskType}
+        <choose>
+            <when test="criteria.status.name() == 'WAITING'">AND t.status IN ('CREATED','WAITING')</when>
+            <when test="criteria.status.name() == 'RUNNING'">AND t.status IN ('RUNNING','RETRYING')</when>
+            <when test="criteria.status.name() == 'FAILED'">AND t.status = 'FAILED'</when>
+            <when test="criteria.status.name() == 'SUCCESS'">AND t.status = 'SUCCESS'</when>
+        </choose>
+        <choose>
+            <when test="criteria.dateWindow.name() == 'TODAY'">AND t.updated_at &gt;= CURRENT_DATE</when>
+            <when test="criteria.dateWindow.name() == 'LAST_7_DAYS'">AND t.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)</when>
+            <when test="criteria.dateWindow.name() == 'LAST_30_DAYS'">AND t.updated_at &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)</when>
+        </choose>
+    </sql>
+
+    <sql id="doctorTaskColumns">
+        t.id AS taskId, t.task_no AS taskNo, c.id AS caseId, c.case_no AS caseNo,
+        p.patient_no AS patientNo, t.task_type AS taskType, t.status AS status,
+        t.retry_count AS retryCount, t.max_retry_count AS maxRetryCount,
+        t.error_message AS errorSummary, t.submitted_at AS submittedAt,
+        t.started_at AS startedAt, t.finished_at AS finishedAt, t.updated_at AS updatedAt
+    </sql>
+
+    <select id="countTasks" resultType="long">
+        SELECT COUNT(*)
+        <include refid="doctorTaskFrom" />
+        <include refid="doctorTaskWhere" />
+    </select>
+
+    <select id="selectTasks" resultType="com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO">
+        SELECT <include refid="doctorTaskColumns" />
+        <include refid="doctorTaskFrom" />
+        <include refid="doctorTaskWhere" />
+        ORDER BY t.updated_at DESC, t.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectTaskDetail" resultType="com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO">
+        SELECT <include refid="doctorTaskColumns" />
+        <include refid="doctorTaskFrom" />
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND (t.task_no = #{taskReference} OR (#{taskId} IS NOT NULL AND t.id = #{taskId}))
+        LIMIT 1
+    </select>
+
+    <select id="selectTaskLogs" resultType="com.example.retinavision.pojo.VO.DoctorAgentTaskLogVO">
+        SELECT l.from_status AS fromStatus, l.to_status AS toStatus, l.message,
+               l.operator_type AS operatorType, l.created_at AS createdAt
+        FROM task_log l
+        JOIN analysis_task t ON t.id = l.task_id
+        JOIN medical_case c ON c.id = t.case_id
+        WHERE c.assigned_doctor_id = #{doctorId} AND t.id = #{taskId}
+        ORDER BY l.created_at DESC, l.id DESC
+        LIMIT 5
+    </select>
+
+    <sql id="clinicalQueueFrom">
+        FROM analysis_task t
+        JOIN medical_case c ON c.id = t.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+        JOIN analysis_result ar ON ar.task_id = t.id
+        LEFT JOIN analysis_review rv ON rv.result_id = ar.id
+        LEFT JOIN analysis_task qt ON qt.id = (
+            SELECT qt0.id FROM analysis_task qt0
+            WHERE qt0.image_file_id = t.image_file_id AND qt0.task_type = 'IMAGE_QUALITY_CHECK'
+            ORDER BY qt0.updated_at DESC, qt0.id DESC LIMIT 1
+        )
+        LEFT JOIN analysis_result qr ON qr.task_id = qt.id
+    </sql>
+
+    <sql id="clinicalQueueWhere">
+        WHERE c.assigned_doctor_id = #{doctorId}
+          AND c.status != 'DELETED'
+          AND t.task_type = 'VESSEL_SEGMENTATION'
+          AND t.status = 'SUCCESS'
+          AND ar.id IS NOT NULL
+        <choose>
+            <when test="criteria.queueType.name() == 'PENDING_REVIEW'">
+                AND (rv.id IS NULL OR rv.status IN ('PENDING','CHANGES_REQUESTED'))
+            </when>
+            <when test="criteria.queueType.name() == 'PENDING_REPORT'">
+                AND rv.status = 'APPROVED'
+                AND NOT EXISTS (
+                    SELECT 1 FROM analysis_report signed_report
+                    WHERE signed_report.result_id = ar.id AND signed_report.status = 'SIGNED'
+                )
+            </when>
+        </choose>
+        <choose>
+            <when test="criteria.dateWindow.name() == 'TODAY'">AND COALESCE(t.finished_at, ar.created_at) &gt;= CURRENT_DATE</when>
+            <when test="criteria.dateWindow.name() == 'LAST_7_DAYS'">AND COALESCE(t.finished_at, ar.created_at) &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY)</when>
+            <when test="criteria.dateWindow.name() == 'LAST_30_DAYS'">AND COALESCE(t.finished_at, ar.created_at) &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)</when>
+        </choose>
+    </sql>
+
+    <select id="countClinicalQueue" resultType="long">
+        SELECT COUNT(DISTINCT t.id)
+        <include refid="clinicalQueueFrom" />
+        <include refid="clinicalQueueWhere" />
+    </select>
+
+    <select id="selectClinicalQueue" resultType="com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO">
+        SELECT DISTINCT
+            t.id AS taskId, t.task_no AS taskNo, ar.id AS resultId,
+            c.id AS caseId, c.case_no AS caseNo, p.patient_no AS patientNo,
+            c.eye_side AS eyeSide, ar.result_type AS resultType,
+            JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.qualityStatus')) AS qualityStatus,
+            CAST(JSON_UNQUOTE(JSON_EXTRACT(qr.result_json, '$.score')) AS DECIMAL(10,2)) AS qualityScore,
+            rv.status AS reviewStatus,
+            (SELECT report0.status FROM analysis_report report0
+             WHERE report0.result_id = ar.id
+             ORDER BY report0.version DESC, report0.id DESC LIMIT 1) AS reportStatus,
+            t.finished_at AS finishedAt, ar.created_at AS resultCreatedAt
+        <include refid="clinicalQueueFrom" />
+        <include refid="clinicalQueueWhere" />
+        ORDER BY COALESCE(t.finished_at, ar.created_at) DESC, t.id DESC
         LIMIT #{offset}, #{pageSize}
     </select>
 </mapper>

@@ -3,6 +3,8 @@ package com.example.retinavision.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.agent.AgentSkillCode;
 import com.example.retinavision.agent.AgentSkillRouter;
+import com.example.retinavision.agent.AgentSkillCatalogService;
+import com.example.retinavision.agent.AgentSkillDefinition;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.AgentSkillEvaluationRunMapper;
@@ -12,13 +14,15 @@ import com.example.retinavision.pojo.Entity.AgentSkillEntity;
 import com.example.retinavision.pojo.Entity.AgentSkillEvaluationRunEntity;
 import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
 import com.example.retinavision.service.AgentSkillAdministrationService;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministrationService {
@@ -28,13 +32,15 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
     private final AgentSkillVersionMapper versions;
     private final AgentSkillEvaluationRunMapper evaluations;
     private final AgentSkillRouter router;
+    private final AgentSkillCatalogService catalog;
     private final ObjectMapper json;
 
     public AgentSkillAdministrationServiceImpl(AgentSkillMapper skills, AgentSkillVersionMapper versions,
                                                AgentSkillEvaluationRunMapper evaluations,
-                                               AgentSkillRouter router, ObjectMapper json) {
+                                               AgentSkillRouter router, AgentSkillCatalogService catalog,
+                                               ObjectMapper json) {
         this.skills = skills; this.versions = versions; this.evaluations = evaluations;
-        this.router = router; this.json = json;
+        this.router = router; this.catalog = catalog; this.json = json;
     }
 
     @Override
@@ -54,23 +60,46 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
     public AgentSkillEvaluationRunEntity evaluate(String skillCode, Long versionId, Integer operatorId) {
         AgentSkillEntity skill = requireSkill(skillCode);
         AgentSkillVersionEntity version = requireVersion(skill, versionId);
-        List<String> examples = readExamples(version.getRoutingExamplesJson());
+        List<EvaluationExample> examples = readExamples(version.getRoutingExamplesJson());
+        List<String> negativeExamples = readNegativeExamples(version.getRoutingNegativeExamplesJson());
         List<String> failures = new ArrayList<>();
         int routePassed = 0;
         int parameterPassed = 0;
         AgentSkillCode expected = AgentSkillCode.valueOf(skillCode);
-        for (String example : examples) {
-            var route = router.route(example, null);
-            if (route.skillCode() == expected) routePassed++; else failures.add(example);
-            if (route.skillCode() == expected && route.arguments() != null) parameterPassed++;
+        List<AgentSkillDefinition> definitions = catalog.forEvaluation(skill, version);
+        for (EvaluationExample example : examples) {
+            try {
+                var route = router.route(example.query(), null, definitions);
+                if (route.confidence() < 0.65) {
+                    failures.add("低置信度: " + example.query());
+                } else if (route.skillCode() == expected) {
+                    routePassed++;
+                    if (containsExpectedArguments(route.arguments(), example.arguments())) parameterPassed++;
+                    else failures.add("参数不匹配: " + example.query());
+                } else {
+                    failures.add("路由不匹配: " + example.query());
+                }
+            } catch (RuntimeException exception) {
+                failures.add("路由异常: " + example.query() + " (" + exception.getClass().getSimpleName() + ")");
+            }
         }
-        int total = examples.size();
+        for (String example : negativeExamples) {
+            try {
+                var route = router.route(example, null, definitions);
+                if (route.confidence() < 0.65 || route.skillCode() != expected) routePassed++;
+                else failures.add("反例误路由: " + example);
+            } catch (RuntimeException exception) {
+                failures.add("路由异常: " + example + " (" + exception.getClass().getSimpleName() + ")");
+            }
+        }
+        int total = examples.size() + negativeExamples.size();
         AgentSkillEvaluationRunEntity run = new AgentSkillEvaluationRunEntity();
         run.setSkillVersionId(versionId); run.setStatus("COMPLETED"); run.setTotalCount(total);
         run.setRoutePassedCount(routePassed); run.setParameterPassedCount(parameterPassed);
         run.setRoutingAccuracy(total == 0 ? 0 : (double) routePassed / total);
-        run.setParameterAccuracy(total == 0 ? 0 : (double) parameterPassed / total);
-        run.setSafetyPassed(true); run.setFailureSamplesJson(write(failures)); run.setCreatedBy(operatorId);
+        run.setParameterAccuracy(examples.isEmpty() ? 0 : (double) parameterPassed / examples.size());
+        run.setSafetyPassed(isSafeCandidate(expected, version));
+        run.setFailureSamplesJson(write(failures)); run.setCreatedBy(operatorId);
         run.setCreatedAt(LocalDateTime.now()); run.setCompletedAt(LocalDateTime.now());
         evaluations.insert(run);
         return run;
@@ -107,13 +136,72 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
         return value;
     }
 
-    private List<String> readExamples(String value) {
-        try { return json.readValue(value, new TypeReference<>() {}); }
-        catch (Exception exception) { throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 路由示例格式无效"); }
+    private List<EvaluationExample> readExamples(String value) {
+        try {
+            JsonNode root = json.readTree(value);
+            if (!root.isArray()) throw new IllegalArgumentException();
+            List<EvaluationExample> result = new ArrayList<>();
+            for (JsonNode item : root) {
+                if (item.isTextual()) {
+                    result.add(new EvaluationExample(item.asText(), Map.of()));
+                    continue;
+                }
+                String query = item.path("query").asText("").trim();
+                if (query.isEmpty()) throw new IllegalArgumentException();
+                Map<String, String> arguments = new LinkedHashMap<>();
+                JsonNode argumentNode = item.path("arguments");
+                if (argumentNode.isObject()) {
+                    argumentNode.fields().forEachRemaining(entry -> arguments.put(entry.getKey(), entry.getValue().asText()));
+                }
+                result.add(new EvaluationExample(query, arguments));
+            }
+            return result;
+        } catch (Exception exception) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 路由示例格式无效");
+        }
+    }
+
+    private List<String> readNegativeExamples(String value) {
+        if (value == null || value.isBlank()) return List.of();
+        try {
+            JsonNode root = json.readTree(value);
+            if (!root.isArray()) throw new IllegalArgumentException();
+            List<String> result = new ArrayList<>();
+            for (JsonNode item : root) {
+                String query = item.isTextual() ? item.asText() : item.path("query").asText("");
+                if (!query.isBlank()) result.add(query);
+            }
+            return result;
+        } catch (Exception exception) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 路由反例格式无效");
+        }
+    }
+
+    private boolean containsExpectedArguments(Map<String, String> actual, Map<String, String> expected) {
+        if (actual == null) return expected.isEmpty();
+        return expected.entrySet().stream().allMatch(entry -> entry.getValue().equals(actual.get(entry.getKey())));
+    }
+
+    private boolean isReadOnlySkill(AgentSkillCode skillCode) {
+        return switch (skillCode) {
+            case DOCTOR_WORKLOAD_OVERVIEW, ASSIGNED_CASE_SEARCH, CASE_CLINICAL_SUMMARY,
+                    CASE_FOLLOWUP_ANALYSIS, DOCTOR_TASK_SEARCH, DOCTOR_CLINICAL_QUEUE,
+                    MEDICAL_KNOWLEDGE_QA -> true;
+        };
+    }
+
+    private boolean isSafeCandidate(AgentSkillCode skillCode, AgentSkillVersionEntity version) {
+        if (!isReadOnlySkill(skillCode)) return false;
+        String workflow = version.getWorkflowPrompt() == null ? "" : version.getWorkflowPrompt();
+        return java.util.stream.Stream.of("执行删除", "创建任务", "修改病例", "保存审核", "签发 PDF", "签发PDF")
+                .noneMatch(workflow::contains);
     }
 
     private String write(Object value) {
         try { return json.writeValueAsString(value); }
         catch (Exception exception) { return "[]"; }
+    }
+
+    private record EvaluationExample(String query, Map<String, String> arguments) {
     }
 }

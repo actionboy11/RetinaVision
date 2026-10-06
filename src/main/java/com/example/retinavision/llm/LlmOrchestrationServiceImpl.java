@@ -68,9 +68,14 @@ public class LlmOrchestrationServiceImpl implements LlmOrchestrationService {
             if (contract != null && contract.path("required").isArray()) {
                 for (JsonNode fieldNode : contract.path("required")) {
                     String field = fieldNode.asText();
-                    JsonNode value = output.path(field);
-                    if (!value.isTextual() || value.asText().isBlank()) {
+                    JsonNode value = output.get(field);
+                    if (value == null || value.isNull()
+                            || (value.isTextual() && value.asText().isBlank())) {
                         throw new LlmException("LLM response is missing required field: " + field);
+                    }
+                    String expectedType = contract.path("properties").path(field).path("type").asText("");
+                    if (!matchesType(value, expectedType)) {
+                        throw new LlmException("LLM response field has invalid type: " + field);
                     }
                 }
             }
@@ -86,6 +91,19 @@ public class LlmOrchestrationServiceImpl implements LlmOrchestrationService {
         } catch (Exception exception) {
             throw new LlmException("LLM response must be valid JSON", exception);
         }
+    }
+
+    private boolean matchesType(JsonNode value, String expectedType) {
+        return switch (expectedType) {
+            case "string" -> value.isTextual();
+            case "number" -> value.isNumber();
+            case "integer" -> value.isIntegralNumber();
+            case "object" -> value.isObject();
+            case "array" -> value.isArray();
+            case "boolean" -> value.isBoolean();
+            case "null" -> value.isNull();
+            default -> true;
+        };
     }
 
     private LlmCallLogEntity callLog(String templateCode,

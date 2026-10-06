@@ -120,6 +120,66 @@ class SchemaMigrationContractTest {
         assertThat(binding).doesNotContain("CONSTRAINT fk_agent_session_skill_version ");
     }
 
+    @Test
+    void doctorAgentEvaluationCorpusAddsInactiveStructuredV2Versions() throws IOException {
+        String corpus = resource("/db/migration/V17__doctor_agent_skill_evaluation_corpus.sql");
+
+        assertThat(corpus).contains(
+                "ASSIGNED_CASE_SEARCH",
+                "PENDING_REVIEW",
+                "LAST_30_DAYS",
+                "routing_negative_examples_json",
+                "version, routing_examples_json");
+        assertThat(corpus).doesNotContain("active_version_id =");
+    }
+
+    @Test
+    void doctorAgentNaturalLanguageBaselineAddsInactiveV3Versions() throws IOException {
+        String corpus = resource("/db/migration/V18__doctor_agent_natural_language_baseline.sql");
+
+        assertThat(corpus).contains(
+                "SELECT id, 3",
+                "名下患者有多少",
+                "没跑血管分割的病例",
+                "打开第三个病例",
+                "这个病例的趋势怎么样",
+                "已审核但PDF还没出的病例");
+        assertThat(corpus).doesNotContain("active_version_id =");
+    }
+
+    @Test
+    void doctorAgentTaskQueueMigrationAddsRouterPromptSkillsAndTypedContext() throws IOException {
+        String migration = resource("/db/migration/V19__doctor_agent_task_clinical_queues.sql");
+
+        assertThat(migration).contains(
+                "reference_type",
+                "DEFAULT 'CASE'",
+                "AGENT_SKILL_ROUTER",
+                "DOCTOR_TASK_SEARCH",
+                "DOCTOR_CLINICAL_QUEUE",
+                "routing_examples_json",
+                "skillCode",
+                "confidence",
+                "arguments");
+        assertThat(migration).doesNotContain(
+                "WHERE skill_code IN ('DOCTOR_TASK_SEARCH', 'DOCTOR_CLINICAL_QUEUE')",
+                "UPDATE agent_skill");
+    }
+
+    @Test
+    void routerPromptV2MakesWriteRequestsLowConfidenceWithoutActivatingSkills() throws IOException {
+        String migration = resource("/db/migration/V20__agent_skill_router_write_intent_guard.sql");
+
+        assertThat(migration).contains(
+                "AGENT_SKILL_ROUTER",
+                "SELECT t.id, 2",
+                "写操作",
+                "confidence",
+                "0.2",
+                "active_version_id");
+        assertThat(migration).doesNotContain("UPDATE agent_skill");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();
