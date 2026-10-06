@@ -93,22 +93,25 @@ secret. The resulting `docker/.env` is ignored by Git.
 
 ```powershell
 Copy-Item .\docker\.env.example .\docker\.env
-docker compose -f .\docker\docker-compose.yml up -d
-docker compose -f .\docker\docker-compose.yml ps
+docker compose --env-file .\docker\.env -f .\docker\docker-compose.yml up -d
+docker compose --env-file .\docker\.env -f .\docker\docker-compose.yml ps
 ```
 
 Compose exposes services only on loopback by default: MySQL `3307`, RabbitMQ
 `5672` and management `15672`, Redis `6379`, Qdrant `6333`, and AI `8000`.
 
-To run AI outside Docker instead:
+To run AI outside Docker instead, use a dedicated PowerShell terminal for this
+foreground process. `Push-Location`/`Pop-Location` restores the repository root
+after the server stops:
 
 ```powershell
-Set-Location .\ai-service
+Push-Location .\ai-service
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 python -m uvicorn retinavision_ai.api:app --app-dir src --host 127.0.0.1 --port 8000
+Pop-Location
 ```
 
 ### 2. Java backend

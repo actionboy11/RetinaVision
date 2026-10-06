@@ -30,7 +30,7 @@ function Get-ForbiddenReason {
     if ($normalized -match '\.pth$') { return 'model checkpoint' }
     if (($name -eq '.env' -or $name -like '.env.*') -and
         -not (Test-AllowedExampleEnvironmentFile $normalized)) { return 'local environment file' }
-    if ($name -in @('application-dev.yaml', 'application-local.yaml')) { return 'local Spring configuration' }
+    if ($name -match '^application-.+\.(yaml|yml)$') { return 'local Spring configuration' }
     if ($normalized -match '^(uploads|storage|storage-e2e|logs|node_modules|dist|target|\.venv|__pycache__|\.pytest_cache|\.idea|\.vscode|\.worktrees)(/|$)' -or
         $normalized -match '^(frontend|ai-service)/(uploads|storage|storage-e2e|logs|node_modules|dist|target|\.venv|__pycache__|\.pytest_cache)(/|$)') {
         return 'generated, local, or runtime directory'
