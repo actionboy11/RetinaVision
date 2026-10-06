@@ -59,7 +59,7 @@ services:
 
   retinavision-ai:
     build:
-      context: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}
+      context: ${RETINAVISION_AI_PROJECT_ROOT:-../ai-service}
       dockerfile: Dockerfile
     container_name: retina_ai
     restart: unless-stopped
@@ -71,14 +71,14 @@ services:
       - "127.0.0.1:${RETINAVISION_AI_PORT:-8000}:8000"
     volumes:
       - type: bind
-        source: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}/models/model_new.pth
+        source: ${RETINAVISION_AI_PROJECT_ROOT:-../ai-service}/models/model_new.pth
         target: /app/models/model_new.pth
         read_only: true
       - type: bind
-        source: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}/storage
+        source: ${RETINAVISION_AI_PROJECT_ROOT:-../ai-service}/storage
         target: /app/storage
       - type: bind
-        source: ${RETINAVISION_AI_PROJECT_ROOT:-../../retinavision-ai}/logs
+        source: ${RETINAVISION_AI_PROJECT_ROOT:-../ai-service}/logs
         target: /app/logs
     healthcheck:
       test: ["CMD", "python", "-c", "import json,urllib.request; data=json.load(urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)); assert data['status']=='UP' and data['ready']"]
