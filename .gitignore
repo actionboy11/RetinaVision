@@ -14,8 +14,8 @@ target/
 .sts4-cache
 
 # local Spring Boot config
-src/main/resources/application-dev.yaml
-src/main/resources/application-local.yaml
+src/main/resources/application-*.yaml
+src/main/resources/application-*.yml
 docker/.env
 
 ### IntelliJ IDEA ###
@@ -42,3 +42,28 @@ uploads/
 
 ### Local worktrees ###
 .worktrees/
+
+### Monorepo frontend ###
+frontend/node_modules/
+frontend/dist/
+frontend/.env*
+!frontend/.env*.example
+*.log
+
+### Monorepo AI service ###
+ai-service/.venv/
+ai-service/.pytest_cache/
+ai-service/**/__pycache__/
+ai-service/**/*.py[cod]
+ai-service/.env*
+!ai-service/.env*.example
+ai-service/models/*.pth
+ai-service/storage/
+ai-service/storage-e2e/
+ai-service/logs/
+
+### Workspace scratch ###
+.tmp/
+tmp/
+output/
+.superpowers/
