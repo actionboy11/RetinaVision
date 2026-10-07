@@ -10,6 +10,11 @@ import com.example.retinavision.agent.AgentSkillRuntimeVersion;
 import com.example.retinavision.agent.AgentSkillVersionBindingService;
 import com.example.retinavision.agent.DoctorAgentSkillOrchestrator;
 import com.example.retinavision.agent.DoctorAgentSkillResult;
+import com.example.retinavision.agent.PatientAgentSkillOrchestrator;
+import com.example.retinavision.agent.PatientAgentSkillResult;
+import com.example.retinavision.agent.AgentStructuredData;
+import com.example.retinavision.agent.AgentPagination;
+import com.example.retinavision.agent.AgentAction;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
@@ -55,6 +60,7 @@ public class AgentChatServiceImpl implements AgentChatService {
     private final LlmProperties llmProperties;
     private final LlmCallLogService callLogs;
     private final DoctorAgentSkillOrchestrator skillOrchestrator;
+    private final PatientAgentSkillOrchestrator patientSkillOrchestrator;
     private final ObjectMapper json;
     private final AgentSkillExecutionLogMapper skillLogs;
     private final AgentSkillVersionBindingService skillVersions;
@@ -65,6 +71,7 @@ public class AgentChatServiceImpl implements AgentChatService {
                                 LlmSafetyPolicy safetyPolicy, LlmProperties llmProperties,
                                 LlmCallLogService callLogs,
                                 DoctorAgentSkillOrchestrator skillOrchestrator,
+                                PatientAgentSkillOrchestrator patientSkillOrchestrator,
                                 ObjectMapper json,
                                 AgentSkillExecutionLogMapper skillLogs,
                                 AgentSkillVersionBindingService skillVersions) {
@@ -78,6 +85,7 @@ public class AgentChatServiceImpl implements AgentChatService {
         this.llmProperties = llmProperties;
         this.callLogs = callLogs;
         this.skillOrchestrator = skillOrchestrator;
+        this.patientSkillOrchestrator = patientSkillOrchestrator;
         this.json = json;
         this.skillLogs = skillLogs;
         this.skillVersions = skillVersions;
@@ -125,16 +133,31 @@ public class AgentChatServiceImpl implements AgentChatService {
         history.add(new AgentConversationMessage("USER", question));
 
         long skillStartedAt = System.nanoTime();
-        java.util.Optional<DoctorAgentSkillResult> skillResult;
+        java.util.Optional<DoctorAgentSkillResult> doctorSkillResult = java.util.Optional.empty();
+        java.util.Optional<PatientAgentSkillResult> patientSkillResult = java.util.Optional.empty();
         try {
-            skillResult = skillOrchestrator.handle(session.getId(), question, user);
+            if (user.getRoleCode() == UserRole.DOCTOR) {
+                doctorSkillResult = skillOrchestrator.handle(session.getId(), question, user);
+            } else if (user.getRoleCode() == UserRole.USER) {
+                patientSkillResult = patientSkillOrchestrator.handle(session.getId(), question, user);
+            }
         } catch (RuntimeException exception) {
             recordSkillFailure(session.getId(), user.getId(), elapsedMillis(skillStartedAt), exception);
             throw exception;
         }
-        if (skillResult.isPresent()) {
+        if (doctorSkillResult.isPresent()) {
             saveMessage(session.getId(), user.getId(), "USER", question, null);
-            return completeStructuredSkill(session, user, question, skillResult.get(), elapsedMillis(skillStartedAt));
+            DoctorAgentSkillResult result = doctorSkillResult.orElseThrow();
+            return completeStructuredSkill(session, user, question,
+                    result.skillCode(), result.skillVersion(), result.confidence(), result.answer(),
+                    result.data(), result.pagination(), result.actions(), elapsedMillis(skillStartedAt));
+        }
+        if (patientSkillResult.isPresent()) {
+            saveMessage(session.getId(), user.getId(), "USER", question, null);
+            PatientAgentSkillResult result = patientSkillResult.orElseThrow();
+            return completeStructuredSkill(session, user, question,
+                    result.skillCode(), result.skillVersion(), result.confidence(), result.answer(),
+                    result.data(), result.pagination(), result.actions(), elapsedMillis(skillStartedAt));
         }
 
         PromptScenario scenario = scenario(user);
@@ -143,11 +166,14 @@ public class AgentChatServiceImpl implements AgentChatService {
         PromptTemplateVersionEntity version = prompts.requireActiveVersion(templateCode);
         String systemPrompt = renderer.render(version, "{}").systemPrompt();
         String traceId = UUID.randomUUID().toString();
-        AgentToolBundle bundle = user.getRoleCode() == UserRole.DOCTOR
+        AgentToolBundle bundle = user.getRoleCode() == UserRole.DOCTOR || user.getRoleCode() == UserRole.USER
                 ? toolFactory.create(session.getId(), user, traceId, Set.of("searchMedicalKnowledge"))
                 : toolFactory.create(session.getId(), user, traceId);
-        AgentSkillRuntimeVersion knowledgeVersion = user.getRoleCode() == UserRole.DOCTOR
-                ? skillVersions.resolve(session.getId(), AgentSkillCode.MEDICAL_KNOWLEDGE_QA) : null;
+        AgentSkillCode knowledgeSkill = user.getRoleCode() == UserRole.DOCTOR
+                ? AgentSkillCode.MEDICAL_KNOWLEDGE_QA
+                : user.getRoleCode() == UserRole.USER ? AgentSkillCode.PATIENT_KNOWLEDGE_QA : null;
+        AgentSkillRuntimeVersion knowledgeVersion = knowledgeSkill == null ? null
+                : skillVersions.resolve(session.getId(), knowledgeSkill);
         long startedAt = System.nanoTime();
         String answer;
         try {
@@ -156,14 +182,14 @@ public class AgentChatServiceImpl implements AgentChatService {
             answer = safetyPolicy.requireText(answer, 3000, "智能助手未返回有效内容");
             callLogs.record(callLog(version, scenario, templateCode, true, elapsedMillis(startedAt), null));
             if (knowledgeVersion != null) {
-                recordSkillExecution(session.getId(), user.getId(), AgentSkillCode.MEDICAL_KNOWLEDGE_QA.name(),
+                recordSkillExecution(session.getId(), user.getId(), knowledgeSkill.name(),
                         knowledgeVersion.version(), 0.55, true, elapsedMillis(startedAt), null);
             }
         } catch (RuntimeException exception) {
             callLogs.record(callLog(version, scenario, templateCode, false, elapsedMillis(startedAt),
                     exception.getClass().getSimpleName() + ": 智能助手调用失败"));
             if (knowledgeVersion != null) {
-                recordSkillExecution(session.getId(), user.getId(), AgentSkillCode.MEDICAL_KNOWLEDGE_QA.name(),
+                recordSkillExecution(session.getId(), user.getId(), knowledgeSkill.name(),
                         knowledgeVersion.version(), 0.55, false, elapsedMillis(startedAt),
                         exception.getClass().getSimpleName());
             }
@@ -176,7 +202,7 @@ public class AgentChatServiceImpl implements AgentChatService {
         session.setUpdatedAt(LocalDateTime.now());
         sessions.updateById(session);
         AgentSkillSummaryVO skill = knowledgeVersion == null ? null
-                : new AgentSkillSummaryVO(AgentSkillCode.MEDICAL_KNOWLEDGE_QA.name(), "医学知识检索",
+                : new AgentSkillSummaryVO(knowledgeSkill.name(), skillName(knowledgeSkill.name()),
                 knowledgeVersion.version());
         return new AgentChatResponseVO(session.getId(), answer, skill, null, null, List.of(),
                 bundle.summaries(), bundle.citations(), safetyPolicy.disclaimer(scenario));
@@ -209,23 +235,24 @@ public class AgentChatServiceImpl implements AgentChatService {
     }
 
     private AgentChatResponseVO completeStructuredSkill(AgentChatSessionEntity session, CurrentUserVO user,
-                                                        String question, DoctorAgentSkillResult result,
-                                                        long latencyMs) {
+                                                        String question, AgentSkillCode skillCode,
+                                                        int skillVersion, double confidence, String answer,
+                                                        AgentStructuredData data, AgentPagination pagination,
+                                                        List<AgentAction> actions, long latencyMs) {
         PromptScenario scenario = scenario(user);
-        safetyPolicy.requireSafe(scenario, result.answer());
-        AgentChatResponseVO response = new AgentChatResponseVO(session.getId(), result.answer(),
-                new AgentSkillSummaryVO(result.skillCode().name(), skillName(result.skillCode().name()),
-                        result.skillVersion()),
-                result.data(), result.pagination(), result.actions(), List.of(), List.of(),
+        safetyPolicy.requireSafe(scenario, answer);
+        AgentChatResponseVO response = new AgentChatResponseVO(session.getId(), answer,
+                new AgentSkillSummaryVO(skillCode.name(), skillName(skillCode.name()), skillVersion),
+                data, pagination, actions, List.of(), List.of(),
                 safetyPolicy.disclaimer(scenario));
-        saveMessage(session.getId(), user.getId(), "ASSISTANT", result.answer(), write(response));
+        saveMessage(session.getId(), user.getId(), "ASSISTANT", answer, write(response));
         session.setTitle(question.length() > 30 ? question.substring(0, 30) : question);
         session.setUpdatedAt(LocalDateTime.now());
         sessions.updateById(session);
         AgentSkillExecutionLogEntity log = new AgentSkillExecutionLogEntity();
         log.setSessionId(session.getId()); log.setUserId(user.getId()); log.setTraceId(UUID.randomUUID().toString());
-        log.setSkillCode(result.skillCode().name()); log.setSkillVersion(result.skillVersion());
-        log.setConfidence(result.confidence());
+        log.setSkillCode(skillCode.name()); log.setSkillVersion(skillVersion);
+        log.setConfidence(confidence);
         log.setSuccess(true); log.setLatencyMs(latencyMs); log.setCreatedAt(LocalDateTime.now());
         skillLogs.insert(log);
         return response;
@@ -282,6 +309,10 @@ public class AgentChatServiceImpl implements AgentChatService {
             case "CASE_FOLLOWUP_ANALYSIS" -> "病例随访比较";
             case "DOCTOR_TASK_SEARCH" -> "分析任务查询";
             case "DOCTOR_CLINICAL_QUEUE" -> "临床待办队列";
+            case "MY_CASE_LIST" -> "我的检查列表";
+            case "MY_CASE_PROGRESS" -> "我的检查进度";
+            case "MY_SIGNED_REPORT" -> "我的正式报告";
+            case "PATIENT_KNOWLEDGE_QA" -> "患者医学知识";
             default -> "医学知识检索";
         };
     }

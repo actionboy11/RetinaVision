@@ -20,9 +20,6 @@ import com.example.retinavision.service.AgentClinicalReferenceService;
 import com.example.retinavision.service.ClinicalAccessService;
 import com.example.retinavision.service.QualityControlService;
 import com.example.retinavision.service.TaskService;
-import com.example.retinavision.service.CaseService;
-import com.example.retinavision.service.PatientCaseService;
-import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
@@ -51,8 +48,6 @@ public class DefaultAgentToolFactory implements AgentToolFactory {
     private final TaskService taskService;
     private final CaseAnalysisTimelineService timelineService;
     private final QualityControlService qualityControlService;
-    private final CaseService caseService;
-    private final PatientCaseService patientCaseService;
     private final AgentToolCallLogMapper logs;
     private final ObjectMapper json;
 
@@ -60,8 +55,7 @@ public class DefaultAgentToolFactory implements AgentToolFactory {
                                    ClinicalAccessService access,
                                    AgentClinicalReferenceService references,
                                    TaskService taskService, CaseAnalysisTimelineService timelineService,
-                                   QualityControlService qualityControlService, CaseService caseService,
-                                   PatientCaseService patientCaseService, AgentToolCallLogMapper logs,
+                                   QualityControlService qualityControlService, AgentToolCallLogMapper logs,
                                    ObjectMapper json) {
         this.retriever = retriever;
         this.audiencePolicy = audiencePolicy;
@@ -70,8 +64,6 @@ public class DefaultAgentToolFactory implements AgentToolFactory {
         this.taskService = taskService;
         this.timelineService = timelineService;
         this.qualityControlService = qualityControlService;
-        this.caseService = caseService;
-        this.patientCaseService = patientCaseService;
         this.logs = logs;
         this.json = json;
     }
@@ -83,55 +75,11 @@ public class DefaultAgentToolFactory implements AgentToolFactory {
         List<ToolCallback> callbacks = new ArrayList<>(Arrays.asList(ToolCallbacks.from(common)));
         if (user.getRoleCode() == UserRole.DOCTOR) {
             callbacks.addAll(Arrays.asList(ToolCallbacks.from(new ClinicalTools(sessionId, user, traceId, bundle))));
-        } else if (user.getRoleCode() == UserRole.USER) {
-            callbacks.addAll(Arrays.asList(ToolCallbacks.from(new PatientTools(sessionId, user, traceId, bundle))));
         } else if (user.getRoleCode() == UserRole.ADMIN) {
             callbacks.addAll(Arrays.asList(ToolCallbacks.from(new GovernanceTools(sessionId, user, traceId, bundle))));
         }
         bundle.setCallbacks(callbacks.toArray(ToolCallback[]::new));
         return bundle;
-    }
-
-    private class PatientTools extends AuditedTools {
-        PatientTools(Long sessionId, CurrentUserVO user, String traceId, AgentToolBundle bundle) {
-            super(sessionId, user, traceId, bundle);
-        }
-
-        @Tool(name = "listMyCases", description = "列出当前患者本人的匿名检查病例和流程状态")
-        public String listMyCases() {
-            return execute("listMyCases", Map.of(), () -> {
-                CaseListQueryDTO query = new CaseListQueryDTO();
-                query.setPageNo(1);
-                query.setPageSize(50);
-                return caseService.getCaseList(query, user).getRecords().stream().map(item -> Map.of(
-                        "caseId", item.getId(),
-                        "caseNo", item.getCaseNo(),
-                        "patientNo", item.getPatientNo(),
-                        "eyeSide", item.getEyeSide(),
-                        "workflowStatus", item.getWorkflowStatus(),
-                        "updatedAt", item.getUpdatedAt()
-                )).toList();
-            });
-        }
-
-        @Tool(name = "getMyCaseProgress", description = "按内部病例 ID 查询当前患者本人的脱敏检查进度")
-        public String getMyCaseProgress(@ToolParam(description = "病例列表返回的内部病例 ID") Long caseId) {
-            return execute("getMyCaseProgress", Map.of("caseId", caseId),
-                    () -> patientCaseService.progress(caseId, user));
-        }
-
-        @Tool(name = "explainMySignedReport", description = "解释当前患者本人指定病例的最新已签发正式报告")
-        public String explainMySignedReport(@ToolParam(description = "病例列表返回的内部病例 ID") Long caseId) {
-            return execute("explainMySignedReport", Map.of("caseId", caseId), () -> {
-                var signedReports = patientCaseService.signedReports(caseId, user);
-                if (signedReports.isEmpty()) {
-                    throw new BaseException(ErrorMessageSignal.NOT_FOUND, "该检查尚无已签发正式报告");
-                }
-                var latest = signedReports.get(0);
-                return patientCaseService.signedReportExplanation(
-                        caseId, latest.resultId(), latest.version(), user);
-            });
-        }
     }
 
     private class CommonTools extends AuditedTools {
