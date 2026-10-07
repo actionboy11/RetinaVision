@@ -139,6 +139,50 @@ class PatientAgentSkillOrchestratorTest {
     }
 
     @Test
+    void directlyViewsReportByCaseReferenceWithoutPriorListContext() {
+        PatientAgentQueryService queries = mock(PatientAgentQueryService.class);
+        PatientAgentQueryContextService contexts = mock(PatientAgentQueryContextService.class);
+        when(contexts.load(5L)).thenReturn(Optional.empty());
+        PatientAgentSignedReportVO card = new PatientAgentSignedReportVO();
+        card.setCaseId(11L); card.setCaseNo("C-11"); card.setResultId(91L); card.setVersion(2);
+        when(queries.listMySignedReports("C-11", 1, 1, patient()))
+                .thenReturn(new PageResult<>(List.of(card), 1, 1, 1));
+        PatientAgentReportDetailVO detail = new PatientAgentReportDetailVO();
+        detail.setCaseId(11L); detail.setCaseNo("C-11"); detail.setResultId(91L); detail.setVersion(2);
+        when(queries.getMySignedReport("11", 91L, 2, patient())).thenReturn(detail);
+        var orchestrator = orchestrator(route(AgentSkillCode.MY_SIGNED_REPORT,
+                Map.of("caseReference", "C-11", "mode", "VIEW")), queries, contexts);
+
+        var result = orchestrator.handle(5L, "查看病例 C-11 的正式报告", patient()).orElseThrow();
+
+        assertThat(result.data().payload()).containsEntry("report", detail);
+        verify(queries).listMySignedReports("C-11", 1, 1, patient());
+    }
+
+    @Test
+    void directlyExplainsLatestSignedReportWithoutPriorListContext() {
+        PatientAgentQueryService queries = mock(PatientAgentQueryService.class);
+        PatientAgentQueryContextService contexts = mock(PatientAgentQueryContextService.class);
+        PatientReportExplanationService explanations = mock(PatientReportExplanationService.class);
+        when(contexts.load(5L)).thenReturn(Optional.empty());
+        PatientAgentSignedReportVO card = new PatientAgentSignedReportVO();
+        card.setCaseId(11L); card.setCaseNo("C-11"); card.setResultId(91L); card.setVersion(2);
+        when(queries.listMySignedReports("", 1, 1, patient()))
+                .thenReturn(new PageResult<>(List.of(card), 1, 1, 1));
+        PatientAgentReportDetailVO detail = new PatientAgentReportDetailVO();
+        detail.setCaseId(11L); detail.setCaseNo("C-11"); detail.setResultId(91L); detail.setVersion(2);
+        when(queries.getMySignedReport("11", 91L, 2, patient())).thenReturn(detail);
+        when(explanations.explain(detail)).thenReturn(PatientReportExplanationResult.available("通俗解释"));
+        var orchestrator = orchestrator(route(AgentSkillCode.MY_SIGNED_REPORT,
+                Map.of("mode", "EXPLAIN")), queries, contexts, explanations);
+
+        var result = orchestrator.handle(5L, "解释我最新的正式报告", patient()).orElseThrow();
+
+        assertThat(result.data().payload()).containsEntry("explanation", "通俗解释");
+        verify(queries).listMySignedReports("", 1, 1, patient());
+    }
+
+    @Test
     void expiredOutOfRangeAndWrongRoleFailWithoutCrossingBoundary() {
         PatientAgentQueryService queries = mock(PatientAgentQueryService.class);
         PatientAgentQueryContextService contexts = mock(PatientAgentQueryContextService.class);

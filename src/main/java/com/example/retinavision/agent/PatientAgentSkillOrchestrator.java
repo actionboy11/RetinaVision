@@ -216,6 +216,16 @@ public class PatientAgentSkillOrchestrator {
         PatientAgentReference reference;
         if (route.command() == AgentContextCommand.SELECT_INDEX) {
             reference = selected(existing, route.selectedIndex());
+        } else if (!route.arguments().getOrDefault("caseReference", "").isBlank()
+                || existing.isEmpty()) {
+            String caseReference = route.arguments().getOrDefault("caseReference", "");
+            var reports = queries.listMySignedReports(caseReference, 1, 1, user);
+            if (reports.getRecords().isEmpty()) {
+                throw new BaseException(ErrorMessageSignal.NOT_FOUND, "资源不存在");
+            }
+            PatientAgentSignedReportVO report = reports.getRecords().get(0);
+            reference = new PatientAgentReference(report.getCaseId(), report.getCaseNo(),
+                    report.getResultId(), report.getVersion());
         } else {
             PatientAgentQueryContextSnapshot context = requireContext(existing,
                     AgentSkillCode.MY_SIGNED_REPORT, "请重新查询正式报告列表");
