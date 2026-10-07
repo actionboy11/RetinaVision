@@ -431,4 +431,33 @@ onBeforeUnmount(() => {
 .app-main {
   padding: 24px;
 }
+
+@media (max-width: 620px) {
+  .app-header {
+    padding: 0 12px;
+  }
+
+  .page-subtitle,
+  .user-summary {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 0;
+  }
+
+  .header-actions :deep(.el-button) {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+  }
+
+  .header-actions :deep(.el-button span) {
+    display: none;
+  }
+
+  .app-main {
+    padding: 12px;
+  }
+}
 </style>

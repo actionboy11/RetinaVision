@@ -2642,17 +2642,24 @@ interface AgentChatResponse {
       | 'DOCTOR_TASK_SEARCH'
       | 'DOCTOR_CLINICAL_QUEUE'
       | 'MEDICAL_KNOWLEDGE_QA'
+      | 'MY_CASE_LIST'
+      | 'MY_CASE_PROGRESS'
+      | 'MY_SIGNED_REPORT'
+      | 'PATIENT_KNOWLEDGE_QA'
     name: string
     version: number
   }
   data?:
     | { type: 'METRICS'; payload: Record<string, number> }
-    | { type: 'CASE_LIST'; payload: { cases: AgentCaseSummary[] } }
+    | { type: 'CASE_LIST'; payload: { cases: AgentCaseSummary[] | PatientAgentCaseSummary[] } }
     | { type: 'CASE_DETAIL'; payload: Record<string, unknown> }
     | { type: 'COMPARISON'; payload: Record<string, unknown> }
     | { type: 'TASK_LIST'; payload: { tasks: AgentTaskSummary[] } }
     | { type: 'TASK_DETAIL'; payload: { taskDetail: AgentTaskDetail } }
     | { type: 'CLINICAL_QUEUE'; payload: { queueType: 'PENDING_REVIEW' | 'PENDING_REPORT'; items: AgentClinicalQueueItem[] } }
+    | { type: 'CASE_PROGRESS'; payload: { progress?: PatientAgentProgress; empty?: boolean } }
+    | { type: 'SIGNED_REPORT'; payload: PatientAgentSignedReportPayload }
+    | { type: 'KNOWLEDGE_ANSWER'; payload: { answer?: string } }
   pagination?: {
     page: number
     pageSize: number
@@ -2661,7 +2668,10 @@ interface AgentChatResponse {
     hasNext: boolean
   }
   actions: Array<{
-    type: 'NEXT_PAGE' | 'PREVIOUS_PAGE' | 'VIEW_CASE' | 'VIEW_TASK' | 'VIEW_REVIEW'
+    type:
+      | 'NEXT_PAGE' | 'PREVIOUS_PAGE'
+      | 'VIEW_CASE' | 'VIEW_TASK' | 'VIEW_REVIEW'
+      | 'VIEW_CASE_PROGRESS' | 'VIEW_SIGNED_REPORT' | 'GO_TO_IMAGE_UPLOAD'
     label: string
     targetId?: number
     targetPath?: string
@@ -2729,12 +2739,70 @@ interface AgentClinicalQueueItem {
   finishedAt?: string
   resultCreatedAt: string
 }
+
+interface PatientAgentCaseSummary {
+  caseId: number
+  caseNo: string
+  eyeSide?: 'LEFT' | 'RIGHT' | 'BOTH'
+  workflowStatus?: 'DRAFT' | 'SUBMITTED' | 'IN_REVIEW' | 'COMPLETED' | 'WITHDRAWN'
+  qualityStatus: 'CHECKING' | 'ACCEPTABLE' | 'REUPLOAD_RECOMMENDED' | 'UNAVAILABLE'
+  qualityMessage: string
+  signedReportAvailable: boolean
+  updatedAt: string
+}
+
+interface PatientAgentProgress {
+  caseId: number
+  caseNo: string
+  currentStage: string
+  stages: Array<{ code: string; label: string; status: 'PENDING' | 'CURRENT' | 'COMPLETED' }>
+  qualityStatus: 'CHECKING' | 'ACCEPTABLE' | 'REUPLOAD_RECOMMENDED' | 'UNAVAILABLE'
+  qualityMessage: string
+  nextHandler: string
+  message: string
+  updatedAt: string
+  estimatedCompletionAt?: null
+}
+
+interface PatientAgentSignedReportPayload {
+  reports?: Array<{
+    caseId: number
+    caseNo: string
+    resultId: number
+    version: number
+    signedAt: string
+    signerName: string
+    conclusion: string
+  }>
+  report?: {
+    caseId: number
+    caseNo: string
+    resultId: number
+    version: number
+    signedAt: string
+    signerName: string
+    findings: string
+    conclusion: string
+    recommendation: string
+  }
+  explanationAvailable?: boolean
+  explanation?: string
+  explanationMessage?: string
+}
 ```
 
 医生自然语言请求采用两阶段执行：
 
 1. `Skill Router` 仅接收用户问题、当前角色可见的版本化 Skill 定义和受控 JSON 输出契约，由 LLM 返回 `skillCode/confidence/arguments`。Router 阶段不注册 Function Calling 工具，也不接收病例、任务或临床队列数据。
 2. Java 校验 Skill、角色、置信度和参数后选择执行模式。`DOCTOR_WORKLOAD_OVERVIEW`、`ASSIGNED_CASE_SEARCH`、`CASE_CLINICAL_SUMMARY`、`CASE_FOLLOWUP_ANALYSIS`、`DOCTOR_TASK_SEARCH` 和 `DOCTOR_CLINICAL_QUEUE` 使用 `DIRECT`：由受控 Service/Mapper 查询并生成固定摘要和结构化数据，查询结果不再发送给 LLM。`MEDICAL_KNOWLEDGE_QA` 使用 `TOOL_CALLING`，且只注册 `searchMedicalKnowledge`。
+
+患者自然语言请求使用相同的 Router 协议，但候选目录只包含患者 Skill：
+
+1. `MY_CASE_LIST`、`MY_CASE_PROGRESS` 和 `MY_SIGNED_REPORT` 使用 `DIRECT`，SQL 直接按当前账号绑定的 `patient_profile.account_user_id` 限定数据范围，列表固定按最近更新时间倒序且每页最多 10 条。
+2. `PATIENT_KNOWLEDGE_QA` 使用 `TOOL_CALLING`，只注册 `searchMedicalKnowledge`，并只检索 `PUBLIC/PATIENT` 受众文档。
+3. 报告查询只返回已签发版本。通俗解释只发送已授权报告的字段白名单；模型超时、协议错误或安全拒绝时保留医生签发原文，并把解释标记为暂不可用。
+4. 患者端质检只返回 `CHECKING/ACCEPTABLE/REUPLOAD_RECOMMENDED/UNAVAILABLE` 和受控通俗说明，不返回评分、阈值、原始错误、模型信息或任务日志。
+5. 患者动作目标仅允许 `/cases/{id}/progress`、`/cases/{id}/progress?section=reports` 和 `/cases/{id}/images`。前端从历史消息恢复动作时仍重新执行该路径白名单。
 
 病例和任务列表固定按最近更新时间倒序，每页默认且最多 10 条；患者数量按 `patient_id` 去重。任务查询支持任务类型、任务状态、时间窗口及任务编号/病例编号定位，未明确任务类型时默认血管分割。临床队列使用独立语义：`PENDING_REVIEW` 返回待医生审核结果，`PENDING_REPORT` 返回已审核通过但尚未签发的结果，不再伪装成病例筛选。
 
@@ -2745,7 +2813,7 @@ interface AgentClinicalQueueItem {
 角色工具如下：
 
 - `USER/DOCTOR/ADMIN`：`searchMedicalKnowledge`，并按角色过滤 `PUBLIC/PATIENT/CLINICAL/ADMIN` 知识受众。
-- 仅 `USER`：`listMyCases`、`getMyCaseProgress`、`explainMySignedReport`；报告解释工具只需病例 ID，并自动选择最新已签发版本。工具不读取原始 AI 结果、mask、草稿或未签发意见。
+- 仅 `USER`：病例列表、检查进度和正式报告是 Java `DIRECT` Skill，不作为 Function Calling 工具暴露给模型；患者知识路径只注册 `searchMedicalKnowledge`。报告通俗解释由独立的受控服务处理，不读取原始 AI 结果、mask、草稿或未签发意见。
 - 仅 `DOCTOR`：任务列表/详情、临床队列、工作量、病例筛选、病例摘要和随访比较属于 Java `DIRECT` Skill，不作为 Function Calling 工具暴露给模型；所有 Mapper 查询直接限定当前负责医生。医学知识路径仅注册 `searchMedicalKnowledge`。
 - 仅 `ADMIN`：`getQualityControlOverview`、`listQualityRiskAlerts`；不注册患者临床工具。
 - 不提供创建任务、修改病例、保存审核、签发 PDF、删除数据、切换 Prompt 或管理知识文档等写工具。
@@ -2779,6 +2847,7 @@ GET  /agent-skill-executions?skillCode=&success=
 
 | 版本 | 日期 | 说明 |
 |---|---|---|
+| v2.2 | 2026-10-07 | 新增患者 Agent 自然语言检查列表、进度、重传提示、正式报告卡片与安全降级契约 |
 | v2.1 | 2026-09-25 | 将 USER 定义为患者，新增匿名患者档案、检查申请状态、患者进度/正式报告接口、知识受众和角色化 Agent |
 | v2.0 | 2026-09-24 | 新增病例负责医生归属、角色首页与管理职责隔离，并增强 Agent 业务编号查询 |
 | v1.9 | 2026-09-24 | 接入 Spring AI 1.1.8、Qdrant DocumentRetriever 与医生/管理员只读智能助手 |

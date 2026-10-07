@@ -79,6 +79,11 @@ public class AgentSkillRegistry {
         if (!isAvailable(code, role)) {
             throw new BaseException(ErrorMessageSignal.FORBIDDEN, "无权使用该 Skill");
         }
+        return normalizeArguments(code, arguments);
+    }
+
+    public Map<String, String> normalizeArguments(AgentSkillCode code,
+                                                   Map<String, String> arguments) {
         Map<String, String> result = new LinkedHashMap<>();
         Map<String, List<String>> schema = argumentSchema(code);
         if (arguments != null) {

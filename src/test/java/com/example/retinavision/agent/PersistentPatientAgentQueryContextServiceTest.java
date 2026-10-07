@@ -69,6 +69,24 @@ class PersistentPatientAgentQueryContextServiceTest {
         assertThat(service.load(10L)).isEmpty();
     }
 
+    @Test
+    void restoresCaseListContextWithoutSelectedCase() {
+        AgentQueryContextMapper mapper = mock(AgentQueryContextMapper.class);
+        AgentQueryContextEntity entity = entity(11L);
+        entity.setTotal(12L);
+        entity.setRecentResultReferencesJson(
+                "[{\"caseId\":69,\"caseNo\":\"C-69\",\"resultId\":null,\"reportVersion\":null}]");
+        when(mapper.selectById(11L)).thenReturn(entity);
+        var service = new PersistentPatientAgentQueryContextService(mapper, new ObjectMapper());
+
+        var restored = service.load(11L).orElseThrow();
+
+        assertThat(restored.selectedCaseId()).isNull();
+        assertThat(restored.total()).isEqualTo(12);
+        assertThat(restored.references()).singleElement().satisfies(reference ->
+                assertThat(reference.caseId()).isEqualTo(69L));
+    }
+
     private AgentQueryContextEntity entity(long sessionId) {
         AgentQueryContextEntity entity = new AgentQueryContextEntity();
         entity.setSessionId(sessionId);

@@ -245,3 +245,11 @@ RetinaVision 已具备患者病例、图像上传、检查进度、医生审核�
 5. 路由评测、全链路回归、文档和 Pull Request。
 
 每一批应形成独立、可测试、可审查的提交，不把无关重构或新的写操作混入本阶段。
+
+## 14. 已验证实现说明
+
+- 生产 Router 只接收当前角色可见的版本化 Skill 目录，并对目录内 Skill 做参数归一化；Patient Orchestrator 随后使用真实 `USER` 角色再次执行权限与参数校验。
+- `MY_CASE_LIST`、`MY_CASE_PROGRESS`、`MY_SIGNED_REPORT` 已按 Native 方式执行，结构化病例和报告查询结果不发送给 Router 或通用对话模型。
+- 患者知识问答只注册 `searchMedicalKnowledge`；旧的患者病例、进度和报告 Function Calling 工具已移除。
+- 前端历史消息按结构化 JSON 恢复患者卡片，并在执行动作前重新校验三类患者路径白名单。
+- 自动化路由语料要求路由准确率至少 90%、参数准确率至少 95%；安全契约覆盖患者投影字段、账号级 SQL、低置信度写意图和路径白名单。

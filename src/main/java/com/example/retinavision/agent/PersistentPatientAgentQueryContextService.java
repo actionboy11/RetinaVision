@@ -4,6 +4,8 @@ import com.example.retinavision.mapper.AgentQueryContextMapper;
 import com.example.retinavision.pojo.Entity.AgentQueryContextEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.util.Set;
 
 @Service
 public class PersistentPatientAgentQueryContextService implements PatientAgentQueryContextService {
+    private static final Logger log = LoggerFactory.getLogger(PersistentPatientAgentQueryContextService.class);
     private static final int EXPIRY_HOURS = 2;
     private static final Set<AgentSkillCode> PATIENT_SKILLS = Set.of(
             AgentSkillCode.MY_CASE_LIST, AgentSkillCode.MY_CASE_PROGRESS,
@@ -40,18 +43,22 @@ public class PersistentPatientAgentQueryContextService implements PatientAgentQu
                     : json.readValue(entity.getCurrentFiltersJson(), new TypeReference<>() {});
             List<PatientAgentReference> references = entity.getRecentResultReferencesJson() == null ? List.of()
                     : json.readValue(entity.getRecentResultReferencesJson(), new TypeReference<>() {});
+            Long selectedCaseId = entity.getSelectedCaseId() == null
+                    ? longValue(filters.get("selectedCaseId"))
+                    : Long.valueOf(entity.getSelectedCaseId());
             return Optional.of(new PatientAgentQueryContextSnapshot(
                     skill,
                     booleanValue(filters.get("reuploadOnly")),
                     booleanValue(filters.get("signedReportOnly")),
                     value(entity.getCurrentPage(), 1), value(entity.getPageSize(), 10),
                     entity.getTotal() == null ? 0 : entity.getTotal(),
-                    entity.getSelectedCaseId() == null ? longValue(filters.get("selectedCaseId"))
-                            : entity.getSelectedCaseId().longValue(),
+                    selectedCaseId,
                     longValue(filters.get("selectedResultId")),
                     intValue(filters.get("selectedReportVersion")),
                     references));
-        } catch (Exception ignored) {
+        } catch (Exception exception) {
+            log.warn("Unable to restore patient Agent context sessionId={} errorType={}",
+                    sessionId, exception.getClass().getSimpleName());
             return Optional.empty();
         }
     }
