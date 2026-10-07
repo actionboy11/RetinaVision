@@ -19,6 +19,7 @@ import RagEvaluation from '@/views/admin/RagEvaluation.vue'
 import ReviewWorkbench from '@/views/doctor/ReviewWorkbench.vue'
 import ClinicalAgent from '@/views/agent/ClinicalAgent.vue'
 import AgentSkillManagement from '@/views/admin/AgentSkillManagement.vue'
+import AgentEvaluation from '@/views/admin/AgentEvaluation.vue'
 import PatientCaseProgress from '@/views/case/PatientCaseProgress.vue'
 import { getRoleHome } from '@/utils/role-home'
 
@@ -77,6 +78,12 @@ const router = createRouter({
           name: 'admin-agent-skills',
           component: AgentSkillManagement,
           meta: { title: 'Agent Skill 管理', requiresAuth: true, adminOnly: true },
+        },
+        {
+          path: 'agent-evaluations',
+          name: 'agent-evaluations',
+          component: AgentEvaluation,
+          meta: { title: 'Agent 评测', requiresAuth: true, adminOnly: true },
         },
         {
           path: 'prompt-evaluations',

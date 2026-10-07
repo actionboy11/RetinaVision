@@ -57,6 +57,7 @@ const activeMenu = computed(() => {
     return '/admin/prompts'
   }
   if (route.path.startsWith('/admin/agent-skills')) return '/admin/agent-skills'
+  if (route.path.startsWith('/agent-evaluations')) return '/agent-evaluations'
 
   if (route.path.startsWith('/prompt-evaluations')) {
     return '/prompt-evaluations'
@@ -281,6 +282,10 @@ onBeforeUnmount(() => {
         <el-menu-item v-if="authStore.user?.roleCode === 'ADMIN'" index="/admin/agent-skills">
           <el-icon><Cpu /></el-icon>
           <span>Agent Skill</span>
+        </el-menu-item>
+        <el-menu-item v-if="authStore.user?.roleCode === 'ADMIN'" index="/agent-evaluations">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>Agent 评测</span>
         </el-menu-item>
         <el-menu-item
           v-if="authStore.user?.roleCode === 'ADMIN'"

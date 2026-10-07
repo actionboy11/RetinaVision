@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import {
   activateAgentSkillVersion,
@@ -13,6 +14,7 @@ import type { AgentSkillExecutionItem, AgentSkillItem, AgentSkillVersionItem } f
 import { formatDateTime } from '@/utils/format'
 
 const loading = ref(false)
+const router = useRouter()
 const actionLoading = ref(false)
 const skills = ref<AgentSkillItem[]>([])
 const versions = ref<AgentSkillVersionItem[]>([])
@@ -40,7 +42,9 @@ const evaluate = async (version: AgentSkillVersionItem) => {
   actionLoading.value = true
   try {
     const result = await evaluateAgentSkillVersion(selected.value.skillCode, Number(version.id))
-    ElMessage.success(`评测完成：路由 ${(result.routingAccuracy * 100).toFixed(0)}%，参数 ${(result.parameterAccuracy * 100).toFixed(0)}%`)
+    visible.value = false
+    ElMessage.success('评测已进入队列')
+    await router.push({ path: '/agent-evaluations', query: { runId: String(result.id) } })
   } finally { actionLoading.value = false }
 }
 
@@ -62,8 +66,11 @@ onMounted(load)
 <template>
   <section class="skill-page" v-loading="loading">
     <header class="page-heading">
-      <div><h2>Agent Skill 管理</h2><p>查看医生智能助手的业务技能、评测结果和当前启用版本。</p></div>
-      <el-button @click="load">刷新</el-button>
+      <div><h2>Agent Skill 管理</h2><p>查看智能助手业务技能、评测状态和当前启用版本。</p></div>
+      <div class="heading-actions">
+        <el-button @click="router.push('/agent-evaluations')">Agent 评测</el-button>
+        <el-button @click="load">刷新</el-button>
+      </div>
     </header>
     <div class="table-panel">
       <el-table :data="skills" stripe>
@@ -112,4 +119,5 @@ onMounted(load)
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
 .section-heading h3 { margin: 0; font-size: 16px; }
 .section-heading span { color: #6b7280; font-size: 13px; }
+.heading-actions { display: flex; gap: 8px; }
 </style>
