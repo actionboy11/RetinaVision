@@ -17,6 +17,7 @@ public class LlmSafetyPolicy {
             PromptScenario.CASE_TREND_SUMMARY, "趋势分析仅供医生复核参考，不构成诊断、治疗建议或报告签发依据。",
             PromptScenario.CLINICAL_ASSISTANT_AGENT, "智能助手仅提供只读辅助查询，不构成诊断、治疗建议或报告签发依据。",
             PromptScenario.PATIENT_ASSISTANT_AGENT, "患者智能助手仅用于查看本人检查进度和理解已签发报告，不构成诊断或治疗建议。",
+            PromptScenario.PATIENT_SIGNED_REPORT_EXPLANATION, "AI 通俗解释仅帮助理解医生已签发报告，不构成新的诊断或治疗建议。",
             PromptScenario.AGENT_SKILL_ROUTER, "Skill 路由只用于选择只读业务能力。"
     );
 
@@ -50,6 +51,7 @@ public class LlmSafetyPolicy {
             case RAG_KNOWLEDGE_CHAT -> "知识助手回答";
             case CASE_TREND_SUMMARY -> "AI 趋势摘要";
             case CLINICAL_ASSISTANT_AGENT, PATIENT_ASSISTANT_AGENT -> "智能助手回答";
+            case PATIENT_SIGNED_REPORT_EXPLANATION -> "正式报告通俗解释";
             case AGENT_SKILL_ROUTER -> "Skill 路由结果";
         };
     }

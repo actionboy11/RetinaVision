@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.retinavision.mapper.PatientAgentQueryMapper">
+
+    <sql id="caseFilters">
+        AND c.status != 'DELETED'
+        <if test="criteria.reuploadOnly">
+            AND EXISTS (
+                SELECT 1 FROM image_file quality_image
+                WHERE quality_image.case_id = c.id
+                  AND quality_image.status != 'DELETED'
+                  AND quality_image.quality_status IN ('WARNING', 'FAIL')
+            )
+        </if>
+        <if test="criteria.signedReportOnly">
+            AND EXISTS (
+                SELECT 1 FROM analysis_task signed_task
+                JOIN analysis_result signed_result ON signed_result.task_id = signed_task.id
+                JOIN analysis_report signed_report ON signed_report.result_id = signed_result.id
+                WHERE signed_task.case_id = c.id AND signed_report.status = 'SIGNED'
+            )
+        </if>
+    </sql>
+
+    <select id="countMyCases" resultType="long">
+        SELECT COUNT(*)
+        FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
+        WHERE p.account_user_id = #{userId}
+        <include refid="caseFilters" />
+    </select>
+
+    <select id="selectMyCases" resultType="com.example.retinavision.mapper.PatientAgentQueryMapper$CaseProjection">
+        SELECT c.id AS caseId, c.case_no AS caseNo, c.eye_side AS eyeSide,
+               c.workflow_status AS workflowStatus,
+               (SELECT latest_image.quality_status FROM image_file latest_image
+                WHERE latest_image.case_id = c.id AND latest_image.status != 'DELETED'
+                ORDER BY latest_image.updated_at DESC, latest_image.id DESC LIMIT 1) AS qualityStatus,
+               (SELECT COALESCE(
+                    JSON_UNQUOTE(JSON_EXTRACT(quality_result.result_json, '$.reasonCode')),
+                    JSON_UNQUOTE(JSON_EXTRACT(quality_result.result_json, '$.reason')))
+                FROM analysis_task quality_task
+                LEFT JOIN analysis_result quality_result ON quality_result.task_id = quality_task.id
+                WHERE quality_task.case_id = c.id AND quality_task.task_type = 'IMAGE_QUALITY_CHECK'
+                ORDER BY quality_task.updated_at DESC, quality_task.id DESC LIMIT 1) AS qualityReason,
+               (SELECT COUNT(*) FROM analysis_task report_task
+                JOIN analysis_result report_result ON report_result.task_id = report_task.id
+                JOIN analysis_report report ON report.result_id = report_result.id
+                WHERE report_task.case_id = c.id AND report.status = 'SIGNED') AS signedReportCount,
+               c.updated_at AS updatedAt
+        FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
+        WHERE p.account_user_id = #{userId}
+        <include refid="caseFilters" />
+        ORDER BY c.updated_at DESC, c.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectMyCaseProgress" resultType="com.example.retinavision.mapper.PatientAgentQueryMapper$ProgressProjection">
+        SELECT c.id AS caseId, c.case_no AS caseNo,
+               (SELECT COUNT(*) FROM image_file image
+                WHERE image.case_id = c.id AND image.status != 'DELETED') AS imageCount,
+               (SELECT latest_image.quality_status FROM image_file latest_image
+                WHERE latest_image.case_id = c.id AND latest_image.status != 'DELETED'
+                ORDER BY latest_image.updated_at DESC, latest_image.id DESC LIMIT 1) AS qualityStatus,
+               (SELECT COALESCE(
+                    JSON_UNQUOTE(JSON_EXTRACT(quality_result.result_json, '$.reasonCode')),
+                    JSON_UNQUOTE(JSON_EXTRACT(quality_result.result_json, '$.reason')))
+                FROM analysis_task quality_task
+                LEFT JOIN analysis_result quality_result ON quality_result.task_id = quality_task.id
+                WHERE quality_task.case_id = c.id AND quality_task.task_type = 'IMAGE_QUALITY_CHECK'
+                ORDER BY quality_task.updated_at DESC, quality_task.id DESC LIMIT 1) AS qualityReason,
+               (SELECT segmentation_task.status FROM analysis_task segmentation_task
+                WHERE segmentation_task.case_id = c.id
+                  AND segmentation_task.task_type = 'VESSEL_SEGMENTATION'
+                ORDER BY segmentation_task.updated_at DESC, segmentation_task.id DESC LIMIT 1) AS analysisStatus,
+               (SELECT COUNT(*) FROM analysis_task report_task
+                JOIN analysis_result report_result ON report_result.task_id = report_task.id
+                JOIN analysis_report report ON report.result_id = report_result.id
+                WHERE report_task.case_id = c.id AND report.status = 'SIGNED') AS signedReportCount,
+               c.updated_at AS updatedAt
+        FROM medical_case c
+        JOIN patient_profile p ON p.id = c.patient_id
+        WHERE p.account_user_id = #{userId}
+          AND c.status != 'DELETED'
+          AND (c.case_no = #{caseReference} OR (#{caseId} IS NOT NULL AND c.id = #{caseId}))
+        LIMIT 1
+    </select>
+
+    <select id="countMySignedReports" resultType="long">
+        SELECT COUNT(*)
+        FROM analysis_report report
+        JOIN analysis_result result ON result.id = report.result_id
+        JOIN analysis_task task ON task.id = result.task_id
+        JOIN medical_case c ON c.id = task.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+        WHERE p.account_user_id = #{userId}
+          AND c.status != 'DELETED'
+          AND report.status = 'SIGNED'
+        <if test="caseReference != null and caseReference != ''">
+          AND (c.case_no = #{caseReference} OR (#{caseId} IS NOT NULL AND c.id = #{caseId}))
+        </if>
+    </select>
+
+    <select id="selectMySignedReports" resultType="com.example.retinavision.pojo.VO.PatientAgentSignedReportVO">
+        SELECT c.id AS caseId, c.case_no AS caseNo, result.id AS resultId,
+               report.version, report.signed_at AS signedAt,
+               report.signer_name_snapshot AS signerName, review.conclusion
+        FROM analysis_report report
+        JOIN analysis_result result ON result.id = report.result_id
+        JOIN analysis_task task ON task.id = result.task_id
+        JOIN medical_case c ON c.id = task.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+        LEFT JOIN analysis_review review ON review.result_id = result.id
+        WHERE p.account_user_id = #{userId}
+          AND c.status != 'DELETED'
+          AND report.status = 'SIGNED'
+        <if test="caseReference != null and caseReference != ''">
+          AND (c.case_no = #{caseReference} OR (#{caseId} IS NOT NULL AND c.id = #{caseId}))
+        </if>
+        ORDER BY report.signed_at DESC, report.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="selectMySignedReport" resultType="com.example.retinavision.pojo.VO.PatientAgentReportDetailVO">
+        SELECT c.id AS caseId, c.case_no AS caseNo, result.id AS resultId,
+               report.version, report.signed_at AS signedAt,
+               report.signer_name_snapshot AS signerName,
+               review.findings, review.conclusion, review.recommendation
+        FROM analysis_report report
+        JOIN analysis_result result ON result.id = report.result_id
+        JOIN analysis_task task ON task.id = result.task_id
+        JOIN medical_case c ON c.id = task.case_id
+        JOIN patient_profile p ON p.id = c.patient_id
+        JOIN analysis_review review ON review.result_id = result.id
+        WHERE p.account_user_id = #{userId}
+          AND c.status != 'DELETED'
+          AND report.status = 'SIGNED'
+        <if test="caseReference != null and caseReference != ''">
+          AND (c.case_no = #{caseReference} OR (#{caseId} IS NOT NULL AND c.id = #{caseId}))
+        </if>
+        <if test="resultId != null">AND result.id = #{resultId}</if>
+        <if test="version != null">AND report.version = #{version}</if>
+        ORDER BY report.signed_at DESC, report.id DESC
+        LIMIT 1
+    </select>
+</mapper>

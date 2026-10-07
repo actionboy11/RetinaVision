@@ -20,6 +20,7 @@ import com.example.retinavision.service.LlmCallLogService;
 import com.example.retinavision.service.impl.AgentChatServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.tool.ToolCallback;
+import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,7 @@ class AgentChatServiceImplTest {
     private final AgentToolFactory tools = mock(AgentToolFactory.class);
     private final LlmCallLogService callLogs = mock(LlmCallLogService.class);
     private final DoctorAgentSkillOrchestrator skillOrchestrator = mock(DoctorAgentSkillOrchestrator.class);
+    private final PatientAgentSkillOrchestrator patientSkillOrchestrator = mock(PatientAgentSkillOrchestrator.class);
     private final AgentSkillExecutionLogMapper skillLogs = mock(AgentSkillExecutionLogMapper.class);
     private final AgentSkillVersionBindingService skillVersions = mock(AgentSkillVersionBindingService.class);
 
@@ -70,18 +72,24 @@ class AgentChatServiceImplTest {
     }
 
     @Test
-    void patientUsesPatientPrompt() {
+    void patientKnowledgeUsesPatientPromptAndOnlyKnowledgeTool() {
         CurrentUserVO user = new CurrentUserVO(9, "user", "用户", UserRole.USER);
         PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
         version.setSystemPrompt("患者只读工具");
         when(prompts.requireActiveVersion("PATIENT_ASSISTANT_AGENT")).thenReturn(version);
-        when(tools.create(any(), any(), any())).thenReturn(new AgentToolBundle(new ToolCallback[0]));
-        when(gateway.generate(any(), any(), any())).thenReturn("检查仍在处理中，请耐心等待。");
+        when(patientSkillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.empty());
+        when(tools.create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge"))))
+                .thenReturn(new AgentToolBundle(new ToolCallback[0]));
+        when(skillVersions.resolve(any(), eq(AgentSkillCode.PATIENT_KNOWLEDGE_QA)))
+                .thenReturn(new AgentSkillRuntimeVersion(61L, 1));
+        when(gateway.generate(any(), any(), any())).thenReturn("这是面向患者的知识解释。");
 
-        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "我的检查到哪一步了？"), user);
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "血管分割是什么意思？"), user);
 
-        assertThat(response.answer()).contains("处理中");
+        assertThat(response.answer()).contains("知识解释");
+        assertThat(response.skill().code()).isEqualTo("PATIENT_KNOWLEDGE_QA");
         verify(prompts).requireActiveVersion("PATIENT_ASSISTANT_AGENT");
+        verify(tools).create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge")));
     }
 
     @Test
@@ -126,6 +134,51 @@ class AgentChatServiceImplTest {
     }
 
     @Test
+    void patientNativeSkillPersistsBothMessagesAndFullStructuredResponseWithoutModel() {
+        CurrentUserVO patient = new CurrentUserVO(9, "patient", "患者", UserRole.USER);
+        PatientAgentSkillResult skillResult = new PatientAgentSkillResult(
+                AgentSkillCode.MY_CASE_PROGRESS, 1, 0.99, "检查当前处于医生处理阶段。",
+                new AgentStructuredData("CASE_PROGRESS", Map.of("progress", Map.of("caseId", 12))),
+                null, List.of(new AgentAction("VIEW_CASE_PROGRESS", "查看进度", 12L,
+                "/cases/12/progress")));
+        when(patientSkillOrchestrator.handle(any(), any(), eq(patient))).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(
+                new AgentChatRequestDTO(null, "我的检查到哪一步了"), patient);
+
+        assertThat(response.data().type()).isEqualTo("CASE_PROGRESS");
+        verify(gateway, never()).generate(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any(), any());
+        ArgumentCaptor<AgentChatMessageEntity> saved = ArgumentCaptor.forClass(AgentChatMessageEntity.class);
+        verify(messages, times(2)).insert(saved.capture());
+        assertThat(saved.getAllValues()).extracting(AgentChatMessageEntity::getRole)
+                .containsExactly("USER", "ASSISTANT");
+        assertThat(saved.getAllValues().get(1).getStructuredContentJson())
+                .contains("CASE_PROGRESS", "VIEW_CASE_PROGRESS", "/cases/12/progress");
+    }
+
+    @Test
+    void unavailablePatientReportExplanationKeepsStructuredReport() {
+        CurrentUserVO patient = new CurrentUserVO(9, "patient", "患者", UserRole.USER);
+        PatientAgentSkillResult skillResult = new PatientAgentSkillResult(
+                AgentSkillCode.MY_SIGNED_REPORT, 1, 0.99,
+                "报告通俗解释暂不可用，您仍可查看医生签发的正式报告",
+                new AgentStructuredData("SIGNED_REPORT", Map.of(
+                        "report", Map.of("caseId", 12, "resultId", 91, "conclusion", "医生结论"),
+                        "explanationAvailable", false,
+                        "explanationMessage", "报告通俗解释暂不可用，您仍可查看医生签发的正式报告")),
+                null, List.of());
+        when(patientSkillOrchestrator.handle(any(), any(), eq(patient))).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "解释这份报告"), patient);
+
+        assertThat(response.data().payload()).containsKey("report")
+                .containsEntry("explanationAvailable", false);
+        verify(gateway, never()).generate(any(), any(), any());
+    }
+
+    @Test
     void doctorKnowledgeRouteRegistersOnlyKnowledgeTool() {
         PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
         version.setSystemPrompt("医学知识问答");
@@ -163,7 +216,7 @@ class AgentChatServiceImplTest {
         properties.setModel("qwen-plus");
         return new AgentChatServiceImpl(sessions, messages, prompts, new PromptRenderService(), gateway,
                 tools, new LlmSafetyPolicy(), properties, callLogs, skillOrchestrator,
-                new com.fasterxml.jackson.databind.ObjectMapper(), skillLogs, skillVersions);
+                patientSkillOrchestrator, new com.fasterxml.jackson.databind.ObjectMapper(), skillLogs, skillVersions);
     }
 
     private CurrentUserVO doctor() {

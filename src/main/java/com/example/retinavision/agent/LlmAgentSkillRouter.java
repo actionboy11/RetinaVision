@@ -1,7 +1,6 @@
 package com.example.retinavision.agent;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.llm.LlmOrchestrationService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -68,7 +67,7 @@ public class LlmAgentSkillRouter implements AgentSkillRouter {
                 }
                 arguments.put(entry.getKey(), entry.getValue().asText());
             });
-            Map<String, String> normalized = registry.validateAndNormalize(code, UserRole.DOCTOR, arguments);
+            Map<String, String> normalized = registry.normalizeArguments(code, arguments);
             return new AgentSkillRoute(code, confidence, normalized);
         } catch (BaseException exception) {
             throw exception;
