@@ -32,6 +32,24 @@ export const skillNameMap: Record<string, string> = {
   DOCTOR_TASK_SEARCH: '分析任务查询',
   DOCTOR_CLINICAL_QUEUE: '临床待办队列',
   MEDICAL_KNOWLEDGE_QA: '医学知识检索',
+  MY_CASE_LIST: '我的检查',
+  MY_CASE_PROGRESS: '检查进度',
+  MY_SIGNED_REPORT: '正式报告',
+  PATIENT_KNOWLEDGE_QA: '健康知识问答',
+}
+
+export const patientQualityStatusTextMap = {
+  CHECKING: '正在检查图像质量',
+  ACCEPTABLE: '图像可以继续处理',
+  REUPLOAD_RECOMMENDED: '建议重新上传图像',
+  UNAVAILABLE: '暂时无法判断图像质量',
+} as const
+
+export const patientQualityStatusTagMap: Record<string, ElementTagType> = {
+  CHECKING: 'info',
+  ACCEPTABLE: 'success',
+  REUPLOAD_RECOMMENDED: 'warning',
+  UNAVAILABLE: 'info',
 }
 
 export const toolNameMap: Record<string, string> = {

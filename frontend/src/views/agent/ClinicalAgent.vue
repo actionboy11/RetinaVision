@@ -53,10 +53,10 @@ const assistantDescription = computed(() => {
 const quickQuestions = computed(() => {
   if (isPatient.value) {
     return [
-      '列出我的检查申请和当前状态',
-      '查看我最近一次检查的处理进度',
-      '解释我最近一份已签发报告中的医学术语',
-      '为什么眼底图像需要先做图像质量检测？',
+      '我有哪些检查？',
+      '我最近一次检查到哪一步了？',
+      '哪些图像需要重新上传？',
+      '查看我的最新正式报告',
     ]
   }
   if (isDoctor.value) {
@@ -210,7 +210,7 @@ const runAction = async (action: AgentAction) => {
   }
 
   const path = action.targetPath || ''
-  if (/^\/(cases\/\d+\/images|tasks\/\d+(\?tab=clinical&stage=review)?|doctor\/reviews)$/.test(path)) {
+  if (/^\/(cases\/\d+\/(progress(\?section=reports)?|images)|tasks\/\d+(\?tab=clinical&stage=review)?|doctor\/reviews)$/.test(path)) {
     await router.push(path)
     return
   }

@@ -5,10 +5,18 @@ import AgentComparison from '@/components/agent/AgentComparison.vue'
 import AgentEvidence from '@/components/agent/AgentEvidence.vue'
 import AgentMarkdown from '@/components/agent/AgentMarkdown.vue'
 import AgentMetrics from '@/components/agent/AgentMetrics.vue'
+import PatientCaseList from '@/components/agent/PatientCaseList.vue'
+import PatientCaseProgress from '@/components/agent/PatientCaseProgress.vue'
+import PatientSignedReport from '@/components/agent/PatientSignedReport.vue'
 import AgentTaskList from '@/components/agent/AgentTaskList.vue'
 import AgentTaskDetail from '@/components/agent/AgentTaskDetail.vue'
 import AgentClinicalQueue from '@/components/agent/AgentClinicalQueue.vue'
-import type { AgentAction, AgentChatResponse } from '@/types/agent'
+import type {
+  AgentAction,
+  AgentCaseListPayload,
+  AgentChatResponse,
+  PatientAgentCaseListPayload,
+} from '@/types/agent'
 import { skillNameMap } from '@/utils/agent-display'
 
 defineProps<{
@@ -20,6 +28,12 @@ const emit = defineEmits<{
   query: [value: string]
   action: [value: AgentAction]
 }>()
+
+const asPatientCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPayload) =>
+  payload as PatientAgentCaseListPayload
+
+const asDoctorCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPayload) =>
+  payload as AgentCaseListPayload
 </script>
 
 <template>
@@ -35,9 +49,16 @@ const emit = defineEmits<{
       :metrics="structured.data.payload"
       @query="emit('query', $event)"
     />
+    <PatientCaseList
+      v-else-if="structured.data?.type === 'CASE_LIST' && structured.skill?.code === 'MY_CASE_LIST'"
+      :payload="asPatientCaseList(structured.data.payload)"
+      :pagination="structured.pagination"
+      :actions="structured.actions"
+      @action="emit('action', $event)"
+    />
     <AgentCaseList
       v-else-if="structured.data?.type === 'CASE_LIST'"
-      :payload="structured.data.payload"
+      :payload="asDoctorCaseList(structured.data.payload)"
       :pagination="structured.pagination"
       :actions="structured.actions"
       @query="emit('query', $event)"
@@ -71,9 +92,22 @@ const emit = defineEmits<{
       v-else-if="structured.data?.type === 'COMPARISON'"
       :comparison="structured.data.payload.comparison"
     />
+    <PatientCaseProgress
+      v-else-if="structured.data?.type === 'CASE_PROGRESS'"
+      :payload="structured.data.payload"
+      :actions="structured.actions"
+      @action="emit('action', $event)"
+    />
+    <PatientSignedReport
+      v-else-if="structured.data?.type === 'SIGNED_REPORT'"
+      :payload="structured.data.payload"
+      :actions="structured.actions"
+      @action="emit('action', $event)"
+    />
 
     <div
-      v-if="!['TASK_LIST', 'TASK_DETAIL', 'CLINICAL_QUEUE'].includes(structured.data?.type || '')
+      v-if="!['TASK_LIST', 'TASK_DETAIL', 'CLINICAL_QUEUE', 'CASE_PROGRESS', 'SIGNED_REPORT'].includes(structured.data?.type || '')
+        && !(structured.data?.type === 'CASE_LIST' && structured.skill?.code === 'MY_CASE_LIST')
         && structured.actions?.some((item) => !['NEXT_PAGE', 'PREVIOUS_PAGE'].includes(item.type))"
       class="message-actions"
     >

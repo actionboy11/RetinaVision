@@ -162,14 +162,89 @@ export interface AgentComparisonPayload {
   comparison?: AgentComparison | null
 }
 
+export type PatientAgentQualityStatus =
+  | 'CHECKING'
+  | 'ACCEPTABLE'
+  | 'REUPLOAD_RECOMMENDED'
+  | 'UNAVAILABLE'
+
+export interface PatientAgentCaseSummary {
+  caseId: ID
+  caseNo: string
+  eyeSide?: EyeSide | null
+  workflowStatus?: CaseWorkflowStatus | null
+  qualityStatus: PatientAgentQualityStatus
+  qualityMessage: string
+  signedReportAvailable: boolean
+  updatedAt: DateTimeString
+}
+
+export interface PatientAgentCaseListPayload {
+  cases?: PatientAgentCaseSummary[]
+}
+
+export interface PatientAgentProgressStage {
+  code: string
+  label: string
+  status: 'PENDING' | 'CURRENT' | 'COMPLETED'
+}
+
+export interface PatientAgentProgress {
+  caseId: ID
+  caseNo: string
+  currentStage: string
+  stages: PatientAgentProgressStage[]
+  qualityStatus: PatientAgentQualityStatus
+  qualityMessage: string
+  nextHandler: string
+  message: string
+  updatedAt: DateTimeString
+  estimatedCompletionAt?: DateTimeString | null
+}
+
+export interface PatientAgentProgressPayload {
+  progress?: PatientAgentProgress | null
+  empty?: boolean
+}
+
+export interface PatientAgentSignedReport {
+  caseId: ID
+  caseNo: string
+  resultId: ID
+  version: number
+  signedAt: DateTimeString
+  signerName: string
+  conclusion: string
+}
+
+export interface PatientAgentReportDetail extends PatientAgentSignedReport {
+  findings: string
+  recommendation: string
+}
+
+export interface PatientAgentSignedReportPayload {
+  reports?: PatientAgentSignedReport[]
+  report?: PatientAgentReportDetail | null
+  explanationAvailable?: boolean
+  explanation?: string | null
+  explanationMessage?: string | null
+}
+
+export interface PatientAgentKnowledgePayload {
+  answer?: string | null
+}
+
 export type AgentStructuredData =
   | { type: 'METRICS'; payload: AgentMetricsPayload }
-  | { type: 'CASE_LIST'; payload: AgentCaseListPayload }
+  | { type: 'CASE_LIST'; payload: AgentCaseListPayload | PatientAgentCaseListPayload }
   | { type: 'CASE_DETAIL'; payload: AgentCaseDetailPayload }
   | { type: 'TASK_LIST'; payload: AgentTaskListPayload }
   | { type: 'TASK_DETAIL'; payload: AgentTaskDetailPayload }
   | { type: 'CLINICAL_QUEUE'; payload: AgentClinicalQueuePayload }
   | { type: 'COMPARISON'; payload: AgentComparisonPayload }
+  | { type: 'CASE_PROGRESS'; payload: PatientAgentProgressPayload }
+  | { type: 'SIGNED_REPORT'; payload: PatientAgentSignedReportPayload }
+  | { type: 'KNOWLEDGE_ANSWER'; payload: PatientAgentKnowledgePayload }
 
 export interface AgentPagination {
   page: number
@@ -180,7 +255,15 @@ export interface AgentPagination {
 }
 
 export interface AgentAction {
-  type: 'NEXT_PAGE' | 'PREVIOUS_PAGE' | 'VIEW_CASE' | 'VIEW_TASK' | 'VIEW_REVIEW'
+  type:
+    | 'NEXT_PAGE'
+    | 'PREVIOUS_PAGE'
+    | 'VIEW_CASE'
+    | 'VIEW_TASK'
+    | 'VIEW_REVIEW'
+    | 'VIEW_CASE_PROGRESS'
+    | 'VIEW_SIGNED_REPORT'
+    | 'GO_TO_IMAGE_UPLOAD'
   label: string
   targetId?: number | null
   targetPath?: string | null

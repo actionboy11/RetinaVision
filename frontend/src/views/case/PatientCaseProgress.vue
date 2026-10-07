@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Back, Download, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -68,7 +68,18 @@ const download = async (report: PatientSignedReport) => {
   }
 }
 
-onMounted(load)
+const focusRequestedSection = async () => {
+  if (route.query.section !== 'reports') return
+  await nextTick()
+  document.getElementById('signed-reports')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+onMounted(async () => {
+  await load()
+  await focusRequestedSection()
+})
+
+watch(() => route.query.section, focusRequestedSection)
 </script>
 
 <template>
@@ -113,7 +124,7 @@ onMounted(load)
         </section>
       </div>
 
-      <section class="report-panel">
+      <section id="signed-reports" class="report-panel">
         <h3>正式报告</h3>
         <el-empty v-if="reports.length === 0" description="医生尚未签发正式报告" />
         <el-table v-else :data="reports" border>
