@@ -216,6 +216,41 @@ class SchemaMigrationContractTest {
                 "PATIENT_ASSISTANT_AGENT'");
     }
 
+    @Test
+    void agentEvaluationMigrationAddsVersionedAnonymousCorpusAndObservableRuns() throws IOException {
+        String migration = resource("/db/migration/V23__agent_evaluation_observability.sql");
+
+        assertThat(migration).contains(
+                "CREATE TABLE agent_evaluation_dataset",
+                "CREATE TABLE agent_evaluation_case",
+                "CREATE TABLE agent_evaluation_run",
+                "CREATE TABLE agent_evaluation_run_binding",
+                "CREATE TABLE agent_evaluation_result",
+                "cancel_requested",
+                "review_decision",
+                "call_source",
+                "evaluation_run_id",
+                "FOREIGN KEY (evaluation_run_id) REFERENCES agent_evaluation_run(id)",
+                "DOCTOR_AGENT_BASELINE",
+                "PATIENT_AGENT_BASELINE",
+                "EVAL-C-",
+                "PT-EVAL-",
+                "EVAL-TASK-",
+                "DOCTOR_QUERY",
+                "PATIENT_QUERY",
+                "CONTEXT",
+                "RAG",
+                "SAFETY",
+                "expected_outcome");
+        assertThat(migration).contains("expected_case_count", "180");
+        assertThat(migration).doesNotContain(
+                "patient_name",
+                "identity_card",
+                "file_path",
+                "mask_url",
+                "api_key");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();
