@@ -23,17 +23,26 @@ public class AgentSkillRegistry {
             AgentSkillCode.DOCTOR_TASK_SEARCH,
             AgentSkillCode.DOCTOR_CLINICAL_QUEUE,
             AgentSkillCode.MEDICAL_KNOWLEDGE_QA);
+    private static final Set<AgentSkillCode> PATIENT_SKILLS = EnumSet.of(
+            AgentSkillCode.MY_CASE_LIST,
+            AgentSkillCode.MY_CASE_PROGRESS,
+            AgentSkillCode.MY_SIGNED_REPORT,
+            AgentSkillCode.PATIENT_KNOWLEDGE_QA);
+    private static final Set<String> FREE_TEXT_ARGUMENTS = Set.of(
+            "taskReference", "caseReference", "resultId", "version");
 
     public AgentSkillExecutionMode executionMode(AgentSkillCode code) {
         return code == AgentSkillCode.MEDICAL_KNOWLEDGE_QA
+                || code == AgentSkillCode.PATIENT_KNOWLEDGE_QA
                 ? AgentSkillExecutionMode.TOOL_CALLING : AgentSkillExecutionMode.DIRECT;
     }
 
     public boolean isAvailable(AgentSkillCode code, UserRole role) {
         if (code == null || role == null) return false;
         if (code == AgentSkillCode.MEDICAL_KNOWLEDGE_QA) {
-            return role == UserRole.USER || role == UserRole.DOCTOR || role == UserRole.ADMIN;
+            return role == UserRole.DOCTOR || role == UserRole.ADMIN;
         }
+        if (role == UserRole.USER) return PATIENT_SKILLS.contains(code);
         return role == UserRole.DOCTOR && DOCTOR_SKILLS.contains(code);
     }
 
@@ -52,6 +61,15 @@ public class AgentSkillRegistry {
                     "clinicalState", names(DoctorClinicalState.values()),
                     "dateWindow", names(DoctorDateWindow.values()),
                     "eyeSide", List.of("LEFT", "RIGHT", "BOTH"));
+            case MY_CASE_LIST -> Map.of(
+                    "reuploadOnly", List.of("TRUE", "FALSE"),
+                    "signedReportOnly", List.of("TRUE", "FALSE"));
+            case MY_CASE_PROGRESS -> Map.of("caseReference", List.of("string"));
+            case MY_SIGNED_REPORT -> Map.of(
+                    "caseReference", List.of("string"),
+                    "resultId", List.of("string"),
+                    "version", List.of("string"),
+                    "mode", List.of("LIST", "VIEW", "EXPLAIN"));
             default -> Map.of();
         };
     }
@@ -68,7 +86,7 @@ public class AgentSkillRegistry {
                 if (!schema.containsKey(key)) {
                     throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 参数不受支持: " + key);
                 }
-                if (!"taskReference".equals(key) && !schema.get(key).contains(value)) {
+                if (!FREE_TEXT_ARGUMENTS.contains(key) && !schema.get(key).contains(value)) {
                     throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 参数值无效: " + key);
                 }
                 if (value != null && !value.isBlank()) result.put(key, value);

@@ -94,6 +94,7 @@ public class DoctorAgentSkillOrchestrator {
             case DOCTOR_TASK_SEARCH -> Optional.of(tasks(sessionId, question, route, existing, user));
             case DOCTOR_CLINICAL_QUEUE -> Optional.of(clinicalQueue(sessionId, route, existing, user));
             case MEDICAL_KNOWLEDGE_QA -> Optional.empty();
+            case MY_CASE_LIST, MY_CASE_PROGRESS, MY_SIGNED_REPORT, PATIENT_KNOWLEDGE_QA -> Optional.empty();
         };
         if (result.isEmpty()) return result;
         AgentSkillRuntimeVersion version = versions.resolve(sessionId, route.skillCode());

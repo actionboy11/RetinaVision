@@ -180,6 +180,28 @@ class SchemaMigrationContractTest {
         assertThat(migration).doesNotContain("UPDATE agent_skill");
     }
 
+    @Test
+    void patientAgentSkillMigrationAddsActiveVersionedReadOnlySkills() throws IOException {
+        String migration = resource("/db/migration/V21__patient_agent_skills.sql");
+
+        assertThat(migration).contains(
+                "MY_CASE_LIST",
+                "MY_CASE_PROGRESS",
+                "MY_SIGNED_REPORT",
+                "PATIENT_KNOWLEDGE_QA",
+                "routing_examples_json",
+                "routing_negative_examples_json",
+                "workflow_prompt",
+                "answer_style",
+                "error_prompts_json",
+                "SET s.active_version_id = v.id");
+        assertThat(migration).doesNotContain(
+                "page_size",
+                "sort_order",
+                "tool_name",
+                "DELETE FROM");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();

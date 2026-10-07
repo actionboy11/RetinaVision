@@ -35,7 +35,9 @@ public class AgentContextCommandParser {
             case TASK -> AgentSkillCode.DOCTOR_TASK_SEARCH;
             case CLINICAL_QUEUE -> AgentSkillCode.DOCTOR_CLINICAL_QUEUE;
             case CASE -> AgentSkillCode.CASE_CLINICAL_SUMMARY;
+            case REPORT -> null;
         };
+        if (skill == null) return Optional.empty();
         return Optional.of(command(skill, AgentContextCommand.SELECT_INDEX, parseIndex(matcher.group(1))));
     }
 
