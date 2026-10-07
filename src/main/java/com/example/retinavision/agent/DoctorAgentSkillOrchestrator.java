@@ -29,7 +29,7 @@ public class DoctorAgentSkillOrchestrator {
     private final AgentQueryContextService contexts;
     private final AgentClinicalReferenceService references;
     private final CaseAnalysisTimelineService timelines;
-    private final AgentSkillVersionBindingService versions;
+    private final AgentSkillVersionResolver versions;
     private final AgentSkillRegistry registry;
     private final AgentSkillCatalogService catalog;
     private final AgentContextCommandParser commandParser;
@@ -38,7 +38,7 @@ public class DoctorAgentSkillOrchestrator {
     public DoctorAgentSkillOrchestrator(AgentSkillRouter router, DoctorAgentQueryService queries,
                                         AgentQueryContextService contexts, AgentClinicalReferenceService references,
                                         CaseAnalysisTimelineService timelines,
-                                        AgentSkillVersionBindingService versions, AgentSkillRegistry registry,
+                                        AgentSkillVersionResolver versions, AgentSkillRegistry registry,
                                         AgentSkillCatalogService catalog, AgentContextCommandParser commandParser) {
         this.router = router;
         this.queries = queries;
@@ -54,7 +54,7 @@ public class DoctorAgentSkillOrchestrator {
     public DoctorAgentSkillOrchestrator(AgentSkillRouter router, DoctorAgentQueryService queries,
                                         AgentQueryContextService contexts, AgentClinicalReferenceService references,
                                         CaseAnalysisTimelineService timelines,
-                                        AgentSkillVersionBindingService versions) {
+                                        AgentSkillVersionResolver versions) {
         this.router = router;
         this.queries = queries;
         this.contexts = contexts;

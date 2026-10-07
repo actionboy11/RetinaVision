@@ -26,7 +26,7 @@ public class PatientAgentSkillOrchestrator {
     private final PatientAgentQueryService queries;
     private final PatientAgentQueryContextService contexts;
     private final PatientReportExplanationService explanations;
-    private final AgentSkillVersionBindingService versions;
+    private final AgentSkillVersionResolver versions;
     private final AgentSkillRegistry registry;
     private final AgentSkillCatalogService catalog;
     private final PatientAgentContextCommandParser commandParser;
@@ -36,7 +36,7 @@ public class PatientAgentSkillOrchestrator {
                                          PatientAgentQueryService queries,
                                          PatientAgentQueryContextService contexts,
                                          PatientReportExplanationService explanations,
-                                         AgentSkillVersionBindingService versions,
+                                          AgentSkillVersionResolver versions,
                                          AgentSkillRegistry registry,
                                          AgentSkillCatalogService catalog,
                                          PatientAgentContextCommandParser commandParser) {
@@ -54,7 +54,7 @@ public class PatientAgentSkillOrchestrator {
                                          PatientAgentQueryService queries,
                                          PatientAgentQueryContextService contexts,
                                          PatientReportExplanationService explanations,
-                                         AgentSkillVersionBindingService versions) {
+                                          AgentSkillVersionResolver versions) {
         this(router, queries, contexts, explanations, versions, new AgentSkillRegistry(), null,
                 new PatientAgentContextCommandParser());
     }
