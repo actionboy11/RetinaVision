@@ -6,6 +6,7 @@ public enum PromptScenario {
     CASE_TREND_SUMMARY,
     CLINICAL_ASSISTANT_AGENT,
     PATIENT_ASSISTANT_AGENT,
+    PATIENT_SIGNED_REPORT_EXPLANATION,
     AGENT_SKILL_ROUTER;
 
     public static PromptScenario fromTemplateCode(String templateCode) {

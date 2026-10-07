@@ -202,6 +202,20 @@ class SchemaMigrationContractTest {
                 "DELETE FROM");
     }
 
+    @Test
+    void patientReportExplanationUsesDedicatedVersionedPrompt() throws IOException {
+        String migration = resource("/db/migration/V22__patient_report_explanation_prompt.sql");
+
+        assertThat(migration).contains(
+                "PATIENT_SIGNED_REPORT_EXPLANATION",
+                "prompt_template_version",
+                "{\"type\":\"json_object\",\"required\":[\"explanation\"]}",
+                "SET t.active_version_id = v.id");
+        assertThat(migration).doesNotContain(
+                "UPDATE prompt_template_version SET system_prompt",
+                "PATIENT_ASSISTANT_AGENT'");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as("migration resource %s", path).isNotNull();

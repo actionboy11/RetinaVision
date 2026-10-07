@@ -15,23 +15,28 @@ import static org.mockito.Mockito.when;
 
 class KnowledgeAudiencePolicyTest {
     @Test
-    void patientCannotReceiveClinicalDocument() {
+    void patientReceivesOnlyActivePublicAndPatientDocuments() {
         KnowledgeDocumentMapper mapper = mock(KnowledgeDocumentMapper.class);
-        when(mapper.selectById(1L)).thenReturn(document(1L, KnowledgeAudience.CLINICAL));
-        when(mapper.selectById(2L)).thenReturn(document(2L, KnowledgeAudience.PATIENT));
+        when(mapper.selectById(1L)).thenReturn(document(1L, KnowledgeAudience.PUBLIC, "ACTIVE"));
+        when(mapper.selectById(2L)).thenReturn(document(2L, KnowledgeAudience.PATIENT, "ACTIVE"));
+        when(mapper.selectById(3L)).thenReturn(document(3L, KnowledgeAudience.CLINICAL, "ACTIVE"));
+        when(mapper.selectById(4L)).thenReturn(document(4L, KnowledgeAudience.RESEARCH, "ACTIVE"));
+        when(mapper.selectById(5L)).thenReturn(document(5L, KnowledgeAudience.ADMIN, "ACTIVE"));
+        when(mapper.selectById(6L)).thenReturn(document(6L, KnowledgeAudience.PUBLIC, "DISABLED"));
         KnowledgeAudiencePolicy policy = new KnowledgeAudiencePolicy(mapper);
 
-        List<Document> visible = policy.filter(List.of(chunk(1L), chunk(2L)), UserRole.USER);
+        List<Document> visible = policy.filter(List.of(
+                chunk(1L), chunk(2L), chunk(3L), chunk(4L), chunk(5L), chunk(6L)), UserRole.USER);
 
         assertThat(visible).extracting(item -> item.getMetadata().get("documentId"))
-                .containsExactly(2L);
+                .containsExactly(1L, 2L);
     }
 
-    private KnowledgeDocumentEntity document(long id, KnowledgeAudience audience) {
+    private KnowledgeDocumentEntity document(long id, KnowledgeAudience audience, String status) {
         KnowledgeDocumentEntity entity = new KnowledgeDocumentEntity();
         entity.setId(id);
         entity.setAudience(audience);
-        entity.setStatus("ACTIVE");
+        entity.setStatus(status);
         return entity;
     }
 
