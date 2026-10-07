@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
 
 class PromptTemplateServiceImplTest {
     private PromptTemplateMapper templates;
@@ -82,6 +83,23 @@ class PromptTemplateServiceImplTest {
                 .hasMessageContaining("不属于该模板");
 
         verify(templates, never()).updateById(any(PromptTemplateEntity.class));
+    }
+
+    @Test
+    void routerPromptActivationUsesUnifiedAgentEvaluationGate() {
+        PromptTemplateEntity template = template(1L, 10L, "ACTIVE");
+        template.setTemplateCode("AGENT_SKILL_ROUTER");
+        when(templates.selectOne(any())).thenReturn(template);
+        when(versions.selectById(20L)).thenReturn(version(20L, 1L, 2, false));
+        AgentEvaluationEligibilityService eligibility = mock(AgentEvaluationEligibilityService.class);
+        PromptTemplateServiceImpl governed = new PromptTemplateServiceImpl(
+                templates, versions, evaluations, llmProperties,
+                new EmbeddingProperties(), new QdrantProperties(), eligibility);
+
+        governed.activateVersion("AGENT_SKILL_ROUTER", 20L);
+
+        verify(eligibility).requirePromptEligible("AGENT_SKILL_ROUTER", 20L);
+        verify(templates).updateById(template);
     }
 
     @Test

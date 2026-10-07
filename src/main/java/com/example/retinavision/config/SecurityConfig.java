@@ -92,6 +92,7 @@ public class SecurityConfig {
                 .requestMatchers("/prompt-templates/**", "/llm-call-logs/**").hasRole("ADMIN")
                 .requestMatchers("/prompt-evaluations/**", "/rag-evaluations/**").hasRole("ADMIN")
                 .requestMatchers("/agent-skills/**", "/agent-skill-executions/**").hasRole("ADMIN")
+                .requestMatchers("/agent-evaluations/**").hasRole("ADMIN")
                 .requestMatchers("/knowledge/documents/**").hasRole("ADMIN")
                 .requestMatchers("/knowledge/**").hasAnyRole("USER", "DOCTOR", "RESEARCHER", "ADMIN")
                 .requestMatchers("/quality-control/**").hasRole("ADMIN")

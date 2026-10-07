@@ -8,6 +8,7 @@ import com.example.retinavision.pojo.Entity.AgentSkillEntity;
 import com.example.retinavision.pojo.Entity.AgentSkillEvaluationRunEntity;
 import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
 import com.example.retinavision.service.impl.AgentSkillAdministrationServiceImpl;
+import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +26,26 @@ import java.util.Map;
 import java.util.List;
 
 class AgentSkillAdministrationServiceTest {
+    @Test
+    void productionActivationUsesUnifiedApprovedEvaluationGate() {
+        AgentSkillMapper skills = mock(AgentSkillMapper.class);
+        AgentSkillVersionMapper versions = mock(AgentSkillVersionMapper.class);
+        AgentSkillEntity skill = new AgentSkillEntity();
+        skill.setId(1L); skill.setSkillCode("ASSIGNED_CASE_SEARCH"); skill.setActiveVersionId(10L);
+        AgentSkillVersionEntity version = new AgentSkillVersionEntity(); version.setId(11L); version.setSkillId(1L);
+        when(skills.selectOne(any())).thenReturn(skill);
+        when(versions.selectById(11L)).thenReturn(version);
+        AgentEvaluationEligibilityService eligibility = mock(AgentEvaluationEligibilityService.class);
+        var service = new AgentSkillAdministrationServiceImpl(skills, versions,
+                mock(AgentSkillEvaluationRunMapper.class), mock(AgentSkillRouter.class),
+                mock(AgentSkillCatalogService.class), new ObjectMapper(), eligibility);
+
+        service.activate("ASSIGNED_CASE_SEARCH", 11L);
+
+        verify(eligibility).requireSkillEligible("ASSIGNED_CASE_SEARCH", 11L);
+        verify(skills).updateById(skill);
+    }
+
     @Test
     void activationRequiresLatestPassingEvaluation() {
         AgentSkillMapper skills = mock(AgentSkillMapper.class);

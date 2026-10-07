@@ -7,10 +7,18 @@ import com.example.retinavision.llm.LlmProperties;
 import com.example.retinavision.mapper.AgentEvaluationDatasetMapper;
 import com.example.retinavision.mapper.AgentEvaluationRunBindingMapper;
 import com.example.retinavision.mapper.AgentEvaluationRunMapper;
+import com.example.retinavision.mapper.AgentSkillMapper;
+import com.example.retinavision.mapper.PromptTemplateMapper;
 import com.example.retinavision.pojo.Entity.AgentEvaluationDatasetEntity;
 import com.example.retinavision.pojo.Entity.AgentEvaluationRunBindingEntity;
 import com.example.retinavision.pojo.Entity.AgentEvaluationRunEntity;
+import com.example.retinavision.pojo.Entity.AgentSkillEntity;
+import com.example.retinavision.pojo.Entity.PromptTemplateEntity;
+import com.example.retinavision.agent.AgentSkillCode;
+import com.example.retinavision.agent.AgentSkillRegistry;
+import com.example.retinavision.enumeration.UserRole;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,17 +36,32 @@ public class AgentEvaluationService {
     private final AgentEvaluationRunner runner;
     private final LlmProperties llm;
     private final Executor executor;
+    private final AgentSkillMapper skills;
+    private final PromptTemplateMapper prompts;
+    private final AgentSkillRegistry registry;
 
+    @Autowired
     public AgentEvaluationService(AgentEvaluationDatasetMapper datasets, AgentEvaluationRunMapper runs,
                                   AgentEvaluationRunBindingMapper bindings, AgentEvaluationRunner runner,
                                   LlmProperties llm,
-                                  @Qualifier("agentEvaluationExecutor") Executor executor) {
+                                  @Qualifier("agentEvaluationExecutor") Executor executor,
+                                  AgentSkillMapper skills, PromptTemplateMapper prompts,
+                                  AgentSkillRegistry registry) {
         this.datasets = datasets;
         this.runs = runs;
         this.bindings = bindings;
         this.runner = runner;
         this.llm = llm;
         this.executor = executor;
+        this.skills = skills;
+        this.prompts = prompts;
+        this.registry = registry;
+    }
+
+    public AgentEvaluationService(AgentEvaluationDatasetMapper datasets, AgentEvaluationRunMapper runs,
+                                  AgentEvaluationRunBindingMapper bindings, AgentEvaluationRunner runner,
+                                  LlmProperties llm, Executor executor) {
+        this(datasets, runs, bindings, runner, llm, executor, null, null, null);
     }
 
     public synchronized AgentEvaluationRunEntity start(AgentEvaluationStartCommand command) {
@@ -88,6 +111,43 @@ public class AgentEvaluationService {
             run.setCancelRequested(true);
             runs.updateById(run);
         }
+    }
+
+    public AgentEvaluationRunEntity startForSkill(String skillCode, Long candidateVersionId, Integer operatorId) {
+        if (skills == null || prompts == null || registry == null) {
+            throw new BaseException(ErrorMessageSignal.SERVICE_UNAVAILABLE, "Agent 评测治理尚未初始化");
+        }
+        AgentSkillCode candidate;
+        try { candidate = AgentSkillCode.valueOf(skillCode); }
+        catch (IllegalArgumentException exception) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "Skill 编码无效");
+        }
+        UserRole role = registry.isAvailable(candidate, UserRole.USER) ? UserRole.USER : UserRole.DOCTOR;
+        String targetRole = role == UserRole.USER ? "PATIENT" : "DOCTOR";
+        AgentEvaluationDatasetEntity dataset = datasets.selectOne(
+                new LambdaQueryWrapper<AgentEvaluationDatasetEntity>()
+                        .eq(AgentEvaluationDatasetEntity::getTargetRole, targetRole)
+                        .eq(AgentEvaluationDatasetEntity::getStatus, "ACTIVE")
+                        .orderByDesc(AgentEvaluationDatasetEntity::getVersion).last("LIMIT 1"));
+        if (dataset == null) throw new BaseException(ErrorMessageSignal.SERVICE_UNAVAILABLE, "缺少角色评测集");
+        Map<String, Long> skillVersionMap = new java.util.LinkedHashMap<>();
+        for (AgentSkillEntity skill : skills.selectList(new LambdaQueryWrapper<AgentSkillEntity>()
+                .eq(AgentSkillEntity::getStatus, "ACTIVE"))) {
+            AgentSkillCode code;
+            try { code = AgentSkillCode.valueOf(skill.getSkillCode()); }
+            catch (IllegalArgumentException ignored) { continue; }
+            if (registry.isAvailable(code, role) && skill.getActiveVersionId() != null) {
+                skillVersionMap.put(skill.getSkillCode(), skill.getActiveVersionId());
+            }
+        }
+        skillVersionMap.put(skillCode, candidateVersionId);
+        PromptTemplateEntity routerPrompt = prompts.selectOne(new LambdaQueryWrapper<PromptTemplateEntity>()
+                .eq(PromptTemplateEntity::getTemplateCode, "AGENT_SKILL_ROUTER"));
+        if (routerPrompt == null || routerPrompt.getActiveVersionId() == null) {
+            throw new BaseException(ErrorMessageSignal.SERVICE_UNAVAILABLE, "缺少启用的路由 Prompt");
+        }
+        return start(new AgentEvaluationStartCommand(dataset.getId(), targetRole, PRIMARY_MODEL_KEY,
+                skillVersionMap, Map.of("AGENT_SKILL_ROUTER", routerPrompt.getActiveVersionId()), operatorId));
     }
 
     private void insertBinding(Long runId, String type, String code, Long versionId) {
