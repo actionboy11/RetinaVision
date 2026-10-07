@@ -113,6 +113,33 @@ class LlmOrchestrationServiceImplTest {
         assertThat(captor.getValue().getSuccess()).isTrue();
     }
 
+    @Test
+    void evaluatesExplicitCandidateVersionAndTagsAuditSourceWithoutActivatingIt() {
+        PromptTemplateService templates = mock(PromptTemplateService.class);
+        LlmClient client = mock(LlmClient.class);
+        LlmCallLogService logs = mock(LlmCallLogService.class);
+        PromptTemplateVersionEntity candidate = version();
+        candidate.setId(88L);
+        candidate.setVersion(7);
+        candidate.setTemplateCode("AGENT_SKILL_ROUTER");
+        when(templates.requireVersion("AGENT_SKILL_ROUTER", 88L)).thenReturn(candidate);
+        when(client.generateJson("database system prompt", "anonymous evaluation input"))
+                .thenReturn("{\"skillCode\":\"ASSIGNED_CASE_SEARCH\"}");
+        LlmOrchestrationService service = new LlmOrchestrationServiceImpl(
+                templates, new PromptRenderService(), client, logs, properties(),
+                new LlmSafetyPolicy(), new ObjectMapper());
+
+        LlmGenerationResult result = service.generateJsonForEvaluation(
+                "AGENT_SKILL_ROUTER", 88L, "anonymous evaluation input", 901L);
+
+        assertThat(result.templateVersion()).isEqualTo(7);
+        verify(templates).requireVersion("AGENT_SKILL_ROUTER", 88L);
+        ArgumentCaptor<LlmCallLogEntity> captor = ArgumentCaptor.forClass(LlmCallLogEntity.class);
+        verify(logs).record(captor.capture());
+        assertThat(captor.getValue().getCallSource()).isEqualTo("EVALUATION");
+        assertThat(captor.getValue().getEvaluationRunId()).isEqualTo(901L);
+    }
+
     private PromptTemplateVersionEntity version() {
         PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
         version.setId(12L);

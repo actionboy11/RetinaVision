@@ -8,6 +8,8 @@ import java.util.List;
 public interface PromptTemplateService {
     PromptTemplateVersionEntity requireActiveVersion(String templateCode);
 
+    PromptTemplateVersionEntity requireVersion(String templateCode, Long versionId);
+
     List<PromptTemplateEntity> listTemplates();
 
     List<PromptTemplateVersionEntity> listVersions(String templateCode);

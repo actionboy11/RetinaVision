@@ -107,16 +107,16 @@ public class FixturePatientAgentQueryService implements PatientAgentQueryService
 
     private List<PatientAgentCaseSummaryVO> createCases() {
         List<PatientAgentCaseSummaryVO> values = new ArrayList<>();
-        for (int index = 1; index <= 4; index++) {
+        for (int index = 1; index <= 40; index++) {
             PatientAgentCaseSummaryVO item = new PatientAgentCaseSummaryVO();
             item.setCaseId(40_000L + index);
-            item.setCaseNo("EVAL-C-P-%03d".formatted(index));
+            item.setCaseNo("EVAL-C-%03d".formatted(index));
             item.setEyeSide(index % 2 == 0 ? "RIGHT" : "LEFT");
             item.setWorkflowStatus(index <= 2 ? CaseWorkflowStatus.IN_REVIEW : CaseWorkflowStatus.COMPLETED);
             item.setQualityStatus(index == 1 ? PatientQualityDisplayStatus.REUPLOAD_RECOMMENDED
                     : PatientQualityDisplayStatus.ACCEPTABLE);
             item.setQualityMessage(index == 1 ? "图像清晰度不足，建议重新上传" : "图像质量可用");
-            item.setSignedReportAvailable(index >= 3);
+            item.setSignedReportAvailable((index - 3) % 4 == 0);
             item.setUpdatedAt(LocalDateTime.of(2026, 10, 7, 10, 0).minusMinutes(index));
             values.add(item);
         }

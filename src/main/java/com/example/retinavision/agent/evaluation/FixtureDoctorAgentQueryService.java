@@ -20,7 +20,7 @@ public class FixtureDoctorAgentQueryService implements DoctorAgentQueryService {
     @Override
     public DoctorWorkloadVO getClinicalWorkload(CurrentUserVO doctor) {
         requireDoctor(doctor);
-        return new DoctorWorkloadVO(12, 12, 3, 5, 2, 1);
+        return new DoctorWorkloadVO(60, 60, 3, 5, 2, 1);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class FixtureDoctorAgentQueryService implements DoctorAgentQueryService {
 
     private List<DoctorAgentCaseSummaryVO> createCases() {
         List<DoctorAgentCaseSummaryVO> values = new ArrayList<>();
-        for (int index = 1; index <= 12; index++) {
+        for (int index = 1; index <= 60; index++) {
             DoctorAgentCaseSummaryVO item = new DoctorAgentCaseSummaryVO();
             item.setCaseId(10_000 + index);
             item.setCaseNo("EVAL-C-%03d".formatted(index));
@@ -135,7 +135,7 @@ public class FixtureDoctorAgentQueryService implements DoctorAgentQueryService {
 
     private List<DoctorAgentTaskSummaryVO> createTasks() {
         List<DoctorAgentTaskSummaryVO> values = new ArrayList<>();
-        for (int index = 1; index <= 12; index++) {
+        for (int index = 1; index <= 60; index++) {
             DoctorAgentTaskSummaryVO item = new DoctorAgentTaskSummaryVO();
             item.setTaskId(30_000L + index);
             item.setTaskNo("EVAL-TASK-%03d".formatted(index));

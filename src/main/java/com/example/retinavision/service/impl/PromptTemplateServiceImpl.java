@@ -57,6 +57,17 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
     }
 
     @Override
+    public PromptTemplateVersionEntity requireVersion(String templateCode, Long versionId) {
+        PromptTemplateEntity template = requireTemplate(templateCode);
+        PromptTemplateVersionEntity version = versions.selectById(versionId);
+        if (version == null || !template.getId().equals(version.getTemplateId())) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "所选 Prompt 版本不属于该模板");
+        }
+        version.setTemplateCode(template.getTemplateCode());
+        return version;
+    }
+
+    @Override
     public List<PromptTemplateEntity> listTemplates() {
         return templates.selectList(new LambdaQueryWrapper<PromptTemplateEntity>()
                 .orderByAsc(PromptTemplateEntity::getTemplateCode));

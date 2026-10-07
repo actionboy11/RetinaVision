@@ -40,17 +40,31 @@ public class LlmOrchestrationServiceImpl implements LlmOrchestrationService {
     @Override
     public LlmGenerationResult generateJson(String templateCode, String sanitizedUserContext) {
         PromptTemplateVersionEntity version = templates.requireActiveVersion(templateCode);
+        return generate(templateCode, version, sanitizedUserContext, "BUSINESS", null);
+    }
+
+    @Override
+    public LlmGenerationResult generateJsonForEvaluation(String templateCode, Long versionId,
+                                                         String sanitizedUserContext, Long evaluationRunId) {
+        PromptTemplateVersionEntity version = templates.requireVersion(templateCode, versionId);
+        return generate(templateCode, version, sanitizedUserContext, "EVALUATION", evaluationRunId);
+    }
+
+    private LlmGenerationResult generate(String templateCode, PromptTemplateVersionEntity version,
+                                         String sanitizedUserContext, String callSource,
+                                         Long evaluationRunId) {
         RenderedPrompt prompt = renderer.render(version, sanitizedUserContext);
         long startedAt = System.nanoTime();
         try {
             String content = client.generateJson(prompt.systemPrompt(), prompt.userPrompt());
             validateOutput(templateCode, version, content);
             long latencyMs = elapsedMillis(startedAt);
-            logs.record(callLog(templateCode, version, true, latencyMs, null));
+            logs.record(callLog(templateCode, version, true, latencyMs, null, callSource, evaluationRunId));
             return new LlmGenerationResult(content, templateCode, version.getVersion(),
                     properties.getProvider(), properties.getModel(), latencyMs);
         } catch (RuntimeException exception) {
-            logs.record(callLog(templateCode, version, false, elapsedMillis(startedAt), safeErrorSummary(exception)));
+            logs.record(callLog(templateCode, version, false, elapsedMillis(startedAt), safeErrorSummary(exception),
+                    callSource, evaluationRunId));
             throw exception;
         }
     }
@@ -110,7 +124,9 @@ public class LlmOrchestrationServiceImpl implements LlmOrchestrationService {
                                      PromptTemplateVersionEntity version,
                                      boolean success,
                                      long latencyMs,
-                                     String errorSummary) {
+                                     String errorSummary,
+                                     String callSource,
+                                     Long evaluationRunId) {
         LlmCallLogEntity log = new LlmCallLogEntity();
         log.setScenario(PromptScenario.fromTemplateCode(templateCode).name());
         log.setTemplateCode(templateCode);
@@ -120,6 +136,8 @@ public class LlmOrchestrationServiceImpl implements LlmOrchestrationService {
         log.setSuccess(success);
         log.setLatencyMs(latencyMs);
         log.setErrorSummary(errorSummary);
+        log.setCallSource(callSource);
+        log.setEvaluationRunId(evaluationRunId);
         log.setCreatedAt(LocalDateTime.now());
         return log;
     }

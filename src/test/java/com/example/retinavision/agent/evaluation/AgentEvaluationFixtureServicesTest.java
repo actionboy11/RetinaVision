@@ -24,7 +24,7 @@ class AgentEvaluationFixtureServicesTest {
 
         assertThat(first.getPageSize()).isEqualTo(10);
         assertThat(first.getRecords()).hasSize(10);
-        assertThat(second.getRecords()).hasSize(2);
+        assertThat(second.getRecords()).hasSize(10);
         assertThat(first.getRecords()).allSatisfy(item -> {
             assertThat(item.getCaseNo()).startsWith("EVAL-C-");
             assertThat(item.getPatientNo()).startsWith("PT-EVAL-");
@@ -39,8 +39,8 @@ class AgentEvaluationFixtureServicesTest {
         var cases = fixtures.listMyCases(new PatientCaseSearchCriteria(false, false), 1, 10, patient());
         var reports = fixtures.listMySignedReports("", 1, 10, patient());
 
-        assertThat(cases.getRecords()).allSatisfy(item -> assertThat(item.getCaseNo()).startsWith("EVAL-C-P-"));
-        assertThat(reports.getRecords()).allSatisfy(item -> assertThat(item.getCaseNo()).startsWith("EVAL-C-P-"));
+        assertThat(cases.getRecords()).allSatisfy(item -> assertThat(item.getCaseNo()).startsWith("EVAL-C-"));
+        assertThat(reports.getRecords()).allSatisfy(item -> assertThat(item.getCaseNo()).startsWith("EVAL-C-"));
         assertThatThrownBy(() -> fixtures.listMyCases(new PatientCaseSearchCriteria(false, false),
                 1, 10, doctor())).isInstanceOf(IllegalArgumentException.class);
         assertNoMapperFields(FixturePatientAgentQueryService.class);
