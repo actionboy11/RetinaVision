@@ -33,13 +33,15 @@ public class DoctorAgentSkillOrchestrator {
     private final AgentSkillRegistry registry;
     private final AgentSkillCatalogService catalog;
     private final AgentContextCommandParser commandParser;
+    private final AgentUnsafeRequestPolicy unsafeRequestPolicy;
 
     @Autowired
     public DoctorAgentSkillOrchestrator(AgentSkillRouter router, DoctorAgentQueryService queries,
                                         AgentQueryContextService contexts, AgentClinicalReferenceService references,
                                         CaseAnalysisTimelineService timelines,
                                         AgentSkillVersionResolver versions, AgentSkillRegistry registry,
-                                        AgentSkillCatalogService catalog, AgentContextCommandParser commandParser) {
+                                        AgentSkillCatalogService catalog, AgentContextCommandParser commandParser,
+                                        AgentUnsafeRequestPolicy unsafeRequestPolicy) {
         this.router = router;
         this.queries = queries;
         this.contexts = contexts;
@@ -49,6 +51,7 @@ public class DoctorAgentSkillOrchestrator {
         this.registry = registry;
         this.catalog = catalog;
         this.commandParser = commandParser;
+        this.unsafeRequestPolicy = unsafeRequestPolicy;
     }
 
     public DoctorAgentSkillOrchestrator(AgentSkillRouter router, DoctorAgentQueryService queries,
@@ -64,10 +67,12 @@ public class DoctorAgentSkillOrchestrator {
         this.registry = new AgentSkillRegistry();
         this.catalog = null;
         this.commandParser = new AgentContextCommandParser();
+        this.unsafeRequestPolicy = new AgentUnsafeRequestPolicy();
     }
 
     public Optional<DoctorAgentSkillResult> handle(Long sessionId, String question, CurrentUserVO user) {
         if (user == null || user.getRoleCode() != UserRole.DOCTOR) return Optional.empty();
+        unsafeRequestPolicy.requireAllowed(question, user.getRoleCode());
         Optional<AgentQueryContextSnapshot> existing = contexts.load(sessionId);
         validateTypedReferenceCommand(question, existing.orElse(null));
         if (existing.isEmpty() && commandParser.isSelectionCommand(question)) {

@@ -75,7 +75,7 @@ class PatientAgentSecurityContractTest {
 
         assertThatThrownBy(() -> orchestrator.handle(8L, "帮我删除检查并重新创建", patient()))
                 .isInstanceOf(BaseException.class)
-                .hasMessageContaining("请说明");
+                .hasMessageContaining("只读查询");
         verify(queries, never()).listMyCases(any(), any(Integer.class), any(Integer.class), any());
     }
 
