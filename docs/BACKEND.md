@@ -65,7 +65,9 @@ RabbitMQ 消费者运行在 Java 后端进程中。Python 服务只负责模型�
 
 第二阶段由 Java 校验角色、置信度和参数后选择执行模式：工作量、病例筛选、病例摘要、随访比较、任务查询和待审核/待签发队列走 Native `DIRECT` Skill，由 Service/Mapper 查询后直接组装固定摘要与结构化数据，不把查询结果再次发送给 LLM；医学知识问答走 `TOOL_CALLING`，医生侧只注册 `searchMedicalKnowledge`。任务、病例和临床队列查询均在 SQL 阶段限定 `assigned_doctor_id`，列表按最近更新时间倒序且每页最多 10 条，翻页会保留筛选与带类型的本页引用。
 
-Skill 版本使用带预期参数和反例的语料评测，候选版本未达到路由准确率 90%、参数准确率 95% 和全部安全检查前不能启用。Agent 没有创建任务、修改病例、审核或签发工具；任务和队列响应只返回匿名编号、状态、时间及脱敏错误摘要，不返回原图、mask、路径、完整结果 JSON 或未签发报告正文。
+统一 Agent 评测中心使用固定版本的 180 条匿名样例覆盖医生、患者、多轮上下文、RAG 连接和安全攻击。管理员手动启动后，系统冻结数据集、受控模型、Skill 与 Router Prompt 版本，逐条串行调用真实模型；自动化测试则使用确定性适配器，不消耗外部 API 配额。评测查询注入匿名 Fixture 服务，不读取或修改临床表，也不写正式 Agent 会话和 Skill 执行日志。模型调用审计以 `callSource=EVALUATION` 和 `evaluationRunId` 标记，常规业务日志默认排除这些记录。
+
+候选版本必须达到路由准确率 90%、参数准确率 95%、查询正确率 95%、结构/安全/RAG 引用 100%，且有效样例 P95 不超过 5 秒；自动通过后还需要管理员人工批准。超时、限流或服务不可用产生 `INVALID`，取消产生 `CANCELLED`，二者均不能作为启用依据。候选 Prompt 以指定版本执行，不修改当前线上启用版本；后续激活必须匹配角色、模型、数据集版本、Skill 版本和相关 Prompt 版本。Agent 没有创建任务、修改病例、审核或签发工具；任务和队列响应只返回匿名编号、状态、时间及脱敏错误摘要，不返回原图、mask、路径、完整结果 JSON 或未签发报告正文。
 
 ## 技术栈
 
@@ -171,6 +173,7 @@ mvn spring-boot:run
 | `/agent` | 角色化只读智能助手 |
 | `/prompt-templates`、`/prompt-evaluations` | Prompt 版本与评测 |
 | `/rag-evaluations`、`/agent-skills` | RAG 与 Skill 治理 |
+| `/agent-evaluations` | 匿名真实模型 Agent 评测、失败分析与人工批准 |
 | `/quality-control`、`/admin` | 模型质控和平台管理 |
 
 公共响应使用统一 `ApiResponse<T>`；分页使用 `PageResult<T>`；图片、mask 和报告下载接口直接返回二进制流。

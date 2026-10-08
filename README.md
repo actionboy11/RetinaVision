@@ -71,6 +71,22 @@ browser JWTs.
 The role-aware Agent remains read-only. Native clinical Skills execute scoped
 queries in Java; medical knowledge questions use restricted tool calling.
 
+### Agent evaluation
+
+Administrators use the Agent evaluation center to validate doctor and patient
+Agent behavior against a versioned, anonymous 180-case dataset. A run freezes
+the selected model, Skill versions, Router Prompt version, and dataset version,
+then measures routing, argument extraction, query assertions, structured
+responses, safety, citations, and latency. Evaluation fixtures never query or
+modify clinical tables and do not create production chat sessions or Skill
+execution logs.
+
+Repository tests use deterministic adapters and do not call an external model.
+Only an administrator-triggered evaluation calls the configured Aliyun
+OpenAI-compatible service, one case at a time. Passing automatic thresholds is
+not enough to activate a candidate: an administrator must also review and
+approve the run. Evaluation never activates a Prompt or Skill automatically.
+
 ### Patient Agent
 
 Patients can ask natural-language questions such as:
