@@ -1,7 +1,6 @@
 package com.example.retinavision.agent.evaluation;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.llm.LlmProperties;
@@ -87,13 +86,18 @@ public class AgentEvaluationAdministrationService {
     public PageResult<AgentEvaluationRunVO> listRuns(String role, String status, int page, int pageSize) {
         int safePage = Math.max(1, page);
         int safeSize = Math.min(50, Math.max(1, pageSize));
-        Page<AgentEvaluationRunEntity> value = runs.selectPage(new Page<>(safePage, safeSize),
-                new LambdaQueryWrapper<AgentEvaluationRunEntity>()
-                        .eq(role != null && !role.isBlank(), AgentEvaluationRunEntity::getTargetRole, role)
-                        .eq(status != null && !status.isBlank(), AgentEvaluationRunEntity::getStatus, status)
-                        .orderByDesc(AgentEvaluationRunEntity::getCreatedAt));
-        return new PageResult<>(value.getRecords().stream().map(item -> toRun(item, List.of())).toList(),
-                value.getTotal(), safePage, safeSize);
+        LambdaQueryWrapper<AgentEvaluationRunEntity> countQuery = new LambdaQueryWrapper<AgentEvaluationRunEntity>()
+                .eq(role != null && !role.isBlank(), AgentEvaluationRunEntity::getTargetRole, role)
+                .eq(status != null && !status.isBlank(), AgentEvaluationRunEntity::getStatus, status);
+        long total = runs.selectCount(countQuery);
+        LambdaQueryWrapper<AgentEvaluationRunEntity> pageQuery = new LambdaQueryWrapper<AgentEvaluationRunEntity>()
+                .eq(role != null && !role.isBlank(), AgentEvaluationRunEntity::getTargetRole, role)
+                .eq(status != null && !status.isBlank(), AgentEvaluationRunEntity::getStatus, status)
+                .orderByDesc(AgentEvaluationRunEntity::getCreatedAt)
+                .last("LIMIT " + ((safePage - 1) * safeSize) + ", " + safeSize);
+        List<AgentEvaluationRunEntity> records = runs.selectList(pageQuery);
+        return new PageResult<>(records.stream().map(item -> toRun(item, List.of())).toList(),
+                total, safePage, safeSize);
     }
 
     public AgentEvaluationRunVO getRun(Long runId) {
@@ -111,16 +115,22 @@ public class AgentEvaluationAdministrationService {
         requireRun(runId);
         int safePage = Math.max(1, page);
         int safeSize = Math.min(100, Math.max(1, pageSize));
-        Page<AgentEvaluationResultEntity> values = results.selectPage(new Page<>(safePage, safeSize),
-                new LambdaQueryWrapper<AgentEvaluationResultEntity>()
-                        .eq(AgentEvaluationResultEntity::getEvaluationRunId, runId)
-                        .eq(success != null, AgentEvaluationResultEntity::getSuccess, success)
-                        .eq(errorType != null && !errorType.isBlank(), AgentEvaluationResultEntity::getErrorType, errorType)
-                        .orderByAsc(AgentEvaluationResultEntity::getId));
-        Map<Long, AgentEvaluationCaseEntity> casesById = cases.selectBatchIds(values.getRecords().stream()
+        LambdaQueryWrapper<AgentEvaluationResultEntity> countQuery = new LambdaQueryWrapper<AgentEvaluationResultEntity>()
+                .eq(AgentEvaluationResultEntity::getEvaluationRunId, runId)
+                .eq(success != null, AgentEvaluationResultEntity::getSuccess, success)
+                .eq(errorType != null && !errorType.isBlank(), AgentEvaluationResultEntity::getErrorType, errorType);
+        long total = results.selectCount(countQuery);
+        LambdaQueryWrapper<AgentEvaluationResultEntity> pageQuery = new LambdaQueryWrapper<AgentEvaluationResultEntity>()
+                .eq(AgentEvaluationResultEntity::getEvaluationRunId, runId)
+                .eq(success != null, AgentEvaluationResultEntity::getSuccess, success)
+                .eq(errorType != null && !errorType.isBlank(), AgentEvaluationResultEntity::getErrorType, errorType)
+                .orderByAsc(AgentEvaluationResultEntity::getId)
+                .last("LIMIT " + ((safePage - 1) * safeSize) + ", " + safeSize);
+        List<AgentEvaluationResultEntity> values = results.selectList(pageQuery);
+        Map<Long, AgentEvaluationCaseEntity> casesById = cases.selectBatchIds(values.stream()
                         .map(AgentEvaluationResultEntity::getEvaluationCaseId).toList()).stream()
                 .collect(Collectors.toMap(AgentEvaluationCaseEntity::getId, item -> item));
-        List<AgentEvaluationResultVO> records = values.getRecords().stream().map(result -> {
+        List<AgentEvaluationResultVO> records = values.stream().map(result -> {
             AgentEvaluationCaseEntity testCase = casesById.get(result.getEvaluationCaseId());
             return new AgentEvaluationResultVO(result.getEvaluationCaseId(),
                     testCase == null ? null : testCase.getCategory(),
@@ -130,7 +140,7 @@ public class AgentEvaluationAdministrationService {
                     readMap(result.getActualArgumentsJson()), result.getSuccess(), result.getErrorType(),
                     result.getErrorSummary(), result.getLatencyMs());
         }).toList();
-        return new PageResult<>(records, values.getTotal(), safePage, safeSize);
+        return new PageResult<>(records, total, safePage, safeSize);
     }
 
     public AgentEvaluationRunVO review(Long runId, String decision, String note, Integer reviewerId) {
