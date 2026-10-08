@@ -48,8 +48,17 @@ public class AgentEvaluationRunner {
                         .orderByAsc(AgentEvaluationCaseEntity::getScenarioCode)
                         .orderByAsc(AgentEvaluationCaseEntity::getSequenceNo));
         try {
+            if (testCases.size() != run.getTotalCount()) {
+                markInvalid(run, "评测数据集样例数量不完整");
+                return;
+            }
             for (AgentEvaluationCaseEntity testCase : testCases) {
-                if (Boolean.TRUE.equals(run.getCancelRequested())) {
+                AgentEvaluationRunEntity current = runs.selectById(runId);
+                if (current == null) {
+                    markInvalid(run, "评测运行状态不可用");
+                    return;
+                }
+                if (Boolean.TRUE.equals(current.getCancelRequested())) {
                     finishCancelled(run, outcomes);
                     return;
                 }
@@ -61,7 +70,7 @@ public class AgentEvaluationRunner {
                     outcomes.add(outcome);
                     persistResult(runId, outcome);
                     run.setCompletedCount(outcomes.size());
-                    markInvalid(run, exception.getMessage());
+                    markInvalid(run, safeSummary(exception));
                     return;
                 }
                 outcomes.add(outcome);
@@ -146,7 +155,6 @@ public class AgentEvaluationRunner {
     }
 
     private String safeSummary(Throwable exception) {
-        String message = exception.getMessage();
-        return exception.getClass().getSimpleName() + (message == null ? "" : ": " + message);
+        return exception.getClass().getSimpleName() + ": 评测基础设施异常";
     }
 }
