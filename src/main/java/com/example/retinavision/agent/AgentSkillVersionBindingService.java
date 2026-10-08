@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
-public class AgentSkillVersionBindingService {
+public class AgentSkillVersionBindingService implements AgentSkillVersionResolver {
     private final AgentSessionSkillVersionMapper bindings;
     private final AgentSkillMapper skills;
     private final AgentSkillVersionMapper versions;
@@ -27,6 +27,7 @@ public class AgentSkillVersionBindingService {
         this.versions = versions;
     }
 
+    @Override
     public AgentSkillRuntimeVersion resolve(Long sessionId, AgentSkillCode skillCode) {
         AgentSessionSkillVersionEntity binding = bindings.selectOne(
                 new LambdaQueryWrapper<AgentSessionSkillVersionEntity>()

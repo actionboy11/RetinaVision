@@ -54,6 +54,21 @@ class LlmAgentSkillRouterTest {
     }
 
     @Test
+    void preservesExtractedCaseReferenceForDoctorCaseSkill() {
+        LlmOrchestrationService llm = mock(LlmOrchestrationService.class);
+        when(llm.generateJson(eq("AGENT_SKILL_ROUTER"), org.mockito.ArgumentMatchers.anyString()))
+                .thenReturn(result("{\"skillCode\":\"CASE_CLINICAL_SUMMARY\",\"confidence\":0.97,"
+                        + "\"arguments\":{\"caseReference\":\"EVAL-C-005\"}}"));
+        LlmAgentSkillRouter router = new LlmAgentSkillRouter(llm, new ObjectMapper(), new AgentSkillRegistry());
+        AgentSkillDefinition definition = new AgentSkillDefinition(AgentSkillCode.CASE_CLINICAL_SUMMARY,
+                "病例摘要", "查询病例摘要", 4, "[]", "只读查询病例摘要");
+
+        AgentSkillRoute route = router.route("查看病例 EVAL-C-005 的摘要", null, List.of(definition));
+
+        assertThat(route.arguments()).containsExactlyEntriesOf(Map.of("caseReference", "EVAL-C-005"));
+    }
+
+    @Test
     void returnsLowConfidenceRouteForCallerPolicyAndEvaluation() {
         LlmOrchestrationService llm = mock(LlmOrchestrationService.class);
         when(llm.generateJson(eq("AGENT_SKILL_ROUTER"), org.mockito.ArgumentMatchers.anyString()))

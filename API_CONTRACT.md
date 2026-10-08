@@ -1860,6 +1860,7 @@ AI 或 RabbitMQ 不可用时，接口仍可返回 HTTP 200，并将对应组件�
 | Prompt 管理 | `/admin/prompts` | `GET /prompt-templates`, `GET /prompt-templates/{templateCode}/versions`, `PUT /prompt-templates/{templateCode}/active-version`, `GET /llm-call-logs` |
 | Prompt 评测 | `/prompt-evaluations` | `POST /prompt-evaluations/runs`, `GET /prompt-evaluations/runs`, `GET /prompt-evaluations/runs/{id}`, `PUT /prompt-evaluations/runs/{id}/review` |
 | RAG 评测 | `/rag-evaluations` | `POST /rag-evaluations/runs`, `GET /rag-evaluations/runs`, `GET /rag-evaluations/runs/{id}`, `PUT /rag-evaluations/runs/{id}/review` |
+| Agent 评测 | `/agent-evaluations` | `GET /agent-evaluations/options`, `GET /agent-evaluations/datasets`, `POST /agent-evaluations/runs`, `GET /agent-evaluations/runs/{id}`, `GET /agent-evaluations/runs/{id}/results`, `POST /agent-evaluations/runs/{id}/cancel`, `PUT /agent-evaluations/runs/{id}/review` |
 | 只读智能助手 | `/agent` | `POST /agent/sessions`, `GET /agent/sessions`, `GET /agent/sessions/{sessionId}/messages`, `POST /agent/chat` |
 
 ## 12. 当前公共接口清单
@@ -2834,6 +2835,67 @@ GET  /agent-skill-executions?skillCode=&success=
 
 新 Skill 版本默认不启用。评测使用与生产一致的 LLM Router 协议，并把待评测候选版本放入本次候选目录，不会提前改变线上启用版本。正例同时声明目标 Skill 与预期参数，反例用于检查误路由；启用前要求最近一次评测路由准确率至少 90%、参数准确率至少 95%，且安全检查全部通过。每个会话按 Skill 独立绑定首次使用时的启用版本，因此管理员切换版本只影响尚未绑定该 Skill 的会话，不改变旧会话的执行语义。执行日志最多返回最近 100 条，只包含 Skill、版本、路由置信度、成功状态、耗时和错误类型。
 
+### 22.2 Agent 评测中心
+
+以下接口仅 `ADMIN` 可访问，统一返回 `ApiResponse<T>`：
+
+```text
+GET  /agent-evaluations/options
+GET  /agent-evaluations/datasets
+POST /agent-evaluations/runs
+GET  /agent-evaluations/runs?targetRole=&status=&page=&pageSize=
+GET  /agent-evaluations/runs/{runId}
+GET  /agent-evaluations/runs/{runId}/results?success=&errorType=&page=&pageSize=
+POST /agent-evaluations/runs/{runId}/cancel
+PUT  /agent-evaluations/runs/{runId}/review
+```
+
+启动请求中的 `modelKey` 必须来自 `/options` 返回的受控配置，浏览器不能任意填写供应商或模型名：
+
+```ts
+interface StartAgentEvaluationRequest {
+  datasetId: number
+  targetRole: 'DOCTOR' | 'PATIENT'
+  modelKey: string
+  skillVersions: Record<string, number>
+  promptVersions: Record<string, number>
+}
+
+interface AgentEvaluationRun {
+  id: number
+  datasetId: number
+  datasetVersion: number
+  targetRole: 'DOCTOR' | 'PATIENT'
+  modelKey: string
+  provider: string
+  model: string
+  status: 'QUEUED' | 'RUNNING' | 'PASSED' | 'FAILED' | 'INVALID' | 'CANCELLED'
+  progress: { completed: number; total: number }
+  metrics: {
+    routingAccuracy: number
+    parameterAccuracy: number
+    queryAccuracy: number
+    structurePassRate: number
+    safetyPassRate: number
+    citationPassRate: number | null
+    averageLatencyMs: number
+    p95LatencyMs: number
+  } | null
+  automatedPass: boolean | null
+  reviewDecision: 'PENDING' | 'APPROVED' | 'REJECTED'
+  reviewNote: string | null
+  bindings: Array<{ type: string; code: string; versionId: number; versionLabel: string }>
+  createdAt: string
+  completedAt: string | null
+}
+```
+
+固定匿名评测集共 180 条，使用 `EVAL-C-*`、`PT-EVAL-*`、`EVAL-TASK-*` 等编号，不读取真实病例或线上会话。运行使用真实 Router 和医生/患者 Orchestrator，但临床查询由匿名 Fixture 服务提供；不会写入正式 `agent_chat_session/message` 或 `agent_skill_execution_log`。`llm_call_log` 仅以 `EVALUATION` 来源记录脱敏调用摘要，业务日志查询默认排除评测调用。
+
+同一时间只执行一个真实模型评测，逐条串行调用；取消请求在当前模型请求结束后停止剩余样例。超时、429 或供应商不可用时运行标记为 `INVALID`，不能用于版本启用。自动通过门槛为：路由准确率不低于 90%、参数与查询准确率不低于 95%、结构/安全/RAG 引用通过率为 100%、有效样例 P95 不超过 5 秒。自动通过后仍须管理员人工批准；评测不会自动启用 Skill 或 Prompt。
+
+后续切换候选 Skill 或 `AGENT_SKILL_ROUTER` Prompt 时，后端要求最近一次 `PASSED + APPROVED` 运行与当前角色、受控模型、数据集版本、Skill 版本及相关 Prompt 版本完全匹配。评测候选 Prompt 使用显式版本调用，不会改变线上当前启用版本。
+
 ### 16.7 角色和对象级访问
 
 - `USER`（患者）：只能管理本人 `DRAFT` 检查资料、上传图像、提交/撤回申请、查看脱敏进度和已签发报告；不能操作技术任务或查看 mask、AI 草稿和未签发意见。
@@ -2847,6 +2909,7 @@ GET  /agent-skill-executions?skillCode=&success=
 
 | 版本 | 日期 | 说明 |
 |---|---|---|
+| v2.3 | 2026-10-08 | 新增统一 Agent 匿名真实模型评测、失败观测、人工批准和版本启用门槛 |
 | v2.2 | 2026-10-07 | 新增患者 Agent 自然语言检查列表、进度、重传提示、正式报告卡片与安全降级契约 |
 | v2.1 | 2026-09-25 | 将 USER 定义为患者，新增匿名患者档案、检查申请状态、患者进度/正式报告接口、知识受众和角色化 Agent |
 | v2.0 | 2026-09-24 | 新增病例负责医生归属、角色首页与管理职责隔离，并增强 Agent 业务编号查询 |

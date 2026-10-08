@@ -26,20 +26,22 @@ public class PatientAgentSkillOrchestrator {
     private final PatientAgentQueryService queries;
     private final PatientAgentQueryContextService contexts;
     private final PatientReportExplanationService explanations;
-    private final AgentSkillVersionBindingService versions;
+    private final AgentSkillVersionResolver versions;
     private final AgentSkillRegistry registry;
     private final AgentSkillCatalogService catalog;
     private final PatientAgentContextCommandParser commandParser;
+    private final AgentUnsafeRequestPolicy unsafeRequestPolicy;
 
     @Autowired
     public PatientAgentSkillOrchestrator(AgentSkillRouter router,
                                          PatientAgentQueryService queries,
                                          PatientAgentQueryContextService contexts,
                                          PatientReportExplanationService explanations,
-                                         AgentSkillVersionBindingService versions,
+                                          AgentSkillVersionResolver versions,
                                          AgentSkillRegistry registry,
                                          AgentSkillCatalogService catalog,
-                                         PatientAgentContextCommandParser commandParser) {
+                                         PatientAgentContextCommandParser commandParser,
+                                         AgentUnsafeRequestPolicy unsafeRequestPolicy) {
         this.router = router;
         this.queries = queries;
         this.contexts = contexts;
@@ -48,19 +50,21 @@ public class PatientAgentSkillOrchestrator {
         this.registry = registry;
         this.catalog = catalog;
         this.commandParser = commandParser;
+        this.unsafeRequestPolicy = unsafeRequestPolicy;
     }
 
     public PatientAgentSkillOrchestrator(AgentSkillRouter router,
                                          PatientAgentQueryService queries,
                                          PatientAgentQueryContextService contexts,
                                          PatientReportExplanationService explanations,
-                                         AgentSkillVersionBindingService versions) {
+                                          AgentSkillVersionResolver versions) {
         this(router, queries, contexts, explanations, versions, new AgentSkillRegistry(), null,
-                new PatientAgentContextCommandParser());
+                new PatientAgentContextCommandParser(), new AgentUnsafeRequestPolicy());
     }
 
     public Optional<PatientAgentSkillResult> handle(Long sessionId, String question, CurrentUserVO user) {
         if (user == null || user.getRoleCode() != UserRole.USER) return Optional.empty();
+        unsafeRequestPolicy.requireAllowed(question, user.getRoleCode());
         Optional<PatientAgentQueryContextSnapshot> existing = contexts.load(sessionId);
         if (existing.isEmpty() && commandParser.isContextCommand(question)) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文已过期，请重新查询检查列表");

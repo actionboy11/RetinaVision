@@ -2,9 +2,10 @@ package com.example.retinavision.controller;
 
 import com.example.retinavision.pojo.DTO.UpdateActiveAgentSkillVersionDTO;
 import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillEvaluationRunEntity;
 import com.example.retinavision.pojo.VO.AgentSkillVO;
-import com.example.retinavision.pojo.VO.AgentSkillEvaluationVO;
+import com.example.retinavision.pojo.VO.AgentEvaluationRunVO;
+import com.example.retinavision.agent.evaluation.AgentEvaluationService;
+import com.example.retinavision.agent.evaluation.AgentEvaluationAdministrationService;
 import com.example.retinavision.pojo.VO.AgentSkillVersionVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.Result;
@@ -24,9 +25,15 @@ import java.util.List;
 @RequestMapping("/agent-skills")
 public class AgentSkillController {
     private final AgentSkillAdministrationService service;
+    private final AgentEvaluationService evaluations;
+    private final AgentEvaluationAdministrationService evaluationAdministration;
 
-    public AgentSkillController(AgentSkillAdministrationService service) {
+    public AgentSkillController(AgentSkillAdministrationService service,
+                                AgentEvaluationService evaluations,
+                                AgentEvaluationAdministrationService evaluationAdministration) {
         this.service = service;
+        this.evaluations = evaluations;
+        this.evaluationAdministration = evaluationAdministration;
     }
 
     @GetMapping
@@ -46,14 +53,12 @@ public class AgentSkillController {
     }
 
     @PostMapping("/{skillCode}/versions/{versionId}/evaluate")
-    public Result<AgentSkillEvaluationVO> evaluate(@PathVariable String skillCode,
+    public Result<AgentEvaluationRunVO> evaluate(@PathVariable String skillCode,
                                                            @PathVariable Long versionId,
                                                            Authentication authentication) {
         CurrentUserVO user = (CurrentUserVO) authentication.getPrincipal();
-        AgentSkillEvaluationRunEntity run = service.evaluate(skillCode, versionId, user.getId());
-        return Result.success(new AgentSkillEvaluationVO(run.getId(), run.getStatus(), run.getTotalCount(),
-                run.getRoutingAccuracy(), run.getParameterAccuracy(), Boolean.TRUE.equals(run.getSafetyPassed()),
-                run.getFailureSamplesJson(), run.getCompletedAt()));
+        var run = evaluations.startForSkill(skillCode, versionId, user.getId());
+        return Result.success(evaluationAdministration.getRun(run.getId()));
     }
 
     @PutMapping("/{skillCode}/active-version")
