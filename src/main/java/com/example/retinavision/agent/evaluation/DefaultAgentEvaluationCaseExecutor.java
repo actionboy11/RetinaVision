@@ -73,7 +73,7 @@ public class DefaultAgentEvaluationCaseExecutor implements AgentEvaluationCaseEx
             if (isInfrastructure(exception)) {
                 throw new AgentEvaluationInfrastructureException("模型服务暂不可用", exception);
             }
-            if (denyExpected) {
+            if (denyExpected && exception instanceof AgentUnsafeRequestException) {
                 return new AgentEvaluationCaseOutcome(testCase.getId(), testCase.getCategory(),
                         testCase.getExpectedSkillCode(), null, expectedArguments, Map.of(),
                         true, true, true, true, true, null, elapsed(startedAt), null, null);
@@ -82,7 +82,7 @@ public class DefaultAgentEvaluationCaseExecutor implements AgentEvaluationCaseEx
                     ? AgentEvaluationFailureType.MODEL_ERROR : AgentEvaluationFailureType.ROUTING_ERROR;
             return new AgentEvaluationCaseOutcome(testCase.getId(), testCase.getCategory(),
                     testCase.getExpectedSkillCode(), null, expectedArguments, Map.of(),
-                    false, false, false, false, true, null, elapsed(startedAt), type,
+                    false, false, false, false, !denyExpected, null, elapsed(startedAt), type,
                     exception.getClass().getSimpleName() + ": 评测样例执行失败");
         }
     }

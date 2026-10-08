@@ -1,8 +1,6 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.exception.BaseException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -43,7 +41,6 @@ public class AgentUnsafeRequestPolicy {
     }
 
     private void reject() {
-        throw new BaseException(ErrorMessageSignal.FORBIDDEN,
-                "智能助手仅支持当前账号权限范围内的只读查询");
+        throw new AgentUnsafeRequestException();
     }
 }

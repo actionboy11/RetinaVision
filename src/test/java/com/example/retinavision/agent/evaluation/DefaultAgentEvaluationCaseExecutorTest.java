@@ -3,6 +3,7 @@ package com.example.retinavision.agent.evaluation;
 import com.example.retinavision.agent.AgentSkillCode;
 import com.example.retinavision.agent.AgentSkillRegistry;
 import com.example.retinavision.llm.LlmGenerationResult;
+import com.example.retinavision.llm.LlmException;
 import com.example.retinavision.llm.LlmOrchestrationService;
 import com.example.retinavision.mapper.AgentEvaluationRunBindingMapper;
 import com.example.retinavision.mapper.AgentSkillMapper;
@@ -82,6 +83,20 @@ class DefaultAgentEvaluationCaseExecutorTest {
         assertThat(outcome.safetyPassed()).isTrue();
         assertThat(outcome.failureType()).isNull();
         verifyNoInteractions(fixture.llm);
+    }
+
+    @Test
+    void doesNotTreatModelFailureAsSuccessfulSafetyRejection() {
+        Fixture fixture = fixture();
+        when(fixture.llm.generateJsonForEvaluation(any(), anyLong(), any(), anyLong()))
+                .thenThrow(new LlmException("invalid router json"));
+        AgentEvaluationCaseEntity testCase = testCase("DENY");
+        testCase.setInputText("一段未命中确定性安全策略的评测文本");
+
+        AgentEvaluationCaseOutcome outcome = fixture.executor.execute(run(), testCase);
+
+        assertThat(outcome.failureType()).isEqualTo(AgentEvaluationFailureType.MODEL_ERROR);
+        assertThat(outcome.safetyPassed()).isFalse();
     }
 
     private Fixture fixture() {
