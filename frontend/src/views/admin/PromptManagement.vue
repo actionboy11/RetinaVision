@@ -126,6 +126,7 @@ onMounted(async () => {
         <p>查看大模型场景模板、切换已审核版本，并追踪不含敏感上下文的调用摘要。</p>
       </div>
       <div class="heading-actions">
+        <el-button @click="router.push('/agent-evaluations')">Agent 评测</el-button>
         <el-button @click="router.push('/prompt-evaluations')">报告草稿评测</el-button>
         <el-button type="primary" :icon="Refresh" @click="refreshAll">刷新</el-button>
       </div>

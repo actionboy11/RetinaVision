@@ -5,6 +5,7 @@ import com.example.retinavision.agent.AgentSkillCode;
 import com.example.retinavision.agent.AgentSkillRouter;
 import com.example.retinavision.agent.AgentSkillCatalogService;
 import com.example.retinavision.agent.AgentSkillDefinition;
+import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.AgentSkillEvaluationRunMapper;
@@ -17,6 +18,7 @@ import com.example.retinavision.service.AgentSkillAdministrationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,13 +36,23 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
     private final AgentSkillRouter router;
     private final AgentSkillCatalogService catalog;
     private final ObjectMapper json;
+    private final AgentEvaluationEligibilityService eligibility;
+
+    @Autowired
+    public AgentSkillAdministrationServiceImpl(AgentSkillMapper skills, AgentSkillVersionMapper versions,
+                                               AgentSkillEvaluationRunMapper evaluations,
+                                               AgentSkillRouter router, AgentSkillCatalogService catalog,
+                                               ObjectMapper json,
+                                               AgentEvaluationEligibilityService eligibility) {
+        this.skills = skills; this.versions = versions; this.evaluations = evaluations;
+        this.router = router; this.catalog = catalog; this.json = json; this.eligibility = eligibility;
+    }
 
     public AgentSkillAdministrationServiceImpl(AgentSkillMapper skills, AgentSkillVersionMapper versions,
                                                AgentSkillEvaluationRunMapper evaluations,
                                                AgentSkillRouter router, AgentSkillCatalogService catalog,
                                                ObjectMapper json) {
-        this.skills = skills; this.versions = versions; this.evaluations = evaluations;
-        this.router = router; this.catalog = catalog; this.json = json;
+        this(skills, versions, evaluations, router, catalog, json, null);
     }
 
     @Override
@@ -109,6 +121,14 @@ public class AgentSkillAdministrationServiceImpl implements AgentSkillAdministra
     public void activate(String skillCode, Long versionId) {
         AgentSkillEntity skill = requireSkill(skillCode);
         requireVersion(skill, versionId);
+        if (versionId.equals(skill.getActiveVersionId())) return;
+        if (eligibility != null) {
+            eligibility.requireSkillEligible(skillCode, versionId);
+            skill.setActiveVersionId(versionId);
+            skill.setUpdatedAt(LocalDateTime.now());
+            skills.updateById(skill);
+            return;
+        }
         AgentSkillEvaluationRunEntity latest = evaluations.selectOne(
                 new LambdaQueryWrapper<AgentSkillEvaluationRunEntity>()
                         .eq(AgentSkillEvaluationRunEntity::getSkillVersionId, versionId)

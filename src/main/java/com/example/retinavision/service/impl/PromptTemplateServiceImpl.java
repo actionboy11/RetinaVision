@@ -16,6 +16,8 @@ import com.example.retinavision.rag.QdrantProperties;
 import com.example.retinavision.pojo.Entity.PromptTemplateEntity;
 import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
 import com.example.retinavision.service.PromptTemplateService;
+import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,16 +32,26 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
     private final LlmProperties llmProperties;
     private final EmbeddingProperties embeddingProperties;
     private final QdrantProperties qdrantProperties;
+    private final AgentEvaluationEligibilityService agentEvaluationEligibility;
 
+    @Autowired
     public PromptTemplateServiceImpl(PromptTemplateMapper templates, PromptTemplateVersionMapper versions,
                                      PromptEvaluationRunMapper evaluations, LlmProperties llmProperties,
-                                     EmbeddingProperties embeddingProperties, QdrantProperties qdrantProperties) {
+                                     EmbeddingProperties embeddingProperties, QdrantProperties qdrantProperties,
+                                     AgentEvaluationEligibilityService agentEvaluationEligibility) {
         this.templates = templates;
         this.versions = versions;
         this.evaluations = evaluations;
         this.llmProperties = llmProperties;
         this.embeddingProperties = embeddingProperties;
         this.qdrantProperties = qdrantProperties;
+        this.agentEvaluationEligibility = agentEvaluationEligibility;
+    }
+
+    public PromptTemplateServiceImpl(PromptTemplateMapper templates, PromptTemplateVersionMapper versions,
+                                     PromptEvaluationRunMapper evaluations, LlmProperties llmProperties,
+                                     EmbeddingProperties embeddingProperties, QdrantProperties qdrantProperties) {
+        this(templates, versions, evaluations, llmProperties, embeddingProperties, qdrantProperties, null);
     }
 
     @Override
@@ -51,6 +63,17 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
         PromptTemplateVersionEntity version = versions.selectById(template.getActiveVersionId());
         if (version == null || !template.getId().equals(version.getTemplateId()) || !Boolean.TRUE.equals(version.getActive())) {
             throw unavailable(templateCode, "启用版本无效");
+        }
+        version.setTemplateCode(template.getTemplateCode());
+        return version;
+    }
+
+    @Override
+    public PromptTemplateVersionEntity requireVersion(String templateCode, Long versionId) {
+        PromptTemplateEntity template = requireTemplate(templateCode);
+        PromptTemplateVersionEntity version = versions.selectById(versionId);
+        if (version == null || !template.getId().equals(version.getTemplateId())) {
+            throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "所选 Prompt 版本不属于该模板");
         }
         version.setTemplateCode(template.getTemplateCode());
         return version;
@@ -83,6 +106,13 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
         }
         if (selected.getId().equals(template.getActiveVersionId())) {
             return template;
+        }
+        if ("AGENT_SKILL_ROUTER".equals(templateCode)) {
+            if (agentEvaluationEligibility == null) {
+                throw new BaseException(ErrorMessageSignal.PARAM_ERROR,
+                        "候选路由 Prompt 版本须先通过 Agent 评测");
+            }
+            agentEvaluationEligibility.requirePromptEligible(templateCode, versionId);
         }
         if (("REPORT_DRAFT_GENERATION".equals(templateCode)
                 || RagEvaluationService.TEMPLATE_CODE.equals(templateCode)) && selected.getReleasedAt() == null) {

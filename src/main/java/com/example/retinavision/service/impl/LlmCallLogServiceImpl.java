@@ -32,6 +32,7 @@ public class LlmCallLogServiceImpl implements LlmCallLogService {
                                        LocalDateTime startTime,
                                        LocalDateTime endTime) {
         return logs.selectList(new LambdaQueryWrapper<LlmCallLogEntity>()
+                .eq(LlmCallLogEntity::getCallSource, "BUSINESS")
                 .eq(scenario != null && !scenario.isBlank(), LlmCallLogEntity::getScenario, scenario)
                 .eq(templateCode != null && !templateCode.isBlank(), LlmCallLogEntity::getTemplateCode, templateCode)
                 .eq(success != null, LlmCallLogEntity::getSuccess, success)

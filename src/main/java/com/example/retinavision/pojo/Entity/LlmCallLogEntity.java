@@ -20,5 +20,7 @@ public class LlmCallLogEntity {
     private Boolean success;
     private Long latencyMs;
     private String errorSummary;
+    private String callSource;
+    private Long evaluationRunId;
     private LocalDateTime createdAt;
 }

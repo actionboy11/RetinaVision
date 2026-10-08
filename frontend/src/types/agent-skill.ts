@@ -19,15 +19,6 @@ export interface AgentSkillVersionItem {
   createdAt: DateTimeString
 }
 
-export interface AgentSkillEvaluation {
-  id: ID
-  status: string
-  totalCount: number
-  routingAccuracy: number
-  parameterAccuracy: number
-  safetyPassed: boolean
-  failureSamplesJson: string
-}
 
 export interface AgentSkillExecutionItem {
   id: ID

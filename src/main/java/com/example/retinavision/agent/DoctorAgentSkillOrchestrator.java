@@ -29,17 +29,19 @@ public class DoctorAgentSkillOrchestrator {
     private final AgentQueryContextService contexts;
     private final AgentClinicalReferenceService references;
     private final CaseAnalysisTimelineService timelines;
-    private final AgentSkillVersionBindingService versions;
+    private final AgentSkillVersionResolver versions;
     private final AgentSkillRegistry registry;
     private final AgentSkillCatalogService catalog;
     private final AgentContextCommandParser commandParser;
+    private final AgentUnsafeRequestPolicy unsafeRequestPolicy;
 
     @Autowired
     public DoctorAgentSkillOrchestrator(AgentSkillRouter router, DoctorAgentQueryService queries,
                                         AgentQueryContextService contexts, AgentClinicalReferenceService references,
                                         CaseAnalysisTimelineService timelines,
-                                        AgentSkillVersionBindingService versions, AgentSkillRegistry registry,
-                                        AgentSkillCatalogService catalog, AgentContextCommandParser commandParser) {
+                                        AgentSkillVersionResolver versions, AgentSkillRegistry registry,
+                                        AgentSkillCatalogService catalog, AgentContextCommandParser commandParser,
+                                        AgentUnsafeRequestPolicy unsafeRequestPolicy) {
         this.router = router;
         this.queries = queries;
         this.contexts = contexts;
@@ -49,12 +51,13 @@ public class DoctorAgentSkillOrchestrator {
         this.registry = registry;
         this.catalog = catalog;
         this.commandParser = commandParser;
+        this.unsafeRequestPolicy = unsafeRequestPolicy;
     }
 
     public DoctorAgentSkillOrchestrator(AgentSkillRouter router, DoctorAgentQueryService queries,
                                         AgentQueryContextService contexts, AgentClinicalReferenceService references,
                                         CaseAnalysisTimelineService timelines,
-                                        AgentSkillVersionBindingService versions) {
+                                        AgentSkillVersionResolver versions) {
         this.router = router;
         this.queries = queries;
         this.contexts = contexts;
@@ -64,10 +67,12 @@ public class DoctorAgentSkillOrchestrator {
         this.registry = new AgentSkillRegistry();
         this.catalog = null;
         this.commandParser = new AgentContextCommandParser();
+        this.unsafeRequestPolicy = new AgentUnsafeRequestPolicy();
     }
 
     public Optional<DoctorAgentSkillResult> handle(Long sessionId, String question, CurrentUserVO user) {
         if (user == null || user.getRoleCode() != UserRole.DOCTOR) return Optional.empty();
+        unsafeRequestPolicy.requireAllowed(question, user.getRoleCode());
         Optional<AgentQueryContextSnapshot> existing = contexts.load(sessionId);
         validateTypedReferenceCommand(question, existing.orElse(null));
         if (existing.isEmpty() && commandParser.isSelectionCommand(question)) {
@@ -90,7 +95,7 @@ public class DoctorAgentSkillOrchestrator {
             case DOCTOR_WORKLOAD_OVERVIEW -> Optional.of(workload(user, route));
             case ASSIGNED_CASE_SEARCH -> Optional.of(search(sessionId, route, existing, user));
             case CASE_CLINICAL_SUMMARY -> Optional.of(summary(sessionId, question, route, existing, user));
-            case CASE_FOLLOWUP_ANALYSIS -> Optional.of(followup(sessionId, question, existing, user));
+            case CASE_FOLLOWUP_ANALYSIS -> Optional.of(followup(sessionId, question, route, existing, user));
             case DOCTOR_TASK_SEARCH -> Optional.of(tasks(sessionId, question, route, existing, user));
             case DOCTOR_CLINICAL_QUEUE -> Optional.of(clinicalQueue(sessionId, route, existing, user));
             case MEDICAL_KNOWLEDGE_QA -> Optional.empty();
@@ -332,7 +337,8 @@ public class DoctorAgentSkillOrchestrator {
 
     private DoctorAgentSkillResult summary(Long sessionId, String question, AgentSkillRoute route,
                                            Optional<AgentQueryContextSnapshot> existing, CurrentUserVO user) {
-        String reference = extractReference(question);
+        String reference = route.arguments().get("caseReference");
+        if (reference == null || reference.isBlank()) reference = extractReference(question);
         if (route.command() == AgentContextCommand.SELECT_INDEX) {
             AgentQueryContextSnapshot context = existing.orElseThrow(() ->
                     new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文已过期，请重新查询病例列表"));
@@ -356,9 +362,10 @@ public class DoctorAgentSkillOrchestrator {
                 "CASE_DETAIL", Map.of("caseDetail", detail), null, actions);
     }
 
-    private DoctorAgentSkillResult followup(Long sessionId, String question,
+    private DoctorAgentSkillResult followup(Long sessionId, String question, AgentSkillRoute route,
                                             Optional<AgentQueryContextSnapshot> existing, CurrentUserVO user) {
-        String reference = extractReference(question);
+        String reference = route.arguments().get("caseReference");
+        if (reference == null || reference.isBlank()) reference = extractReference(question);
         if ((reference == null || reference.isBlank()) && existing.isPresent()
                 && existing.get().selectedCaseId() != null) reference = String.valueOf(existing.get().selectedCaseId());
         var item = references.resolveCase(reference, user);

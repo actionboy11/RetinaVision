@@ -30,6 +30,8 @@ const reminderTimer = ref<ReturnType<typeof setInterval> | null>(null)
 const lastOverdueNoticeAt = ref(0)
 
 const activeMenu = computed(() => {
+  if (route.path.startsWith('/agent-evaluations')) return '/agent-evaluations'
+
   if (route.path.startsWith('/cases')) {
     if (authStore.user?.roleCode === 'USER' && route.query.mode) {
       return `/cases?mode=${String(route.query.mode)}`
@@ -88,7 +90,7 @@ const agentMenuText = computed(() => {
   return '平台运维助手'
 })
 
-const pageTitle = computed(() => route.path.startsWith('/agent') ? agentMenuText.value : route.meta.title)
+const pageTitle = computed(() => route.path === '/agent' ? agentMenuText.value : route.meta.title)
 
 const totalDoctorTodoCount = computed(() => {
   if (!reminder.value) {
@@ -282,6 +284,10 @@ onBeforeUnmount(() => {
           <el-icon><Cpu /></el-icon>
           <span>Agent Skill</span>
         </el-menu-item>
+        <el-menu-item v-if="authStore.user?.roleCode === 'ADMIN'" index="/agent-evaluations">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>Agent 评测</span>
+        </el-menu-item>
         <el-menu-item
           v-if="authStore.user?.roleCode === 'ADMIN'"
           index="/prompt-evaluations"
@@ -433,6 +439,31 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 620px) {
+  .app-aside {
+    width: 64px !important;
+    flex: 0 0 64px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .brand > div:not(.brand-mark),
+  .side-menu :deep(.el-menu-item span),
+  .side-menu :deep(.el-badge) {
+    display: none;
+  }
+
+  .side-menu {
+    padding: 8px 4px;
+  }
+
+  .side-menu :deep(.el-menu-item) {
+    justify-content: center;
+    padding: 0 !important;
+  }
+
   .app-header {
     padding: 0 12px;
   }
