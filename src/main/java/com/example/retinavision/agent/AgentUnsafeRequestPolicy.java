@@ -19,7 +19,7 @@ public class AgentUnsafeRequestPolicy {
     private static final List<String> READ_INTENTS = List.of(
             "查看", "展示", "输出", "读取", "获取", "给我", "列出");
     private static final List<String> PROTECTED_TARGETS = List.of(
-            "其他患者", "别的患者", "所有患者", "其他医生", "未签发报告", "未审核报告",
+            "其他患者", "别的患者", "别人的", "所有患者", "全部患者", "其他医生", "未签发报告", "未审核报告",
             "任务日志", "文件路径", "原始mask", "maskurl");
 
     public void requireAllowed(String question, UserRole role) {
