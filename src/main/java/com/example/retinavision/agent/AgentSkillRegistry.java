@@ -61,6 +61,8 @@ public class AgentSkillRegistry {
                     "clinicalState", names(DoctorClinicalState.values()),
                     "dateWindow", names(DoctorDateWindow.values()),
                     "eyeSide", List.of("LEFT", "RIGHT", "BOTH"));
+            case CASE_CLINICAL_SUMMARY, CASE_FOLLOWUP_ANALYSIS ->
+                    Map.of("caseReference", List.of("string"));
             case MY_CASE_LIST -> Map.of(
                     "reuploadOnly", List.of("TRUE", "FALSE"),
                     "signedReportOnly", List.of("TRUE", "FALSE"));

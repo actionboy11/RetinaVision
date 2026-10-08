@@ -76,4 +76,18 @@ class AgentSkillRegistryTest {
                 UserRole.USER, Map.of("toolName", "deleteCase")))
                 .hasMessageContaining("参数");
     }
+
+    @Test
+    void preservesCaseReferenceForDoctorSummaryAndFollowupSkills() {
+        for (AgentSkillCode code : new AgentSkillCode[]{
+                AgentSkillCode.CASE_CLINICAL_SUMMARY,
+                AgentSkillCode.CASE_FOLLOWUP_ANALYSIS}) {
+            assertThat(registry.validateAndNormalize(code, UserRole.DOCTOR,
+                    Map.of("caseReference", "EVAL-C-005")))
+                    .containsExactlyEntriesOf(Map.of("caseReference", "EVAL-C-005"));
+            assertThatThrownBy(() -> registry.validateAndNormalize(code, UserRole.DOCTOR,
+                    Map.of("patientName", "someone")))
+                    .hasMessageContaining("参数");
+        }
+    }
 }

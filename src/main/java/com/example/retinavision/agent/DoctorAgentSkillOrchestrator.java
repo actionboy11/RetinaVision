@@ -90,7 +90,7 @@ public class DoctorAgentSkillOrchestrator {
             case DOCTOR_WORKLOAD_OVERVIEW -> Optional.of(workload(user, route));
             case ASSIGNED_CASE_SEARCH -> Optional.of(search(sessionId, route, existing, user));
             case CASE_CLINICAL_SUMMARY -> Optional.of(summary(sessionId, question, route, existing, user));
-            case CASE_FOLLOWUP_ANALYSIS -> Optional.of(followup(sessionId, question, existing, user));
+            case CASE_FOLLOWUP_ANALYSIS -> Optional.of(followup(sessionId, question, route, existing, user));
             case DOCTOR_TASK_SEARCH -> Optional.of(tasks(sessionId, question, route, existing, user));
             case DOCTOR_CLINICAL_QUEUE -> Optional.of(clinicalQueue(sessionId, route, existing, user));
             case MEDICAL_KNOWLEDGE_QA -> Optional.empty();
@@ -332,7 +332,8 @@ public class DoctorAgentSkillOrchestrator {
 
     private DoctorAgentSkillResult summary(Long sessionId, String question, AgentSkillRoute route,
                                            Optional<AgentQueryContextSnapshot> existing, CurrentUserVO user) {
-        String reference = extractReference(question);
+        String reference = route.arguments().get("caseReference");
+        if (reference == null || reference.isBlank()) reference = extractReference(question);
         if (route.command() == AgentContextCommand.SELECT_INDEX) {
             AgentQueryContextSnapshot context = existing.orElseThrow(() ->
                     new BaseException(ErrorMessageSignal.PARAM_ERROR, "查询上下文已过期，请重新查询病例列表"));
@@ -356,9 +357,10 @@ public class DoctorAgentSkillOrchestrator {
                 "CASE_DETAIL", Map.of("caseDetail", detail), null, actions);
     }
 
-    private DoctorAgentSkillResult followup(Long sessionId, String question,
+    private DoctorAgentSkillResult followup(Long sessionId, String question, AgentSkillRoute route,
                                             Optional<AgentQueryContextSnapshot> existing, CurrentUserVO user) {
-        String reference = extractReference(question);
+        String reference = route.arguments().get("caseReference");
+        if (reference == null || reference.isBlank()) reference = extractReference(question);
         if ((reference == null || reference.isBlank()) && existing.isPresent()
                 && existing.get().selectedCaseId() != null) reference = String.valueOf(existing.get().selectedCaseId());
         var item = references.resolveCase(reference, user);

@@ -4,6 +4,7 @@ import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.enumeration.EyeSide;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.enumeration.TaskStatus;
+import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
@@ -11,6 +12,7 @@ import com.example.retinavision.pojo.VO.DoctorWorkloadVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO;
 import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
 import com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO;
+import com.example.retinavision.pojo.VO.CaseListItemVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.AgentClinicalReferenceService;
 import com.example.retinavision.service.CaseAnalysisTimelineService;
@@ -33,6 +35,42 @@ import static org.mockito.Mockito.never;
 import org.mockito.ArgumentCaptor;
 
 class DoctorAgentSkillOrchestratorTest {
+
+    @Test
+    void summaryPrefersStructuredCaseReferenceAndFallsBackToQuestionForLegacyRoutes() {
+        AgentClinicalReferenceService references = mock(AgentClinicalReferenceService.class);
+        AgentQueryContextService contexts = mock(AgentQueryContextService.class);
+        AgentSkillVersionBindingService versions = mock(AgentSkillVersionBindingService.class);
+        when(contexts.load(9L)).thenReturn(Optional.empty());
+        when(versions.resolve(eq(9L), eq(AgentSkillCode.CASE_CLINICAL_SUMMARY)))
+                .thenReturn(new AgentSkillRuntimeVersion(1L, 4));
+        CaseListItemVO structured = caseItem(51, "EVAL-C-STRUCTURED");
+        CaseListItemVO legacy = caseItem(52, "C202610080052");
+        when(references.resolveCase("EVAL-C-STRUCTURED", doctor())).thenReturn(structured);
+        when(references.resolveCase("C202610080052", doctor())).thenReturn(legacy);
+
+        AgentSkillRouter structuredRouter = (question, current) -> new AgentSkillRoute(
+                AgentSkillCode.CASE_CLINICAL_SUMMARY, 0.98,
+                Map.of("caseReference", "EVAL-C-STRUCTURED"));
+        DoctorAgentSkillOrchestrator structuredOrchestrator = new DoctorAgentSkillOrchestrator(
+                structuredRouter, mock(DoctorAgentQueryService.class), contexts, references,
+                mock(CaseAnalysisTimelineService.class), versions);
+        DoctorAgentSkillResult structuredResult = structuredOrchestrator.handle(
+                9L, "查看病例 EVAL-C-WRONG 的摘要", doctor()).orElseThrow();
+
+        AgentSkillRouter legacyRouter = (question, current) -> new AgentSkillRoute(
+                AgentSkillCode.CASE_CLINICAL_SUMMARY, 0.98, Map.of());
+        DoctorAgentSkillOrchestrator legacyOrchestrator = new DoctorAgentSkillOrchestrator(
+                legacyRouter, mock(DoctorAgentQueryService.class), contexts, references,
+                mock(CaseAnalysisTimelineService.class), versions);
+        DoctorAgentSkillResult legacyResult = legacyOrchestrator.handle(
+                9L, "查看病例 C202610080052 的摘要", doctor()).orElseThrow();
+
+        assertThat(structuredResult.answer()).contains("EVAL-C-STRUCTURED");
+        assertThat(legacyResult.answer()).contains("C202610080052");
+        verify(references).resolveCase("EVAL-C-STRUCTURED", doctor());
+        verify(references).resolveCase("C202610080052", doctor());
+    }
 
     @Test
     void rejectsLowConfidenceRouteBeforeExecutingNativeQuery() {
@@ -335,6 +373,13 @@ class DoctorAgentSkillOrchestratorTest {
         DoctorAgentTaskSummaryVO task = new DoctorAgentTaskSummaryVO();
         task.setTaskId(id); task.setTaskNo(taskNo); task.setStatus(TaskStatus.SUCCESS);
         return task;
+    }
+
+    private CaseListItemVO caseItem(int id, String caseNo) {
+        CaseListItemVO item = new CaseListItemVO();
+        item.setId(id); item.setCaseNo(caseNo); item.setPatientNo("PT-EVAL-001");
+        item.setWorkflowStatus(CaseWorkflowStatus.SUBMITTED);
+        return item;
     }
 
     private AgentQueryContextSnapshot taskContext(List<Long> ids) {
