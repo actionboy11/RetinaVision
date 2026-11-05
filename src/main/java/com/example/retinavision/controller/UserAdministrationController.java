@@ -3,7 +3,7 @@ package com.example.retinavision.controller;
 import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.UserAdministrationService;
+import com.example.retinavision.service.user.UserAdministrationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;

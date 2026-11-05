@@ -2,7 +2,7 @@ package com.example.retinavision.controller;
 
 import com.example.retinavision.pojo.VO.AgentSkillExecutionVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.AgentSkillExecutionQueryService;
+import com.example.retinavision.service.governance.AgentSkillExecutionQueryService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

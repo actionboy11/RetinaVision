@@ -9,7 +9,7 @@ import com.example.retinavision.agent.evaluation.AgentEvaluationAdministrationSe
 import com.example.retinavision.pojo.VO.AgentSkillVersionVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.AgentSkillAdministrationService;
+import com.example.retinavision.service.governance.AgentSkillAdministrationService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

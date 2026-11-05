@@ -73,6 +73,19 @@ class LayerFunctionalPackageArchitectureTest {
                 () -> "Unapproved functional package names: " + violations);
     }
 
+    @Test
+    void service_classes_are_grouped_by_function() {
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(BASE_PACKAGE + ".service")
+                        || javaClass.getPackageName().equals(BASE_PACKAGE + ".service.impl"))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Service classes still stored outside functional groups: " + violations);
+    }
+
     private String relativePackage(JavaClass javaClass) {
         String packageName = javaClass.getPackageName();
         if (packageName.equals(BASE_PACKAGE)) {

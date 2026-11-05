@@ -6,7 +6,7 @@ import com.example.retinavision.enumeration.TaskType;
 import com.example.retinavision.pojo.VO.AnalysisResultComparisonVO;
 import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.VO.CaseTrendSummaryVO;
-import com.example.retinavision.service.CaseAnalysisTimelineService;
+import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
 
 import java.time.LocalDateTime;
 import java.util.List;

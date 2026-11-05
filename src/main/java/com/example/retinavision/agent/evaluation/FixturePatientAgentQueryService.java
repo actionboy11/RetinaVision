@@ -6,7 +6,7 @@ import com.example.retinavision.enumeration.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.pojo.VO.*;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.PatientAgentQueryService;
+import com.example.retinavision.service.agent.PatientAgentQueryService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -2,8 +2,8 @@ package com.example.retinavision.llm;
 
 import com.example.retinavision.pojo.Entity.LlmCallLogEntity;
 import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
-import com.example.retinavision.service.LlmCallLogService;
-import com.example.retinavision.service.PromptTemplateService;
+import com.example.retinavision.service.governance.LlmCallLogService;
+import com.example.retinavision.service.governance.PromptTemplateService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;

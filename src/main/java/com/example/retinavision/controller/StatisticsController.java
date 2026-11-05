@@ -4,7 +4,7 @@ import com.example.retinavision.pojo.VO.QueueStatisticsVO;
 import com.example.retinavision.pojo.VO.TaskStatisticsVO;
 import com.example.retinavision.pojo.VO.TaskTrendItemVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.StatisticsService;
+import com.example.retinavision.service.operations.StatisticsService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;

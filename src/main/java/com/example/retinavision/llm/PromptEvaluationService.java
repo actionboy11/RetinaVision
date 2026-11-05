@@ -7,7 +7,7 @@ import com.example.retinavision.mapper.PromptEvaluationRunMapper;
 import com.example.retinavision.mapper.PromptTemplateVersionMapper;
 import com.example.retinavision.pojo.Entity.PromptEvaluationRunEntity;
 import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
-import com.example.retinavision.service.PromptTemplateService;
+import com.example.retinavision.service.governance.PromptTemplateService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;

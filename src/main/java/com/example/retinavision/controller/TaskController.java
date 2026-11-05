@@ -9,8 +9,8 @@ import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.TaskService;
-import com.example.retinavision.service.ClinicalAccessService;
+import com.example.retinavision.service.analysis.TaskService;
+import com.example.retinavision.service.cases.ClinicalAccessService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

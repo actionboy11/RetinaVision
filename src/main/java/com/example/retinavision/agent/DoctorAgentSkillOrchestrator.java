@@ -9,9 +9,9 @@ import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
-import com.example.retinavision.service.AgentClinicalReferenceService;
-import com.example.retinavision.service.CaseAnalysisTimelineService;
-import com.example.retinavision.service.DoctorAgentQueryService;
+import com.example.retinavision.service.agent.AgentClinicalReferenceService;
+import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
+import com.example.retinavision.service.agent.DoctorAgentQueryService;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 

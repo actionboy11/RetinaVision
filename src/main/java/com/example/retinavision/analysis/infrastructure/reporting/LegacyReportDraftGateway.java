@@ -3,7 +3,7 @@ package com.example.retinavision.analysis.infrastructure.reporting;
 import com.example.retinavision.analysis.application.port.out.ReportDraftPort;
 import com.example.retinavision.mapper.TaskMapper;
 import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.service.AnalysisReportService;
+import com.example.retinavision.service.reporting.AnalysisReportService;
 
 public final class LegacyReportDraftGateway implements ReportDraftPort {
 

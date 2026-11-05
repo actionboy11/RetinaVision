@@ -2,9 +2,9 @@ package com.example.retinavision.controller;
 
 import com.example.retinavision.pojo.VO.AnalysisResultVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.AnalysisResultService;
-import com.example.retinavision.service.AnalysisReportService;
-import com.example.retinavision.service.ClinicalAccessService;
+import com.example.retinavision.service.analysis.AnalysisResultService;
+import com.example.retinavision.service.reporting.AnalysisReportService;
+import com.example.retinavision.service.cases.ClinicalAccessService;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
 import com.example.retinavision.enumeration.ReportStatus;
 import org.springframework.core.io.InputStreamResource;

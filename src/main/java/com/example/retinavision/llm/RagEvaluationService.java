@@ -17,7 +17,7 @@ import com.example.retinavision.rag.QdrantSearchHit;
 import com.example.retinavision.rag.RagEvaluationScorer;
 import com.example.retinavision.rag.RagGroundingValidator;
 import com.example.retinavision.rag.RagDocumentSupport;
-import com.example.retinavision.service.PromptTemplateService;
+import com.example.retinavision.service.governance.PromptTemplateService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;

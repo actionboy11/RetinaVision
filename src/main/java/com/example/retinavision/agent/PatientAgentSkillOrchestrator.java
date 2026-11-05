@@ -8,8 +8,8 @@ import com.example.retinavision.pojo.VO.PatientAgentCaseSummaryVO;
 import com.example.retinavision.pojo.VO.PatientAgentProgressVO;
 import com.example.retinavision.pojo.VO.PatientAgentReportDetailVO;
 import com.example.retinavision.pojo.VO.PatientAgentSignedReportVO;
-import com.example.retinavision.service.PatientAgentQueryService;
-import com.example.retinavision.service.PatientReportExplanationService;
+import com.example.retinavision.service.agent.PatientAgentQueryService;
+import com.example.retinavision.service.patient.PatientReportExplanationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

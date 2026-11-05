@@ -5,7 +5,7 @@ import com.example.retinavision.pojo.VO.QualityControlOverviewVO;
 import com.example.retinavision.pojo.VO.ReviewStatisticsVO;
 import com.example.retinavision.pojo.VO.RiskAlertItemVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.QualityControlService;
+import com.example.retinavision.service.governance.QualityControlService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -5,7 +5,7 @@ import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.enumeration.*;
 import com.example.retinavision.pojo.VO.*;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.DoctorAgentQueryService;
+import com.example.retinavision.service.agent.DoctorAgentQueryService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

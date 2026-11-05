@@ -5,7 +5,7 @@ import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.service.PatientReportExplanationService;
+import com.example.retinavision.service.patient.PatientReportExplanationService;
 
 import java.util.List;
 import java.util.Map;
