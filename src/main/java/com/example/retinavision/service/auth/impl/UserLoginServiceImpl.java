@@ -15,7 +15,7 @@ import com.example.retinavision.service.auth.UserLoginService;
 import com.example.retinavision.service.auth.LoginAttemptService;
 import com.example.retinavision.service.auth.JwtBlacklistService;
 import com.example.retinavision.service.patient.PatientProfileService;
-import com.example.retinavision.utils.JwtUtil;
+import com.example.retinavision.utils.auth.JwtUtil;
 import com.example.retinavision.exception.BaseException;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;

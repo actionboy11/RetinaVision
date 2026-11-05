@@ -1,6 +1,6 @@
 package com.example.retinavision.config;
 
-import com.example.retinavision.filter.JwtAuthenticationFilter;
+import com.example.retinavision.filter.auth.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

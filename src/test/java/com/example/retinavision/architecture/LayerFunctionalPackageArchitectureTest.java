@@ -86,6 +86,23 @@ class LayerFunctionalPackageArchitectureTest {
                 () -> "Service classes still stored outside functional groups: " + violations);
     }
 
+    @Test
+    void controller_and_auth_entry_points_are_grouped_by_function() {
+        Set<String> rootPackages = Set.of(
+                BASE_PACKAGE + ".controller",
+                BASE_PACKAGE + ".filter",
+                BASE_PACKAGE + ".utils");
+
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> rootPackages.contains(javaClass.getPackageName()))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "HTTP/auth entry points still stored outside functional groups: " + violations);
+    }
+
     private String relativePackage(JavaClass javaClass) {
         String packageName = javaClass.getPackageName();
         if (packageName.equals(BASE_PACKAGE)) {

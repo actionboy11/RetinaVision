@@ -8,7 +8,7 @@ import com.example.retinavision.pojo.Entity.UserEntity;
 import com.example.retinavision.service.auth.LoginAttemptService;
 import com.example.retinavision.service.auth.JwtBlacklistService;
 import com.example.retinavision.service.patient.PatientProfileService;
-import com.example.retinavision.utils.JwtUtil;
+import com.example.retinavision.utils.auth.JwtUtil;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
