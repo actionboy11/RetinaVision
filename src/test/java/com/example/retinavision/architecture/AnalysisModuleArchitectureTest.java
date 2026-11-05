@@ -12,6 +12,9 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
         importOptions = ImportOption.DoNotIncludeTests.class)
 class AnalysisModuleArchitectureTest {
 
+    // Task 5 will point these behavioral rules at the new technical-layer paths.
+    // Until then they intentionally protect the existing application/domain/infrastructure layout.
+
     @ArchTest
     static final ArchRule domain_is_framework_free = noClasses()
             .that().resideInAPackage("..analysis.domain..")
