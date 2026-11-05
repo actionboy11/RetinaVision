@@ -7,7 +7,7 @@ import com.example.retinavision.mapper.AgentSkillVersionMapper;
 import com.example.retinavision.pojo.Entity.AgentSkillEntity;
 import com.example.retinavision.pojo.Entity.AgentSkillEvaluationRunEntity;
 import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
-import com.example.retinavision.service.impl.AgentSkillAdministrationServiceImpl;
+import com.example.retinavision.service.governance.impl.AgentSkillAdministrationServiceImpl;
 import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

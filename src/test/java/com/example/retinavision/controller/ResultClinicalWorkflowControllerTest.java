@@ -5,11 +5,11 @@ import com.example.retinavision.enumeration.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.Entity.AnalysisReportEntity;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.service.AiReportDraftService;
-import com.example.retinavision.service.AnalysisReportService;
-import com.example.retinavision.service.ClinicalAccessService;
-import com.example.retinavision.service.ResultHumanWorkflowService;
-import com.example.retinavision.service.ResultReviewService;
+import com.example.retinavision.service.reporting.AiReportDraftService;
+import com.example.retinavision.service.reporting.AnalysisReportService;
+import com.example.retinavision.service.cases.ClinicalAccessService;
+import com.example.retinavision.service.clinical.ResultHumanWorkflowService;
+import com.example.retinavision.service.clinical.ResultReviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 

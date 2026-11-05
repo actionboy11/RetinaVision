@@ -9,8 +9,8 @@ import com.example.retinavision.pojo.VO.PatientAgentProgressVO;
 import com.example.retinavision.pojo.VO.PatientAgentReportDetailVO;
 import com.example.retinavision.pojo.VO.PatientAgentSignedReportVO;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.PatientAgentQueryService;
-import com.example.retinavision.service.PatientReportExplanationService;
+import com.example.retinavision.service.agent.PatientAgentQueryService;
+import com.example.retinavision.service.patient.PatientReportExplanationService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

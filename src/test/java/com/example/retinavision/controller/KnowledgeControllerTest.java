@@ -6,8 +6,8 @@ import com.example.retinavision.pojo.DTO.KnowledgeDocumentCreateDTO;
 import com.example.retinavision.pojo.DTO.KnowledgeDocumentStatusDTO;
 import com.example.retinavision.pojo.Entity.KnowledgeDocumentEntity;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.service.KnowledgeChatService;
-import com.example.retinavision.service.KnowledgeIngestionService;
+import com.example.retinavision.service.knowledge.KnowledgeChatService;
+import com.example.retinavision.service.knowledge.KnowledgeIngestionService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 

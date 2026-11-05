@@ -14,9 +14,9 @@ import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
 import com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO;
 import com.example.retinavision.pojo.VO.CaseListItemVO;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.AgentClinicalReferenceService;
-import com.example.retinavision.service.CaseAnalysisTimelineService;
-import com.example.retinavision.service.DoctorAgentQueryService;
+import com.example.retinavision.service.agent.AgentClinicalReferenceService;
+import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
+import com.example.retinavision.service.agent.DoctorAgentQueryService;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

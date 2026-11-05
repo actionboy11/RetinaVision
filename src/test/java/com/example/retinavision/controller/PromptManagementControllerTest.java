@@ -6,8 +6,8 @@ import com.example.retinavision.pojo.DTO.UpdateActivePromptVersionDTO;
 import com.example.retinavision.pojo.Entity.PromptTemplateEntity;
 import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
 import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.service.LlmCallLogService;
-import com.example.retinavision.service.PromptTemplateService;
+import com.example.retinavision.service.governance.LlmCallLogService;
+import com.example.retinavision.service.governance.PromptTemplateService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 

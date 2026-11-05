@@ -1,8 +1,8 @@
 package com.example.retinavision.mq;
 
-import com.example.retinavision.service.AnalysisTaskExecutionService;
-import com.example.retinavision.service.AnalysisTaskExecutionService.ExecutionDisposition;
-import com.example.retinavision.service.AnalysisTaskRetryService;
+import com.example.retinavision.service.analysis.AnalysisTaskExecutionService;
+import com.example.retinavision.service.analysis.AnalysisTaskExecutionService.ExecutionDisposition;
+import com.example.retinavision.service.analysis.AnalysisTaskRetryService;
 import com.rabbitmq.client.Channel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

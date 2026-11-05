@@ -19,7 +19,7 @@ import com.example.retinavision.mapper.ImageMapper;
 import com.example.retinavision.mapper.LogMapper;
 import com.example.retinavision.mapper.TaskMapper;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
-import com.example.retinavision.service.AnalysisReportService;
+import com.example.retinavision.service.reporting.AnalysisReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
