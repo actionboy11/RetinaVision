@@ -15,7 +15,7 @@ import com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO;
 import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 
 import com.example.retinavision.agent.*;
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.agent.DoctorAgentQueryService;
 

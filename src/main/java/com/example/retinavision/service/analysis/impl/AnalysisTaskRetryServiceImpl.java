@@ -3,7 +3,7 @@ package com.example.retinavision.service.analysis.impl;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;
-import com.example.retinavision.mq.RabbitMqProperties;
+import com.example.retinavision.mq.analysis.RabbitMqProperties;
 import com.example.retinavision.pojo.analysis.entity.LogEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.service.analysis.AnalysisTaskRetryService;

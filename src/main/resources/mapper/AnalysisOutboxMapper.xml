@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxMapper">
+<mapper namespace="com.example.retinavision.mapper.analysis.AnalysisOutboxMapper">
     <resultMap id="analysisOutboxResult"
-               type="com.example.retinavision.analysis.infrastructure.outbox.AnalysisOutboxEntity">
+               type="com.example.retinavision.pojo.analysis.entity.AnalysisOutboxEntity">
         <id property="id" column="id"/>
         <result property="eventKey" column="event_key"/>
         <result property="aggregateId" column="aggregate_id"/>

@@ -1,9 +1,9 @@
 package com.example.retinavision.service.analysis.impl;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
-import com.example.retinavision.analysis.application.model.AnalysisTaskRequestedEvent;
-import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventOutbox;
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.event.AnalysisTaskRequestedEvent;
+import com.example.retinavision.service.analysis.port.AnalysisTaskEventOutbox;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
@@ -18,7 +18,7 @@ import com.example.retinavision.mapper.imaging.ImageMapper;
 import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
-import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
+import com.example.retinavision.mq.analysis.AnalysisTaskMessagePublisher;
 import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
 import com.example.retinavision.pojo.analysis.dto.TaskListQueryDTO;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;

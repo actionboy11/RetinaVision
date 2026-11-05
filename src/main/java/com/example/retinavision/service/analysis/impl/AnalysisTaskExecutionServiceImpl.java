@@ -1,9 +1,9 @@
 package com.example.retinavision.service.analysis.impl;
 
-import com.example.retinavision.analysis.application.ExecuteAnalysisTaskUseCase;
-import com.example.retinavision.analysis.application.command.ExecuteAnalysisTaskCommand;
-import com.example.retinavision.analysis.infrastructure.mq.AnalysisTaskMessageAdapter;
-import com.example.retinavision.mq.AnalysisTaskMessage;
+import com.example.retinavision.service.analysis.ExecuteAnalysisTaskUseCase;
+import com.example.retinavision.pojo.analysis.command.ExecuteAnalysisTaskCommand;
+import com.example.retinavision.mq.analysis.AnalysisTaskMessageAdapter;
+import com.example.retinavision.mq.analysis.AnalysisTaskMessage;
 import com.example.retinavision.service.analysis.AnalysisTaskExecutionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

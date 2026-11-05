@@ -3,9 +3,9 @@ import com.example.retinavision.mapper.imaging.ImageMapper;
 
 import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mapper.analysis.LogMapper;
-import com.example.retinavision.mq.AnalysisTaskMessage;
-import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
-import com.example.retinavision.mq.RabbitMqProperties;
+import com.example.retinavision.mq.analysis.AnalysisTaskMessage;
+import com.example.retinavision.mq.analysis.AnalysisTaskMessagePublisher;
+import com.example.retinavision.mq.analysis.RabbitMqProperties;
 import com.example.retinavision.service.analysis.AnalysisTaskRetryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

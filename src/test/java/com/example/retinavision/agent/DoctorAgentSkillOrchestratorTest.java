@@ -3,7 +3,7 @@ import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.enumeration.cases.EyeSide;
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.exception.BaseException;

@@ -1,7 +1,7 @@
 package com.example.retinavision.pojo.analysis.vo;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import lombok.Data;
 

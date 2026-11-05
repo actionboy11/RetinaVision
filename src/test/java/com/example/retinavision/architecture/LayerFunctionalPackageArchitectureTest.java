@@ -122,6 +122,19 @@ class LayerFunctionalPackageArchitectureTest {
                 () -> "Persistence/model classes still stored outside functional groups: " + violations);
     }
 
+    @Test
+    void legacy_analysis_package_is_empty() {
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(BASE_PACKAGE + ".analysis")
+                        || javaClass.getPackageName().startsWith(BASE_PACKAGE + ".analysis."))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Legacy analysis packages still contain classes: " + violations);
+    }
+
     private String relativePackage(JavaClass javaClass) {
         String packageName = javaClass.getPackageName();
         if (packageName.equals(BASE_PACKAGE)) {

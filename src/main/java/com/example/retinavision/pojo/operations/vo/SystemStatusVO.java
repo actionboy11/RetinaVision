@@ -1,6 +1,6 @@
 package com.example.retinavision.pojo.operations.vo;
 
-import com.example.retinavision.ai.dto.AiHealthResponse;
+import com.example.retinavision.ai.analysis.dto.AiHealthResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

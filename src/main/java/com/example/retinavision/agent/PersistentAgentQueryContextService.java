@@ -4,7 +4,7 @@ import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.example.retinavision.mapper.agent.AgentQueryContextMapper;
 import com.example.retinavision.enumeration.cases.EyeSide;
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.pojo.agent.entity.AgentQueryContextEntity;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

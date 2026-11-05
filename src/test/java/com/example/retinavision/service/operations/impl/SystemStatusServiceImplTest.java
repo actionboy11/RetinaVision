@@ -1,7 +1,7 @@
 package com.example.retinavision.service.operations.impl;
 
-import com.example.retinavision.ai.AiHealthClient;
-import com.example.retinavision.ai.dto.AiHealthResponse;
+import com.example.retinavision.ai.analysis.AiHealthClient;
+import com.example.retinavision.ai.analysis.dto.AiHealthResponse;
 import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.SystemStatusVO;
 import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;

@@ -4,7 +4,7 @@ import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.operations.StatisticsMapper;
-import com.example.retinavision.mq.RabbitMqProperties;
+import com.example.retinavision.mq.analysis.RabbitMqProperties;
 import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.TaskTrendItemVO;

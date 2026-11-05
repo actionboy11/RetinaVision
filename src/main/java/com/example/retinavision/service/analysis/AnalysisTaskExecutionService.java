@@ -1,6 +1,6 @@
 package com.example.retinavision.service.analysis;
 
-import com.example.retinavision.mq.AnalysisTaskMessage;
+import com.example.retinavision.mq.analysis.AnalysisTaskMessage;
 
 public interface AnalysisTaskExecutionService {
     enum ExecutionDisposition {

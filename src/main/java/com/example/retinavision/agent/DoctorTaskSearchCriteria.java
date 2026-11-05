@@ -1,7 +1,7 @@
 package com.example.retinavision.agent;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 
 public record DoctorTaskSearchCriteria(AnalysisTaskType taskType,
                                        DoctorTaskStatusFilter status,

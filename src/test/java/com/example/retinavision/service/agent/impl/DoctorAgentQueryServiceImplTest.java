@@ -8,7 +8,7 @@ import com.example.retinavision.agent.DoctorClinicalQueueCriteria;
 import com.example.retinavision.agent.DoctorClinicalQueueType;
 import com.example.retinavision.agent.DoctorTaskSearchCriteria;
 import com.example.retinavision.agent.DoctorTaskStatusFilter;
-import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.agent.SegmentationState;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
