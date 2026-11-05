@@ -2,7 +2,7 @@ package com.example.retinavision.analysis.infrastructure.outbox;
 
 import com.example.retinavision.analysis.application.model.AnalysisTaskRequestedEvent;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.mq.AnalysisTaskMessage;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.fasterxml.jackson.databind.ObjectMapper;

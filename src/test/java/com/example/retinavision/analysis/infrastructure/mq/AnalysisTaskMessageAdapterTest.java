@@ -1,7 +1,7 @@
 package com.example.retinavision.analysis.infrastructure.mq;
 
 import com.example.retinavision.analysis.application.command.ExecuteAnalysisTaskCommand;
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.mq.AnalysisTaskMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

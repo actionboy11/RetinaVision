@@ -2,9 +2,9 @@ package com.example.retinavision.service.operations.impl;
 
 import com.example.retinavision.ai.AiHealthClient;
 import com.example.retinavision.ai.dto.AiHealthResponse;
-import com.example.retinavision.pojo.VO.QueueStatisticsVO;
-import com.example.retinavision.pojo.VO.SystemStatusVO;
-import com.example.retinavision.pojo.VO.TaskStatisticsVO;
+import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
+import com.example.retinavision.pojo.operations.vo.SystemStatusVO;
+import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
 import com.example.retinavision.service.operations.StatisticsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

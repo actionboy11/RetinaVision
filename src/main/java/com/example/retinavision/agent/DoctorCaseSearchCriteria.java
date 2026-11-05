@@ -1,7 +1,7 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.enumeration.CaseWorkflowStatus;
-import com.example.retinavision.enumeration.EyeSide;
+import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
+import com.example.retinavision.enumeration.cases.EyeSide;
 
 public record DoctorCaseSearchCriteria(SegmentationState segmentationState,
                                        CaseWorkflowStatus workflowStatus,

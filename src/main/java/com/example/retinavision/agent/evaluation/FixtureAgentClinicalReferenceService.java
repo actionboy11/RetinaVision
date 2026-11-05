@@ -1,11 +1,11 @@
 package com.example.retinavision.agent.evaluation;
 
-import com.example.retinavision.enumeration.CaseWorkflowStatus;
-import com.example.retinavision.enumeration.EyeSide;
-import com.example.retinavision.enumeration.PatientGender;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.VO.CaseListItemVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
+import com.example.retinavision.enumeration.cases.EyeSide;
+import com.example.retinavision.enumeration.patient.PatientGender;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.agent.AgentClinicalReferenceService;
 
 import java.time.LocalDateTime;

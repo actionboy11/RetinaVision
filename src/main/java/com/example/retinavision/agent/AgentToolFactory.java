@@ -1,6 +1,6 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 import java.util.Arrays;
 import java.util.Set;

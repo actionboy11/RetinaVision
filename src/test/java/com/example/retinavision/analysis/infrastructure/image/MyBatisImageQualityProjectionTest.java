@@ -2,9 +2,9 @@ package com.example.retinavision.analysis.infrastructure.image;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.example.retinavision.enumeration.ImageQualityStatus;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

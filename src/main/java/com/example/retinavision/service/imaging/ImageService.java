@@ -1,6 +1,6 @@
 package com.example.retinavision.service.imaging;
 
-import com.example.retinavision.pojo.VO.ImageFileItemVO;
+import com.example.retinavision.pojo.imaging.vo.ImageFileItemVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;

@@ -1,13 +1,13 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.enumeration.CaseWorkflowStatus;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.PatientAgentCaseSummaryVO;
-import com.example.retinavision.pojo.VO.PatientAgentProgressVO;
-import com.example.retinavision.pojo.VO.PatientAgentReportDetailVO;
-import com.example.retinavision.pojo.VO.PatientAgentSignedReportVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.patient.vo.PatientAgentCaseSummaryVO;
+import com.example.retinavision.pojo.patient.vo.PatientAgentProgressVO;
+import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
+import com.example.retinavision.pojo.reporting.vo.PatientAgentSignedReportVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.agent.PatientAgentQueryService;
 import com.example.retinavision.service.patient.PatientReportExplanationService;

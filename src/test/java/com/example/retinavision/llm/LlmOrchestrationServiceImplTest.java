@@ -1,7 +1,7 @@
 package com.example.retinavision.llm;
 
-import com.example.retinavision.pojo.Entity.LlmCallLogEntity;
-import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
+import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.example.retinavision.service.governance.LlmCallLogService;
 import com.example.retinavision.service.governance.PromptTemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;

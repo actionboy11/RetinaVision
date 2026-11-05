@@ -1,9 +1,9 @@
 package com.example.retinavision.service.patient;
 
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.PatientCaseProgressVO;
-import com.example.retinavision.pojo.VO.PatientSignedReportVO;
-import com.example.retinavision.pojo.VO.PatientSignedReportExplanationVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.patient.vo.PatientCaseProgressVO;
+import com.example.retinavision.pojo.reporting.vo.PatientSignedReportVO;
+import com.example.retinavision.pojo.reporting.vo.PatientSignedReportExplanationVO;
 
 import java.util.List;
 

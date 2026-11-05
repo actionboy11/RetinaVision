@@ -15,10 +15,10 @@ import com.example.retinavision.analysis.infrastructure.persistence.MyBatisAnaly
 import com.example.retinavision.analysis.infrastructure.persistence.MyBatisTaskAuditLog;
 import com.example.retinavision.analysis.infrastructure.reporting.LegacyReportDraftGateway;
 import com.example.retinavision.analysis.infrastructure.storage.LocalArtifactStore;
-import com.example.retinavision.mapper.AnalysisResultMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.mapper.LogMapper;
-import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.mapper.analysis.LogMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.service.reporting.AnalysisReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;

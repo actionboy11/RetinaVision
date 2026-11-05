@@ -1,20 +1,20 @@
 package com.example.retinavision.service.cases.impl;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.enumeration.CaseWorkflowStatus;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.AnalysisResultMapper;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.mapper.PatientProfileMapper;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
-import com.example.retinavision.pojo.Entity.CaseEntity;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
-import com.example.retinavision.pojo.Entity.PatientProfileEntity;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.mapper.patient.PatientProfileMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
+import com.example.retinavision.pojo.cases.entity.CaseEntity;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
+import com.example.retinavision.pojo.patient.entity.PatientProfileEntity;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.cases.ClinicalAccessService;
 import org.springframework.stereotype.Service;
 

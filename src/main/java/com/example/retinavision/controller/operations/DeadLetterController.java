@@ -1,6 +1,6 @@
 package com.example.retinavision.controller.operations;
 
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.operations.DeadLetterRecoveryService;
 import org.springframework.security.core.Authentication;

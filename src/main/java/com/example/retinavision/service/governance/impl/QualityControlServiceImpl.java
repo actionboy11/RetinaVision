@@ -1,10 +1,10 @@
 package com.example.retinavision.service.governance.impl;
 
-import com.example.retinavision.mapper.QualityControlMapper;
-import com.example.retinavision.pojo.VO.ModelPerformanceItemVO;
-import com.example.retinavision.pojo.VO.QualityControlOverviewVO;
-import com.example.retinavision.pojo.VO.ReviewStatisticsVO;
-import com.example.retinavision.pojo.VO.RiskAlertItemVO;
+import com.example.retinavision.mapper.governance.QualityControlMapper;
+import com.example.retinavision.pojo.operations.vo.ModelPerformanceItemVO;
+import com.example.retinavision.pojo.governance.vo.QualityControlOverviewVO;
+import com.example.retinavision.pojo.clinical.vo.ReviewStatisticsVO;
+import com.example.retinavision.pojo.governance.vo.RiskAlertItemVO;
 import com.example.retinavision.service.governance.QualityControlService;
 import org.springframework.stereotype.Service;
 

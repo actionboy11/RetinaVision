@@ -1,14 +1,14 @@
 package com.example.retinavision.service.clinical.impl;
 
-import com.example.retinavision.enumeration.ReviewStatus;
+import com.example.retinavision.enumeration.clinical.ReviewStatus;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.AnalysisResultMapper;
-import com.example.retinavision.mapper.AnalysisReviewMapper;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.DTO.SubmitReviewDTO;
-import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
-import com.example.retinavision.pojo.Entity.AnalysisReviewEntity;
-import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
+import com.example.retinavision.mapper.clinical.AnalysisReviewMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.clinical.dto.SubmitReviewDTO;
+import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
+import com.example.retinavision.pojo.clinical.entity.AnalysisReviewEntity;
+import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.service.clinical.ClinicalTaskLogService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

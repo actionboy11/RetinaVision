@@ -1,14 +1,16 @@
 package com.example.retinavision.agent;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.enumeration.patient.PatientGender;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.TaskType;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.enumeration.EyeSide;
+import com.example.retinavision.enumeration.analysis.TaskType;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
+import com.example.retinavision.pojo.cases.vo.CaseAnalysisTimelineVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
 import com.example.retinavision.service.agent.AgentClinicalReferenceService;
 import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
 import com.example.retinavision.service.agent.DoctorAgentQueryService;

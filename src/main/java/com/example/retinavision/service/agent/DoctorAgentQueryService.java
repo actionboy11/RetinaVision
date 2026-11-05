@@ -3,12 +3,12 @@ package com.example.retinavision.service.agent;
 import com.example.retinavision.agent.DoctorCaseSearchCriteria;
 import com.example.retinavision.agent.DoctorTaskSearchCriteria;
 import com.example.retinavision.agent.DoctorClinicalQueueCriteria;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
-import com.example.retinavision.pojo.VO.DoctorWorkloadVO;
-import com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO;
-import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
-import com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
+import com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO;
+import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskDetailVO;
+import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskSummaryVO;
+import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 import com.example.retinavision.result.PageResult;
 
 public interface DoctorAgentQueryService {

@@ -1,8 +1,8 @@
 package com.example.retinavision.service.user.impl;
 
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.user.entity.UserEntity;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

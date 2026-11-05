@@ -2,11 +2,11 @@ package com.example.retinavision.service.knowledge.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.KnowledgeChunkMapper;
-import com.example.retinavision.mapper.KnowledgeDocumentMapper;
-import com.example.retinavision.pojo.DTO.KnowledgeDocumentCreateDTO;
-import com.example.retinavision.pojo.Entity.KnowledgeChunkEntity;
-import com.example.retinavision.pojo.Entity.KnowledgeDocumentEntity;
+import com.example.retinavision.mapper.knowledge.KnowledgeChunkMapper;
+import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeChunkEntity;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
 import com.example.retinavision.rag.EmbeddingClient;
 import com.example.retinavision.rag.EmbeddingProperties;
 import com.example.retinavision.rag.QdrantClient;

@@ -1,12 +1,12 @@
 package com.example.retinavision.agent;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.mapper.AgentSkillMapper;
-import com.example.retinavision.mapper.AgentSkillVersionMapper;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.example.retinavision.controller.auth;
 
-import com.example.retinavision.pojo.DTO.UserLoginDTO;
-import com.example.retinavision.pojo.DTO.UserRegisterDTO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.UserLoginVO;
+import com.example.retinavision.pojo.auth.dto.UserLoginDTO;
+import com.example.retinavision.pojo.auth.dto.UserRegisterDTO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.auth.vo.UserLoginVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.auth.UserLoginService;
 import org.springframework.security.core.Authentication;

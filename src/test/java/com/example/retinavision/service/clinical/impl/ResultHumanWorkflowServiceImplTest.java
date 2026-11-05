@@ -2,11 +2,11 @@ package com.example.retinavision.service.clinical.impl;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.AnalysisCorrectionMapper;
-import com.example.retinavision.mapper.AnalysisFeedbackMapper;
-import com.example.retinavision.mapper.AnalysisResultMapper;
-import com.example.retinavision.pojo.Entity.AnalysisCorrectionEntity;
-import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
+import com.example.retinavision.mapper.clinical.AnalysisCorrectionMapper;
+import com.example.retinavision.mapper.clinical.AnalysisFeedbackMapper;
+import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
+import com.example.retinavision.pojo.clinical.entity.AnalysisCorrectionEntity;
+import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,8 @@
 package com.example.retinavision.service.operations.impl;
+import com.example.retinavision.mapper.imaging.ImageMapper;
 
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.mapper.LogMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mq.AnalysisTaskMessage;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.mq.RabbitMqProperties;
@@ -32,7 +33,7 @@ class DeadLetterRecoveryServiceImplTest {
     @Mock private LogMapper logMapper;
     @Mock private AnalysisTaskMessagePublisher publisher;
     @Mock private AnalysisTaskRetryService retryService;
-    @Mock private com.example.retinavision.mapper.ImageMapper imageMapper;
+    @Mock private com.example.retinavision.mapper.imaging.ImageMapper imageMapper;
 
     @Test
     void recoversDeadLetterAndPublishesFreshMainQueueMessage() {

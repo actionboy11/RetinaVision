@@ -1,7 +1,7 @@
 package com.example.retinavision.service.clinical;
-import com.example.retinavision.pojo.DTO.SubmitFeedbackDTO;
-import com.example.retinavision.pojo.Entity.AnalysisCorrectionEntity;
-import com.example.retinavision.pojo.Entity.AnalysisFeedbackEntity;
+import com.example.retinavision.pojo.clinical.dto.SubmitFeedbackDTO;
+import com.example.retinavision.pojo.clinical.entity.AnalysisCorrectionEntity;
+import com.example.retinavision.pojo.clinical.entity.AnalysisFeedbackEntity;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 public interface ResultHumanWorkflowService {

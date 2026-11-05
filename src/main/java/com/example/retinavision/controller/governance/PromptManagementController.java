@@ -1,16 +1,16 @@
 package com.example.retinavision.controller.governance;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.pojo.DTO.UpdateActivePromptVersionDTO;
-import com.example.retinavision.pojo.Entity.LlmCallLogEntity;
-import com.example.retinavision.pojo.Entity.PromptTemplateEntity;
-import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.LlmCallLogVO;
-import com.example.retinavision.pojo.VO.PromptTemplateVO;
-import com.example.retinavision.pojo.VO.PromptTemplateVersionVO;
+import com.example.retinavision.pojo.governance.dto.UpdateActivePromptVersionDTO;
+import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.governance.vo.LlmCallLogVO;
+import com.example.retinavision.pojo.governance.vo.PromptTemplateVO;
+import com.example.retinavision.pojo.governance.vo.PromptTemplateVersionVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.governance.LlmCallLogService;
 import com.example.retinavision.service.governance.PromptTemplateService;

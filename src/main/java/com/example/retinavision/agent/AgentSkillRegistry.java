@@ -1,8 +1,9 @@
 package com.example.retinavision.agent;
+import com.example.retinavision.enumeration.cases.EyeSide;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.TaskType;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.analysis.TaskType;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import org.springframework.stereotype.Component;
 

@@ -1,6 +1,6 @@
 package com.example.retinavision.mq;
 
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

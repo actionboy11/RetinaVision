@@ -1,11 +1,11 @@
 package com.example.retinavision.service.cases;
 
-import com.example.retinavision.pojo.DTO.CaseInsertDTO;
-import com.example.retinavision.pojo.DTO.CaseDoctorAssignmentDTO;
-import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
-import com.example.retinavision.pojo.DTO.CaseUpdateDTO;
-import com.example.retinavision.pojo.VO.CaseListItemVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.cases.dto.CaseInsertDTO;
+import com.example.retinavision.pojo.cases.dto.CaseDoctorAssignmentDTO;
+import com.example.retinavision.pojo.cases.dto.CaseListQueryDTO;
+import com.example.retinavision.pojo.cases.dto.CaseUpdateDTO;
+import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 
 public interface CaseService {

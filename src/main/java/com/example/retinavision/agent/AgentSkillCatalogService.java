@@ -1,11 +1,12 @@
 package com.example.retinavision.agent;
+import com.example.retinavision.enumeration.user.UserRole;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.mapper.AgentSkillMapper;
-import com.example.retinavision.mapper.AgentSkillVersionMapper;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ public class AgentSkillCatalogService {
         List<AgentSkillDefinition> result = new ArrayList<>();
         for (AgentSkillEntity skill : all) {
             AgentSkillCode code = parseCode(skill.getSkillCode());
-            if (code == null || !registry.isAvailable(code, com.example.retinavision.enumeration.UserRole.DOCTOR)) {
+            if (code == null || !registry.isAvailable(code, com.example.retinavision.enumeration.user.UserRole.DOCTOR)) {
                 continue;
             }
             AgentSkillVersionEntity version;
@@ -63,7 +64,7 @@ public class AgentSkillCatalogService {
         }
         if (result.stream().noneMatch(item -> item.code().name().equals(candidateSkill.getSkillCode()))) {
             AgentSkillCode code = parseCode(candidateSkill.getSkillCode());
-            if (code != null && registry.isAvailable(code, com.example.retinavision.enumeration.UserRole.DOCTOR)) {
+            if (code != null && registry.isAvailable(code, com.example.retinavision.enumeration.user.UserRole.DOCTOR)) {
                 result.add(definition(candidateSkill, candidateVersion));
             }
         }

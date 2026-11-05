@@ -1,8 +1,8 @@
 package com.example.retinavision.service.operations;
 
-import com.example.retinavision.pojo.VO.QueueStatisticsVO;
-import com.example.retinavision.pojo.VO.TaskStatisticsVO;
-import com.example.retinavision.pojo.VO.TaskTrendItemVO;
+import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
+import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
+import com.example.retinavision.pojo.operations.vo.TaskTrendItemVO;
 
 import java.util.List;
 

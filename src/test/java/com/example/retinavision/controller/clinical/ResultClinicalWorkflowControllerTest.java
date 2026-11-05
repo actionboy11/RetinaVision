@@ -1,10 +1,10 @@
 package com.example.retinavision.controller.clinical;
 
-import com.example.retinavision.enumeration.ReportStatus;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.reporting.ReportStatus;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.pojo.Entity.AnalysisReportEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.reporting.entity.AnalysisReportEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.reporting.AiReportDraftService;
 import com.example.retinavision.service.reporting.AnalysisReportService;
 import com.example.retinavision.service.cases.ClinicalAccessService;

@@ -1,16 +1,16 @@
 package com.example.retinavision.service.operations.impl;
 
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.mapper.LogMapper;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.mapper.analysis.LogMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.mq.AnalysisTaskMessage;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
 import com.example.retinavision.mq.RabbitMqProperties;
-import com.example.retinavision.pojo.Entity.LogEntity;
+import com.example.retinavision.pojo.analysis.entity.LogEntity;
 import com.example.retinavision.service.analysis.AnalysisTaskRetryService;
 import com.example.retinavision.service.operations.DeadLetterRecoveryService;
 import org.springframework.amqp.core.Message;

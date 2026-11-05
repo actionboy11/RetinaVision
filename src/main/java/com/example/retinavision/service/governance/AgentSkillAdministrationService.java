@@ -1,8 +1,8 @@
 package com.example.retinavision.service.governance;
 
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillEvaluationRunEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.governance.entity.AgentSkillEvaluationRunEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 
 import java.util.List;
 

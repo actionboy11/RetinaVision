@@ -1,14 +1,14 @@
 package com.example.retinavision.controller.clinical;
 
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.enumeration.TaskType;
-import com.example.retinavision.mapper.AnalysisResultMapper;
-import com.example.retinavision.pojo.DTO.TaskListQueryDTO;
-import com.example.retinavision.pojo.Entity.AnalysisResultEntity;
-import com.example.retinavision.pojo.VO.AnalysisResultVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.DoctorReviewReminderVO;
-import com.example.retinavision.pojo.VO.TaskListItemVO;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.enumeration.analysis.TaskType;
+import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
+import com.example.retinavision.pojo.analysis.dto.TaskListQueryDTO;
+import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
+import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.clinical.vo.DoctorReviewReminderVO;
+import com.example.retinavision.pojo.analysis.vo.TaskListItemVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.analysis.AnalysisResultService;

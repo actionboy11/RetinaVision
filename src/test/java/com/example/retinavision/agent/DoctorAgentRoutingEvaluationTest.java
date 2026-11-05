@@ -1,6 +1,7 @@
 package com.example.retinavision.agent;
+import com.example.retinavision.enumeration.analysis.TaskType;
 
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

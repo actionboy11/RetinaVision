@@ -1,13 +1,14 @@
 package com.example.retinavision.service.knowledge.impl;
+import com.example.retinavision.enumeration.knowledge.KnowledgeAudience;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.KnowledgeChunkMapper;
-import com.example.retinavision.mapper.KnowledgeDocumentMapper;
-import com.example.retinavision.pojo.DTO.KnowledgeDocumentCreateDTO;
-import com.example.retinavision.pojo.Entity.KnowledgeChunkEntity;
-import com.example.retinavision.pojo.Entity.KnowledgeDocumentEntity;
+import com.example.retinavision.mapper.knowledge.KnowledgeChunkMapper;
+import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeChunkEntity;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
 import com.example.retinavision.rag.EmbeddingClient;
 import com.example.retinavision.rag.EmbeddingProperties;
 import com.example.retinavision.rag.QdrantClient;
@@ -68,7 +69,7 @@ public class KnowledgeIngestionServiceImpl implements KnowledgeIngestionService 
         document.setOriginalContent(request.content().trim());
         document.setCategory(normalizeCategory(request.category()));
         document.setAudience(request.audience() == null
-                ? com.example.retinavision.enumeration.KnowledgeAudience.PUBLIC : request.audience());
+                ? com.example.retinavision.enumeration.knowledge.KnowledgeAudience.PUBLIC : request.audience());
         document.setStatus("INDEXING");
         document.setVersion(1);
         document.setUploadedBy(userId);

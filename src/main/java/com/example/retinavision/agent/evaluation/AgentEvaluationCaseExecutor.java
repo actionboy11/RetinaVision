@@ -1,7 +1,7 @@
 package com.example.retinavision.agent.evaluation;
 
-import com.example.retinavision.pojo.Entity.AgentEvaluationCaseEntity;
-import com.example.retinavision.pojo.Entity.AgentEvaluationRunEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationCaseEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
 
 @FunctionalInterface
 public interface AgentEvaluationCaseExecutor {

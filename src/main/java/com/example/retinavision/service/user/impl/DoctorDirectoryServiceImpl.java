@@ -1,10 +1,10 @@
 package com.example.retinavision.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.Entity.UserEntity;
-import com.example.retinavision.pojo.VO.DoctorOptionVO;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.user.entity.UserEntity;
+import com.example.retinavision.pojo.user.vo.DoctorOptionVO;
 import com.example.retinavision.service.user.DoctorDirectoryService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;

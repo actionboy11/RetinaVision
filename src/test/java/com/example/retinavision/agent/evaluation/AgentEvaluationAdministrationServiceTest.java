@@ -1,12 +1,20 @@
 package com.example.retinavision.agent.evaluation;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationCaseMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationDatasetMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationResultMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationRunMapper;
+import com.example.retinavision.mapper.governance.PromptTemplateMapper;
+import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.llm.LlmProperties;
-import com.example.retinavision.mapper.*;
-import com.example.retinavision.pojo.Entity.AgentEvaluationRunEntity;
-import com.example.retinavision.pojo.VO.AgentEvaluationResultVO;
-import com.example.retinavision.pojo.VO.AgentEvaluationRunVO;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationResultVO;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationRunVO;
 import com.example.retinavision.result.PageResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

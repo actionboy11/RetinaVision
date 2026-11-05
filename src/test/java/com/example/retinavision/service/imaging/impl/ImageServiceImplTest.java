@@ -1,15 +1,16 @@
 package com.example.retinavision.service.imaging.impl;
+import com.example.retinavision.mapper.analysis.TaskMapper;
 
-import com.example.retinavision.enumeration.CaseStatus;
-import com.example.retinavision.enumeration.TaskType;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.DTO.CreateTaskDTO;
-import com.example.retinavision.pojo.Entity.CaseEntity;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.enumeration.cases.CaseStatus;
+import com.example.retinavision.enumeration.analysis.TaskType;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
+import com.example.retinavision.pojo.cases.entity.CaseEntity;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.service.analysis.TaskService;
-import com.example.retinavision.pojo.VO.CreateTaskVO;
+import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,7 @@ class ImageServiceImplTest {
     @Mock CaseMapper caseMapper;
     @Mock UserRegisterMapper userMapper;
     @Mock TaskService taskService;
-    @Mock com.example.retinavision.mapper.TaskMapper taskMapper;
+    @Mock com.example.retinavision.mapper.analysis.TaskMapper taskMapper;
     @TempDir Path tempDir;
 
     @Test

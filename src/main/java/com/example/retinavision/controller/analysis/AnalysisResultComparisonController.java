@@ -1,7 +1,7 @@
 package com.example.retinavision.controller.analysis;
 
-import com.example.retinavision.pojo.VO.AnalysisResultComparisonVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.analysis.vo.AnalysisResultComparisonVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
 import com.example.retinavision.service.cases.ClinicalAccessService;

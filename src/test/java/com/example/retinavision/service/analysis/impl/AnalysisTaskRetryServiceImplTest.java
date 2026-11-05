@@ -1,11 +1,11 @@
 package com.example.retinavision.service.analysis.impl;
 
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.mapper.LogMapper;
-import com.example.retinavision.mapper.TaskMapper;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.mapper.analysis.LogMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mq.RabbitMqProperties;
-import com.example.retinavision.pojo.Entity.LogEntity;
-import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.pojo.analysis.entity.LogEntity;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

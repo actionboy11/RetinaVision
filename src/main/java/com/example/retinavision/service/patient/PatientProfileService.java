@@ -1,10 +1,10 @@
 package com.example.retinavision.service.patient;
 
-import com.example.retinavision.pojo.DTO.PatientAccountLinkDTO;
-import com.example.retinavision.pojo.Entity.PatientProfileEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.LegacyPatientProfileVO;
-import com.example.retinavision.pojo.VO.PatientProfileVO;
+import com.example.retinavision.pojo.patient.dto.PatientAccountLinkDTO;
+import com.example.retinavision.pojo.patient.entity.PatientProfileEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.patient.vo.LegacyPatientProfileVO;
+import com.example.retinavision.pojo.patient.vo.PatientProfileVO;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.example.retinavision.service.cases;
 
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 //  ClinicalAccessService 用于检查当前用户是否有权限访问临床数据
 public interface ClinicalAccessService {

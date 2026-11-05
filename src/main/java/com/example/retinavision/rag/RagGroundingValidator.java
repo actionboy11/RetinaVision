@@ -2,7 +2,7 @@ package com.example.retinavision.rag;
 
 import com.example.retinavision.llm.LlmSafetyPolicy;
 import com.example.retinavision.llm.PromptScenario;
-import com.example.retinavision.pojo.VO.KnowledgeChatResponseVO;
+import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,5 @@
 package com.example.retinavision.agent;
+import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.llm.LlmGenerationResult;

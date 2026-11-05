@@ -1,6 +1,6 @@
 package com.example.retinavision.service.analysis;
 
-import com.example.retinavision.pojo.VO.AnalysisResultVO;
+import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
 
 import java.nio.file.Path;
 

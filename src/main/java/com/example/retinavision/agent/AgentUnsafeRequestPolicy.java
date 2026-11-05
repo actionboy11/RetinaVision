@@ -1,6 +1,6 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

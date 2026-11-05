@@ -1,9 +1,9 @@
 package com.example.retinavision.controller.patient;
 
-import com.example.retinavision.pojo.DTO.PatientAccountLinkDTO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.LegacyPatientProfileVO;
-import com.example.retinavision.pojo.VO.PatientProfileVO;
+import com.example.retinavision.pojo.patient.dto.PatientAccountLinkDTO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.patient.vo.LegacyPatientProfileVO;
+import com.example.retinavision.pojo.patient.vo.PatientProfileVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.patient.PatientProfileService;
 import org.springframework.security.core.Authentication;

@@ -1,7 +1,7 @@
 package com.example.retinavision.service.patient;
 
 import com.example.retinavision.agent.PatientReportExplanationResult;
-import com.example.retinavision.pojo.VO.PatientAgentReportDetailVO;
+import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
 
 public interface PatientReportExplanationService {
     PatientReportExplanationResult explain(PatientAgentReportDetailVO report);

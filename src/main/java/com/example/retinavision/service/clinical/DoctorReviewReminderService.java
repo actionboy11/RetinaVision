@@ -1,7 +1,7 @@
 package com.example.retinavision.service.clinical;
 
-import com.example.retinavision.pojo.VO.DoctorReviewReminderVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.clinical.vo.DoctorReviewReminderVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 public interface DoctorReviewReminderService {
 

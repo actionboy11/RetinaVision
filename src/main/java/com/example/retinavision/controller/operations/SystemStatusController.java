@@ -1,6 +1,6 @@
 package com.example.retinavision.controller.operations;
 
-import com.example.retinavision.pojo.VO.SystemStatusVO;
+import com.example.retinavision.pojo.operations.vo.SystemStatusVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.operations.SystemStatusService;
 import org.springframework.web.bind.annotation.GetMapping;

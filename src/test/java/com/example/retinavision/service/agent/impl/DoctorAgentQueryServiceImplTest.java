@@ -1,4 +1,6 @@
 package com.example.retinavision.service.agent.impl;
+import com.example.retinavision.enumeration.analysis.TaskType;
+import com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO;
 
 import com.example.retinavision.agent.DoctorCaseSearchCriteria;
 import com.example.retinavision.agent.DoctorDateWindow;
@@ -8,15 +10,15 @@ import com.example.retinavision.agent.DoctorTaskSearchCriteria;
 import com.example.retinavision.agent.DoctorTaskStatusFilter;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.agent.SegmentationState;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.DoctorAgentQueryMapper;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.DoctorAgentCaseSummaryVO;
-import com.example.retinavision.pojo.VO.DoctorAgentTaskDetailVO;
-import com.example.retinavision.pojo.VO.DoctorAgentTaskLogVO;
-import com.example.retinavision.pojo.VO.DoctorAgentTaskSummaryVO;
-import com.example.retinavision.pojo.VO.DoctorClinicalQueueItemVO;
+import com.example.retinavision.mapper.cases.DoctorAgentQueryMapper;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
+import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskDetailVO;
+import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskLogVO;
+import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskSummaryVO;
+import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -61,7 +63,7 @@ class DoctorAgentQueryServiceImplTest {
         CurrentUserVO doctor = new CurrentUserVO();
         doctor.setId(27);
         doctor.setRoleCode(UserRole.DOCTOR);
-        var expected = new com.example.retinavision.pojo.VO.DoctorWorkloadVO(4, 7, 2, 3, 1, 1);
+        var expected = new com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO(4, 7, 2, 3, 1, 1);
         when(mapper.selectWorkload(27)).thenReturn(expected);
 
         assertThat(service.getClinicalWorkload(doctor)).isEqualTo(expected);

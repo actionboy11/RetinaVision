@@ -1,28 +1,29 @@
 package com.example.retinavision.service.cases.impl;
+import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.CaseStatus;
-import com.example.retinavision.enumeration.CaseWorkflowStatus;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.cases.CaseStatus;
+import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.DTO.CaseDoctorAssignmentDTO;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.Entity.PatientProfileEntity;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
-import com.example.retinavision.pojo.Entity.UserEntity;
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.pojo.DTO.CaseInsertDTO;
-import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
-import com.example.retinavision.pojo.DTO.CaseUpdateDTO;
-import com.example.retinavision.pojo.Entity.CaseEntity;
-import com.example.retinavision.pojo.VO.CaseListItemVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.cases.dto.CaseDoctorAssignmentDTO;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.pojo.patient.entity.PatientProfileEntity;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
+import com.example.retinavision.pojo.user.entity.UserEntity;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.pojo.cases.dto.CaseInsertDTO;
+import com.example.retinavision.pojo.cases.dto.CaseListQueryDTO;
+import com.example.retinavision.pojo.cases.dto.CaseUpdateDTO;
+import com.example.retinavision.pojo.cases.entity.CaseEntity;
+import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.cases.CaseService;
 import com.example.retinavision.service.patient.PatientProfileService;
@@ -290,7 +291,7 @@ public class CaseServiceImpl implements CaseService {
         }
         Long analysisCount = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
                 .eq(TaskEntity::getCaseId, caseId.longValue())
-                .eq(TaskEntity::getTaskType, com.example.retinavision.enumeration.TaskType.VESSEL_SEGMENTATION));
+                .eq(TaskEntity::getTaskType, com.example.retinavision.enumeration.analysis.TaskType.VESSEL_SEGMENTATION));
         if (analysisCount != null && analysisCount > 0) {
             throw new BaseException(ErrorMessageSignal.CONFLICT, "医生已开始分析，病例不能撤回");
         }

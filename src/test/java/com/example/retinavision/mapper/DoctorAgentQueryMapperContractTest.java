@@ -1,4 +1,8 @@
 package com.example.retinavision.mapper;
+import com.example.retinavision.enumeration.cases.EyeSide;
+import com.example.retinavision.enumeration.clinical.ReviewStatus;
+import com.example.retinavision.enumeration.reporting.ReportStatus;
+import com.example.retinavision.mapper.cases.DoctorAgentQueryMapper;
 
 import org.junit.jupiter.api.Test;
 

@@ -2,9 +2,9 @@ package com.example.retinavision.analysis.infrastructure.image;
 
 import com.example.retinavision.analysis.application.model.SourceImage;
 import com.example.retinavision.analysis.application.port.out.SourceImageReader;
-import com.example.retinavision.enumeration.ImageStatus;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
+import com.example.retinavision.enumeration.imaging.ImageStatus;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 
 public final class MyBatisSourceImageReader implements SourceImageReader {
 

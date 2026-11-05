@@ -1,12 +1,16 @@
 package com.example.retinavision.controller.governance;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationDatasetVO;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationOptionsVO;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationResultVO;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationRunVO;
 
 import com.example.retinavision.agent.evaluation.*;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.pojo.DTO.ReviewAgentEvaluationDTO;
-import com.example.retinavision.pojo.DTO.StartAgentEvaluationDTO;
-import com.example.retinavision.pojo.VO.*;
+import com.example.retinavision.pojo.governance.dto.ReviewAgentEvaluationDTO;
+import com.example.retinavision.pojo.governance.dto.StartAgentEvaluationDTO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
 import org.springframework.security.core.Authentication;

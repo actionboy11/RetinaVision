@@ -1,14 +1,14 @@
 package com.example.retinavision.service.patient.impl;
 
-import com.example.retinavision.enumeration.PatientProfileSource;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.PatientProfileMapper;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.Entity.PatientProfileEntity;
-import com.example.retinavision.pojo.Entity.UserEntity;
-import com.example.retinavision.pojo.DTO.PatientAccountLinkDTO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.enumeration.patient.PatientProfileSource;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.patient.PatientProfileMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.patient.entity.PatientProfileEntity;
+import com.example.retinavision.pojo.user.entity.UserEntity;
+import com.example.retinavision.pojo.patient.dto.PatientAccountLinkDTO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

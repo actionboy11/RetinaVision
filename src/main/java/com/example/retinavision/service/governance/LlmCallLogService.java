@@ -1,6 +1,6 @@
 package com.example.retinavision.service.governance;
 
-import com.example.retinavision.pojo.Entity.LlmCallLogEntity;
+import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;

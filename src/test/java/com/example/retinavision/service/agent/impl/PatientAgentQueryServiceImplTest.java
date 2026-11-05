@@ -2,12 +2,12 @@ package com.example.retinavision.service.agent.impl;
 
 import com.example.retinavision.agent.PatientCaseSearchCriteria;
 import com.example.retinavision.agent.PatientQualityPresenter;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.PatientAgentQueryMapper;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
-import com.example.retinavision.pojo.VO.PatientAgentReportDetailVO;
-import com.example.retinavision.pojo.VO.PatientAgentSignedReportVO;
+import com.example.retinavision.mapper.patient.PatientAgentQueryMapper;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
+import com.example.retinavision.pojo.reporting.vo.PatientAgentSignedReportVO;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

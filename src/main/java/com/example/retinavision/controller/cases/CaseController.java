@@ -1,16 +1,17 @@
 package com.example.retinavision.controller.cases;
+import com.example.retinavision.enumeration.user.UserRole;
 
 
-import com.example.retinavision.pojo.DTO.CaseInsertDTO;
-import com.example.retinavision.pojo.DTO.CaseDoctorAssignmentDTO;
-import com.example.retinavision.pojo.DTO.CaseListQueryDTO;
-import com.example.retinavision.pojo.DTO.CaseUpdateDTO;
-import com.example.retinavision.enumeration.EyeSide;
-import com.example.retinavision.enumeration.TaskType;
-import com.example.retinavision.pojo.VO.CaseAnalysisTimelineVO;
-import com.example.retinavision.pojo.VO.CaseListItemVO;
-import com.example.retinavision.pojo.VO.CaseTrendSummaryVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.cases.dto.CaseInsertDTO;
+import com.example.retinavision.pojo.cases.dto.CaseDoctorAssignmentDTO;
+import com.example.retinavision.pojo.cases.dto.CaseListQueryDTO;
+import com.example.retinavision.pojo.cases.dto.CaseUpdateDTO;
+import com.example.retinavision.enumeration.cases.EyeSide;
+import com.example.retinavision.enumeration.analysis.TaskType;
+import com.example.retinavision.pojo.cases.vo.CaseAnalysisTimelineVO;
+import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
+import com.example.retinavision.pojo.cases.vo.CaseTrendSummaryVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
@@ -76,7 +77,7 @@ public class CaseController {
             //检验当前用户是否有权限访问该病例详情
             accessService.assertCanAccessCase(user(authentication), caseId.longValue());
             CaseListItemVO caseListItemVO =caseService.getCaseById(caseId);
-            if (user(authentication).getRoleCode() == com.example.retinavision.enumeration.UserRole.USER) {
+            if (user(authentication).getRoleCode() == com.example.retinavision.enumeration.user.UserRole.USER) {
                 caseListItemVO.setDiagnosisNote(null);
             }
             return Result.success(caseListItemVO);

@@ -1,7 +1,7 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.pojo.VO.AgentCitationVO;
-import com.example.retinavision.pojo.VO.AgentToolCallSummaryVO;
+import com.example.retinavision.pojo.agent.vo.AgentCitationVO;
+import com.example.retinavision.pojo.agent.vo.AgentToolCallSummaryVO;
 import org.springframework.ai.tool.ToolCallback;
 
 import java.util.ArrayList;

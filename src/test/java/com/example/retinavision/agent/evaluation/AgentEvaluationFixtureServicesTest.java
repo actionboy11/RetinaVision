@@ -1,9 +1,9 @@
 package com.example.retinavision.agent.evaluation;
 
 import com.example.retinavision.agent.*;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;

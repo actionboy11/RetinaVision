@@ -1,9 +1,9 @@
 package com.example.retinavision.service.governance.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.mapper.AgentSkillExecutionLogMapper;
-import com.example.retinavision.pojo.Entity.AgentSkillExecutionLogEntity;
-import com.example.retinavision.pojo.VO.AgentSkillExecutionVO;
+import com.example.retinavision.mapper.governance.AgentSkillExecutionLogMapper;
+import com.example.retinavision.pojo.governance.entity.AgentSkillExecutionLogEntity;
+import com.example.retinavision.pojo.governance.vo.AgentSkillExecutionVO;
 import com.example.retinavision.service.governance.AgentSkillExecutionQueryService;
 import org.springframework.stereotype.Service;
 

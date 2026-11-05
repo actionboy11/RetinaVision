@@ -1,16 +1,20 @@
 package com.example.retinavision.agent.evaluation;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationCaseEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunBindingEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.agent.*;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.llm.LlmException;
 import com.example.retinavision.llm.LlmOrchestrationService;
-import com.example.retinavision.mapper.AgentEvaluationRunBindingMapper;
-import com.example.retinavision.mapper.AgentSkillMapper;
-import com.example.retinavision.mapper.AgentSkillVersionMapper;
-import com.example.retinavision.pojo.Entity.*;
+import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

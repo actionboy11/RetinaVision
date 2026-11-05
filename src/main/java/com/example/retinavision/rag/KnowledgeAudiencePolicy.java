@@ -1,9 +1,9 @@
 package com.example.retinavision.rag;
 
-import com.example.retinavision.enumeration.KnowledgeAudience;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.mapper.KnowledgeDocumentMapper;
-import com.example.retinavision.pojo.Entity.KnowledgeDocumentEntity;
+import com.example.retinavision.enumeration.knowledge.KnowledgeAudience;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
 

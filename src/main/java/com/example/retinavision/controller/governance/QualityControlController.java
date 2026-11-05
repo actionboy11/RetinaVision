@@ -1,9 +1,9 @@
 package com.example.retinavision.controller.governance;
 
-import com.example.retinavision.pojo.VO.ModelPerformanceItemVO;
-import com.example.retinavision.pojo.VO.QualityControlOverviewVO;
-import com.example.retinavision.pojo.VO.ReviewStatisticsVO;
-import com.example.retinavision.pojo.VO.RiskAlertItemVO;
+import com.example.retinavision.pojo.operations.vo.ModelPerformanceItemVO;
+import com.example.retinavision.pojo.governance.vo.QualityControlOverviewVO;
+import com.example.retinavision.pojo.clinical.vo.ReviewStatisticsVO;
+import com.example.retinavision.pojo.governance.vo.RiskAlertItemVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.governance.QualityControlService;
 import org.springframework.web.bind.annotation.GetMapping;

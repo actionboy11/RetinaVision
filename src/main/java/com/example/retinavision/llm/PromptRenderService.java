@@ -1,6 +1,6 @@
 package com.example.retinavision.llm;
 
-import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import org.springframework.stereotype.Component;
 
 @Component

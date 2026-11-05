@@ -2,7 +2,7 @@ package com.example.retinavision.mq;
 
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.exception.BaseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

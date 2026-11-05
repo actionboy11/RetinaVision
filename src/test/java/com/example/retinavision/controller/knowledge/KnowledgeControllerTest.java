@@ -1,11 +1,11 @@
 package com.example.retinavision.controller.knowledge;
 
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.pojo.DTO.KnowledgeDocumentCreateDTO;
-import com.example.retinavision.pojo.DTO.KnowledgeDocumentStatusDTO;
-import com.example.retinavision.pojo.Entity.KnowledgeDocumentEntity;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentStatusDTO;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.knowledge.KnowledgeChatService;
 import com.example.retinavision.service.knowledge.KnowledgeIngestionService;
 import org.junit.jupiter.api.Test;

@@ -1,24 +1,25 @@
 package com.example.retinavision.service.imaging.impl;
+import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageContant;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.CaseStatus;
-import com.example.retinavision.enumeration.ImageStatus;
-import com.example.retinavision.enumeration.ImageQualityStatus;
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.cases.CaseStatus;
+import com.example.retinavision.enumeration.imaging.ImageStatus;
+import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.pojo.Entity.CaseEntity;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
-import com.example.retinavision.pojo.Entity.UserEntity;
-import com.example.retinavision.pojo.DTO.CreateTaskDTO;
-import com.example.retinavision.pojo.VO.ImageFileItemVO;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.pojo.cases.entity.CaseEntity;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
+import com.example.retinavision.pojo.user.entity.UserEntity;
+import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
+import com.example.retinavision.pojo.imaging.vo.ImageFileItemVO;
 import com.example.retinavision.service.imaging.ImageService;
 import com.example.retinavision.service.analysis.TaskService;
 import org.springframework.beans.factory.annotation.Value;
@@ -138,7 +139,7 @@ public class ImageServiceImpl implements ImageService {
                 .imageWidth(imageWidth)
                 .imageHeight(imageHeight)
                 .status(ImageStatus.UPLOADED)
-                .qualityStatus(com.example.retinavision.enumeration.ImageQualityStatus.NOT_CHECKED)
+                .qualityStatus(com.example.retinavision.enumeration.imaging.ImageQualityStatus.NOT_CHECKED)
                 .uploadedBy(userid.longValue())
                 .uploadedAt(now)
                 .updatedAt(now)
@@ -149,7 +150,7 @@ public class ImageServiceImpl implements ImageService {
         imageMapper.updateById(imageEntity);
 
         try {
-            com.example.retinavision.pojo.VO.CreateTaskVO qualityTask = taskService.createTask(new CreateTaskDTO(
+            com.example.retinavision.pojo.analysis.vo.CreateTaskVO qualityTask = taskService.createTask(new CreateTaskDTO(
                     caseId.longValue(), imageEntity.getId(), TaskType.IMAGE_QUALITY_CHECK, 5), userid);
             imageEntity.setQualityStatus(ImageQualityStatus.CHECKING);
             imageEntity.setQualityTaskId(qualityTask.getId());
@@ -210,7 +211,7 @@ public class ImageServiceImpl implements ImageService {
         if (status == ImageQualityStatus.FAIL) {
             throw new com.example.retinavision.exception.ConflictException("图像质量未通过，请重新上传图像");
         }
-        com.example.retinavision.pojo.VO.CreateTaskVO task = taskService.createTask(
+        com.example.retinavision.pojo.analysis.vo.CreateTaskVO task = taskService.createTask(
                 new CreateTaskDTO(image.getCaseId(), image.getId(), TaskType.IMAGE_QUALITY_CHECK, 5), userId);
         image.setQualityStatus(ImageQualityStatus.CHECKING);
         image.setQualityTaskId(task.getId());

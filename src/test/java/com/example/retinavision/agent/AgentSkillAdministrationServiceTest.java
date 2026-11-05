@@ -1,12 +1,12 @@
 package com.example.retinavision.agent;
 
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.AgentSkillEvaluationRunMapper;
-import com.example.retinavision.mapper.AgentSkillMapper;
-import com.example.retinavision.mapper.AgentSkillVersionMapper;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillEvaluationRunEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
+import com.example.retinavision.mapper.governance.AgentSkillEvaluationRunMapper;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.governance.entity.AgentSkillEvaluationRunEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 import com.example.retinavision.service.governance.impl.AgentSkillAdministrationServiceImpl;
 import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
 import com.fasterxml.jackson.databind.ObjectMapper;

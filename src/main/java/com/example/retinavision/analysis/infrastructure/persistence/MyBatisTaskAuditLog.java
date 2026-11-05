@@ -2,9 +2,9 @@ package com.example.retinavision.analysis.infrastructure.persistence;
 
 import com.example.retinavision.analysis.application.port.out.TaskAuditLog;
 import com.example.retinavision.analysis.domain.model.TaskTransition;
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.mapper.LogMapper;
-import com.example.retinavision.pojo.Entity.LogEntity;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.mapper.analysis.LogMapper;
+import com.example.retinavision.pojo.analysis.entity.LogEntity;
 
 public final class MyBatisTaskAuditLog implements TaskAuditLog {
 

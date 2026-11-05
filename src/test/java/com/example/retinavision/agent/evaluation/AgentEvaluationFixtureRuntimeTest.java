@@ -1,7 +1,7 @@
 package com.example.retinavision.agent.evaluation;
 
 import com.example.retinavision.agent.*;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import org.junit.jupiter.api.Test;
 

@@ -1,10 +1,11 @@
 package com.example.retinavision.service.auth.impl;
+import com.example.retinavision.pojo.auth.dto.UserRegisterDTO;
 
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.AccountNotFoundException;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.pojo.DTO.UserLoginDTO;
-import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.pojo.auth.dto.UserLoginDTO;
+import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.service.auth.LoginAttemptService;
 import com.example.retinavision.service.auth.JwtBlacklistService;
 import com.example.retinavision.service.patient.PatientProfileService;
@@ -62,7 +63,7 @@ class UserLoginServiceImplTest {
 
     @Test
     void publicRegistrationAlwaysCreatesUserRole() {
-        com.example.retinavision.pojo.DTO.UserRegisterDTO dto = new com.example.retinavision.pojo.DTO.UserRegisterDTO();
+        com.example.retinavision.pojo.auth.dto.UserRegisterDTO dto = new com.example.retinavision.pojo.auth.dto.UserRegisterDTO();
         dto.setUsername("newuser");
         dto.setPassword("secret1");
         dto.setRealName("New User");

@@ -1,13 +1,13 @@
 package com.example.retinavision.service.agent.impl;
 
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.VO.CaseListItemVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.agent.AgentClinicalReferenceService;
 import org.springframework.stereotype.Service;
 

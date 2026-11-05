@@ -1,7 +1,7 @@
 package com.example.retinavision.service.governance;
 
-import com.example.retinavision.pojo.Entity.PromptTemplateEntity;
-import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 
 import java.util.List;
 

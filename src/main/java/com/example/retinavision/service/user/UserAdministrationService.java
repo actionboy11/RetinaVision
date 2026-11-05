@@ -1,7 +1,7 @@
 package com.example.retinavision.service.user;
 
-import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
-import com.example.retinavision.pojo.VO.AdminUserItemVO;
+import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
+import com.example.retinavision.pojo.user.vo.AdminUserItemVO;
 import java.util.List;
 
 public interface UserAdministrationService {

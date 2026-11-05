@@ -1,11 +1,11 @@
 package com.example.retinavision.service.user.impl;
 
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
-import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
+import com.example.retinavision.pojo.user.entity.UserEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

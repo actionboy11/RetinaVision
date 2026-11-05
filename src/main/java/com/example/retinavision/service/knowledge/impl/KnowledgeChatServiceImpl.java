@@ -1,4 +1,5 @@
 package com.example.retinavision.service.knowledge.impl;
+import com.example.retinavision.enumeration.user.UserRole;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageSignal;
@@ -7,13 +8,13 @@ import com.example.retinavision.llm.LlmGenerationResult;
 import com.example.retinavision.llm.LlmOrchestrationService;
 import com.example.retinavision.llm.LlmSafetyPolicy;
 import com.example.retinavision.llm.PromptScenario;
-import com.example.retinavision.mapper.KnowledgeChatMessageMapper;
-import com.example.retinavision.mapper.KnowledgeChatSessionMapper;
-import com.example.retinavision.pojo.DTO.KnowledgeChatRequestDTO;
-import com.example.retinavision.pojo.Entity.KnowledgeChatMessageEntity;
-import com.example.retinavision.pojo.Entity.KnowledgeChatSessionEntity;
-import com.example.retinavision.pojo.VO.KnowledgeChatResponseVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.mapper.knowledge.KnowledgeChatMessageMapper;
+import com.example.retinavision.mapper.knowledge.KnowledgeChatSessionMapper;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatMessageEntity;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatSessionEntity;
+import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.rag.KnowledgeDocumentRetriever;
 import com.example.retinavision.rag.KnowledgeAudiencePolicy;
 import com.example.retinavision.rag.QdrantSearchHit;
@@ -122,7 +123,7 @@ public class KnowledgeChatServiceImpl implements KnowledgeChatService {
     }
 
     private KnowledgeChatResponseVO chatInternal(KnowledgeChatRequestDTO request, Integer userId,
-                                                  com.example.retinavision.enumeration.UserRole role) {
+                                                  com.example.retinavision.enumeration.user.UserRole role) {
         if (request == null || request.question() == null || request.question().isBlank()) {
             throw new BaseException(ErrorMessageSignal.PARAM_ERROR, "问题不能为空");
         }

@@ -1,8 +1,13 @@
 package com.example.retinavision.service.analysis;
+import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
+import com.example.retinavision.pojo.analysis.vo.RetryTaskVO;
+import com.example.retinavision.pojo.analysis.vo.TaskDetailVO;
+import com.example.retinavision.pojo.analysis.vo.TaskListItemVO;
+import com.example.retinavision.pojo.analysis.vo.TaskLogVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
-import com.example.retinavision.pojo.DTO.CreateTaskDTO;
-import com.example.retinavision.pojo.DTO.TaskListQueryDTO;
-import com.example.retinavision.pojo.VO.*;
+import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
+import com.example.retinavision.pojo.analysis.dto.TaskListQueryDTO;
 import com.example.retinavision.result.PageResult;
 
 import java.util.List;

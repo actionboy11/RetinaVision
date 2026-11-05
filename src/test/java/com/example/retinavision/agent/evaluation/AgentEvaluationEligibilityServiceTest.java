@@ -1,14 +1,18 @@
 package com.example.retinavision.agent.evaluation;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationDatasetMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationRunMapper;
+import com.example.retinavision.mapper.governance.PromptTemplateMapper;
 
 import com.example.retinavision.agent.AgentSkillRegistry;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.llm.LlmProperties;
-import com.example.retinavision.mapper.*;
-import com.example.retinavision.pojo.Entity.AgentEvaluationDatasetEntity;
-import com.example.retinavision.pojo.Entity.AgentEvaluationRunBindingEntity;
-import com.example.retinavision.pojo.Entity.AgentEvaluationRunEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.PromptTemplateEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationDatasetEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunBindingEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -1,13 +1,13 @@
 package com.example.retinavision.controller.governance;
 
-import com.example.retinavision.pojo.DTO.UpdateActiveAgentSkillVersionDTO;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.VO.AgentSkillVO;
-import com.example.retinavision.pojo.VO.AgentEvaluationRunVO;
+import com.example.retinavision.pojo.governance.dto.UpdateActiveAgentSkillVersionDTO;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.governance.vo.AgentSkillVO;
+import com.example.retinavision.pojo.governance.vo.AgentEvaluationRunVO;
 import com.example.retinavision.agent.evaluation.AgentEvaluationService;
 import com.example.retinavision.agent.evaluation.AgentEvaluationAdministrationService;
-import com.example.retinavision.pojo.VO.AgentSkillVersionVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.governance.vo.AgentSkillVersionVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.governance.AgentSkillAdministrationService;
 import org.springframework.security.core.Authentication;

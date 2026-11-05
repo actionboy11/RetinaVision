@@ -4,7 +4,7 @@ import com.example.retinavision.agent.PatientReportExplanationResult;
 import com.example.retinavision.llm.LlmOrchestrationService;
 import com.example.retinavision.llm.LlmSafetyPolicy;
 import com.example.retinavision.llm.PromptScenario;
-import com.example.retinavision.pojo.VO.PatientAgentReportDetailVO;
+import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
 import com.example.retinavision.service.patient.PatientReportExplanationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

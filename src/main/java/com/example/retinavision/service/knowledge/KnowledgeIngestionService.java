@@ -1,7 +1,7 @@
 package com.example.retinavision.service.knowledge;
 
-import com.example.retinavision.pojo.DTO.KnowledgeDocumentCreateDTO;
-import com.example.retinavision.pojo.Entity.KnowledgeDocumentEntity;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
 
 import java.util.List;
 

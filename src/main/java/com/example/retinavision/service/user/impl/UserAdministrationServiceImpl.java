@@ -2,14 +2,14 @@ package com.example.retinavision.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.UserRole;
+import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.UserRegisterMapper;
-import com.example.retinavision.mapper.CaseMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
+import com.example.retinavision.mapper.cases.CaseMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.pojo.Entity.CaseEntity;
-import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
-import com.example.retinavision.pojo.Entity.UserEntity;
+import com.example.retinavision.pojo.cases.entity.CaseEntity;
+import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
+import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.service.user.UserAdministrationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import com.example.retinavision.pojo.VO.AdminUserItemVO;
+import com.example.retinavision.pojo.user.vo.AdminUserItemVO;
 
 @Service
 // 用户管理服务实现类，提供用户角色分配和用户列表查询功能

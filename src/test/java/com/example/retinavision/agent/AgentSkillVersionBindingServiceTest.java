@@ -1,11 +1,11 @@
 package com.example.retinavision.agent;
 
-import com.example.retinavision.mapper.AgentSessionSkillVersionMapper;
-import com.example.retinavision.mapper.AgentSkillMapper;
-import com.example.retinavision.mapper.AgentSkillVersionMapper;
-import com.example.retinavision.pojo.Entity.AgentSessionSkillVersionEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
+import com.example.retinavision.mapper.agent.AgentSessionSkillVersionMapper;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.pojo.agent.entity.AgentSessionSkillVersionEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

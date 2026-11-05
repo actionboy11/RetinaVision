@@ -1,10 +1,10 @@
 package com.example.retinavision.llm;
 
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.PromptEvaluationRunMapper;
-import com.example.retinavision.mapper.PromptTemplateVersionMapper;
-import com.example.retinavision.pojo.Entity.PromptEvaluationRunEntity;
-import com.example.retinavision.pojo.Entity.PromptTemplateVersionEntity;
+import com.example.retinavision.mapper.governance.PromptEvaluationRunMapper;
+import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
+import com.example.retinavision.pojo.governance.entity.PromptEvaluationRunEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.example.retinavision.service.governance.PromptTemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

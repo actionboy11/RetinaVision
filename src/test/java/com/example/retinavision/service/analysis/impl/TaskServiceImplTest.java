@@ -1,30 +1,31 @@
 package com.example.retinavision.service.analysis.impl;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 import com.example.retinavision.analysis.application.model.AnalysisTaskRequestedEvent;
 import com.example.retinavision.analysis.application.port.out.AnalysisTaskEventOutbox;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
 import com.example.retinavision.constant.ErrorMessageSignal;
-import com.example.retinavision.enumeration.CaseStatus;
-import com.example.retinavision.enumeration.CaseWorkflowStatus;
-import com.example.retinavision.enumeration.ImageStatus;
-import com.example.retinavision.enumeration.ImageQualityStatus;
-import com.example.retinavision.enumeration.UserRole;
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.enumeration.TaskType;
+import com.example.retinavision.enumeration.cases.CaseStatus;
+import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
+import com.example.retinavision.enumeration.imaging.ImageStatus;
+import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.CaseMapper;
-import com.example.retinavision.mapper.ImageMapper;
-import com.example.retinavision.mapper.LogMapper;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.mapper.UserRegisterMapper;
+import com.example.retinavision.mapper.cases.CaseMapper;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.mapper.analysis.LogMapper;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.mapper.user.UserRegisterMapper;
 import com.example.retinavision.mq.AnalysisTaskMessagePublisher;
-import com.example.retinavision.pojo.DTO.CreateTaskDTO;
-import com.example.retinavision.pojo.DTO.TaskListQueryDTO;
-import com.example.retinavision.pojo.Entity.CaseEntity;
-import com.example.retinavision.pojo.Entity.ImageFileEntity;
-import com.example.retinavision.pojo.Entity.LogEntity;
-import com.example.retinavision.pojo.Entity.TaskEntity;
-import com.example.retinavision.pojo.VO.CreateTaskVO;
+import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
+import com.example.retinavision.pojo.analysis.dto.TaskListQueryDTO;
+import com.example.retinavision.pojo.cases.entity.CaseEntity;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
+import com.example.retinavision.pojo.analysis.entity.LogEntity;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
+import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
 import com.example.retinavision.service.analysis.AiQuotaReservation;
 import com.example.retinavision.service.analysis.AiTaskQuotaService;
 import com.example.retinavision.exception.RateLimitException;
@@ -222,7 +223,7 @@ class TaskServiceImplTest {
         when(taskMapper.selectTaskPage(any(), eq(null), eq(20), eq(0), eq(10)))
                 .thenReturn(java.util.List.of());
 
-        taskService.getLTaskList(query, new com.example.retinavision.pojo.VO.CurrentUserVO(
+        taskService.getLTaskList(query, new com.example.retinavision.pojo.auth.vo.CurrentUserVO(
                 20, "doctor", "Doctor", UserRole.DOCTOR));
 
         verify(taskMapper).countTaskPage(any(), eq(null), eq(20));

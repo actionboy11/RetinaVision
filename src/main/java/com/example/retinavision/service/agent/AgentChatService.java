@@ -1,10 +1,10 @@
 package com.example.retinavision.service.agent;
 
-import com.example.retinavision.pojo.DTO.AgentChatRequestDTO;
-import com.example.retinavision.pojo.Entity.AgentChatMessageEntity;
-import com.example.retinavision.pojo.Entity.AgentChatSessionEntity;
-import com.example.retinavision.pojo.VO.AgentChatResponseVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.agent.dto.AgentChatRequestDTO;
+import com.example.retinavision.pojo.agent.entity.AgentChatMessageEntity;
+import com.example.retinavision.pojo.agent.entity.AgentChatSessionEntity;
+import com.example.retinavision.pojo.agent.vo.AgentChatResponseVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 import java.util.List;
 

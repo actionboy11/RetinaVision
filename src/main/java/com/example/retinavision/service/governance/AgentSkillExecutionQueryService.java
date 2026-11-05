@@ -1,6 +1,6 @@
 package com.example.retinavision.service.governance;
 
-import com.example.retinavision.pojo.VO.AgentSkillExecutionVO;
+import com.example.retinavision.pojo.governance.vo.AgentSkillExecutionVO;
 
 import java.util.List;
 

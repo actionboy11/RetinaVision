@@ -1,8 +1,8 @@
 package com.example.retinavision.service.governance.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.mapper.LlmCallLogMapper;
-import com.example.retinavision.pojo.Entity.LlmCallLogEntity;
+import com.example.retinavision.mapper.governance.LlmCallLogMapper;
+import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
 import com.example.retinavision.service.governance.LlmCallLogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;

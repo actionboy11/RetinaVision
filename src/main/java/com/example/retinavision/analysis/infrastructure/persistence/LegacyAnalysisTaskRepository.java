@@ -5,9 +5,9 @@ import com.example.retinavision.analysis.application.port.out.AnalysisTaskReposi
 import com.example.retinavision.analysis.domain.model.AnalysisTask;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskStatus;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
-import com.example.retinavision.enumeration.TaskStatus;
-import com.example.retinavision.mapper.TaskMapper;
-import com.example.retinavision.pojo.Entity.TaskEntity;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.mapper.analysis.TaskMapper;
+import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 
 import java.time.Clock;
 import java.time.LocalDateTime;

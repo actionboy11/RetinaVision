@@ -1,8 +1,8 @@
 package com.example.retinavision.controller.operations;
 
-import com.example.retinavision.pojo.VO.QueueStatisticsVO;
-import com.example.retinavision.pojo.VO.TaskStatisticsVO;
-import com.example.retinavision.pojo.VO.TaskTrendItemVO;
+import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
+import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
+import com.example.retinavision.pojo.operations.vo.TaskTrendItemVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.operations.StatisticsService;
 import org.springframework.web.bind.annotation.GetMapping;

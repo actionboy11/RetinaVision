@@ -1,7 +1,7 @@
 package com.example.retinavision.controller.user;
 
-import com.example.retinavision.pojo.DTO.UpdateUserRoleDTO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.user.UserAdministrationService;
 import org.springframework.security.core.Authentication;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
-import com.example.retinavision.pojo.VO.AdminUserItemVO;
+import com.example.retinavision.pojo.user.vo.AdminUserItemVO;
 import java.util.List;
 
 @RestController

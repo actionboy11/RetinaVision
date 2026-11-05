@@ -1,12 +1,12 @@
 package com.example.retinavision.agent.evaluation;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.mapper.AgentEvaluationCaseMapper;
-import com.example.retinavision.mapper.AgentEvaluationResultMapper;
-import com.example.retinavision.mapper.AgentEvaluationRunMapper;
-import com.example.retinavision.pojo.Entity.AgentEvaluationCaseEntity;
-import com.example.retinavision.pojo.Entity.AgentEvaluationResultEntity;
-import com.example.retinavision.pojo.Entity.AgentEvaluationRunEntity;
+import com.example.retinavision.mapper.governance.AgentEvaluationCaseMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationResultMapper;
+import com.example.retinavision.mapper.governance.AgentEvaluationRunMapper;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationCaseEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationResultEntity;
+import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 

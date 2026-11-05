@@ -1,6 +1,6 @@
 package com.example.retinavision.service.reporting;
-import com.example.retinavision.pojo.DTO.UpdateReportDraftDTO;
-import com.example.retinavision.pojo.Entity.AnalysisReportEntity;
+import com.example.retinavision.pojo.reporting.dto.UpdateReportDraftDTO;
+import com.example.retinavision.pojo.reporting.entity.AnalysisReportEntity;
 import java.nio.file.Path;
 import java.util.List;
 // 分析报告服务接口 用于处理眼底图像分析报告的业务逻辑

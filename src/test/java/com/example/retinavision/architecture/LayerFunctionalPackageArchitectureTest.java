@@ -103,6 +103,25 @@ class LayerFunctionalPackageArchitectureTest {
                 () -> "HTTP/auth entry points still stored outside functional groups: " + violations);
     }
 
+    @Test
+    void persistence_models_are_grouped_by_function() {
+        Set<String> legacyPackages = Set.of(
+                BASE_PACKAGE + ".mapper",
+                BASE_PACKAGE + ".enumeration",
+                BASE_PACKAGE + ".pojo.DTO",
+                BASE_PACKAGE + ".pojo.Entity",
+                BASE_PACKAGE + ".pojo.VO");
+
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> legacyPackages.contains(javaClass.getPackageName()))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Persistence/model classes still stored outside functional groups: " + violations);
+    }
+
     private String relativePackage(JavaClass javaClass) {
         String packageName = javaClass.getPackageName();
         if (packageName.equals(BASE_PACKAGE)) {

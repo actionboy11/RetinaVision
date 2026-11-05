@@ -1,10 +1,10 @@
 package com.example.retinavision.service.knowledge;
 
-import com.example.retinavision.pojo.DTO.KnowledgeChatRequestDTO;
-import com.example.retinavision.pojo.Entity.KnowledgeChatMessageEntity;
-import com.example.retinavision.pojo.Entity.KnowledgeChatSessionEntity;
-import com.example.retinavision.pojo.VO.KnowledgeChatResponseVO;
-import com.example.retinavision.pojo.VO.CurrentUserVO;
+import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatMessageEntity;
+import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatSessionEntity;
+import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 import java.util.List;
 

@@ -3,12 +3,12 @@ package com.example.retinavision.agent;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.constant.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.mapper.AgentSessionSkillVersionMapper;
-import com.example.retinavision.mapper.AgentSkillMapper;
-import com.example.retinavision.mapper.AgentSkillVersionMapper;
-import com.example.retinavision.pojo.Entity.AgentSessionSkillVersionEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillEntity;
-import com.example.retinavision.pojo.Entity.AgentSkillVersionEntity;
+import com.example.retinavision.mapper.agent.AgentSessionSkillVersionMapper;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.pojo.agent.entity.AgentSessionSkillVersionEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

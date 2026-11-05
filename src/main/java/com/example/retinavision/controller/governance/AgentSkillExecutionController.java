@@ -1,6 +1,6 @@
 package com.example.retinavision.controller.governance;
 
-import com.example.retinavision.pojo.VO.AgentSkillExecutionVO;
+import com.example.retinavision.pojo.governance.vo.AgentSkillExecutionVO;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.governance.AgentSkillExecutionQueryService;
 import org.springframework.web.bind.annotation.GetMapping;

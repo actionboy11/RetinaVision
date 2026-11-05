@@ -1,9 +1,11 @@
 package com.example.retinavision.agent;
+import com.example.retinavision.enumeration.analysis.TaskStatus;
+import com.example.retinavision.enumeration.analysis.TaskType;
 
-import com.example.retinavision.enumeration.EyeSide;
+import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.analysis.domain.model.AnalysisTaskType;
-import com.example.retinavision.mapper.AgentQueryContextMapper;
-import com.example.retinavision.pojo.Entity.AgentQueryContextEntity;
+import com.example.retinavision.mapper.agent.AgentQueryContextMapper;
+import com.example.retinavision.pojo.agent.entity.AgentQueryContextEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

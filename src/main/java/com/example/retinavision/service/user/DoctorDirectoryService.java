@@ -1,6 +1,6 @@
 package com.example.retinavision.service.user;
 
-import com.example.retinavision.pojo.VO.DoctorOptionVO;
+import com.example.retinavision.pojo.user.vo.DoctorOptionVO;
 
 import java.util.List;
 
