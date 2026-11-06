@@ -1,4 +1,6 @@
-package com.example.retinavision.exception;
+package com.example.retinavision.exception.auth;
+
+import com.example.retinavision.exception.shared.BaseException;
 
 /**
  * 账号不存在异常

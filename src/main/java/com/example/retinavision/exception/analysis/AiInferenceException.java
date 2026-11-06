@@ -1,4 +1,6 @@
-package com.example.retinavision.ai.analysis;
+package com.example.retinavision.exception.analysis;
+
+import com.example.retinavision.ai.analysis.AiFailureCategory;
 
 public class AiInferenceException extends RuntimeException {
     private final AiFailureCategory category;

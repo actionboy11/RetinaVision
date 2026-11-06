@@ -1,8 +1,8 @@
-package com.example.retinavision.llm.shared;
+package com.example.retinavision.exception.llm;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 
 public class LlmException extends BaseException {
     public LlmException(String message) {

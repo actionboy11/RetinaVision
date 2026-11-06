@@ -1,6 +1,7 @@
 package com.example.retinavision.ai.analysis;
 
 import com.example.retinavision.ai.analysis.dto.AiInferenceResponse;
+import com.example.retinavision.exception.analysis.AiInferenceException;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;

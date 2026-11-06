@@ -3,7 +3,7 @@ package com.example.retinavision.service.operations.impl;
 import com.example.retinavision.constant.shared.ErrorMessageContant;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.operations.StatisticsMapper;
 import com.example.retinavision.mq.analysis.RabbitMqProperties;
 import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;

@@ -1,6 +1,6 @@
 package com.example.retinavision.llm.shared;
 
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.llm.shared.OpenAiCompatibleLlmClient;
 

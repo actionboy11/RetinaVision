@@ -1,7 +1,7 @@
 package com.example.retinavision.service.cases.impl;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmGenerationResult;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
@@ -13,7 +13,7 @@ import com.example.retinavision.enumeration.reporting.ReportStatus;
 import com.example.retinavision.enumeration.clinical.ReviewStatus;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.reporting.AnalysisReportMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.clinical.AnalysisReviewMapper;

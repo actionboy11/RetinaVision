@@ -7,7 +7,7 @@ import com.example.retinavision.service.agent.AgentSkillRegistry;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.AgentEvaluationDatasetMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunMapper;

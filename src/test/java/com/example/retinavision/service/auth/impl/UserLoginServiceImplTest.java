@@ -2,7 +2,7 @@ package com.example.retinavision.service.auth.impl;
 import com.example.retinavision.pojo.auth.dto.UserRegisterDTO;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.AccountNotFoundException;
+import com.example.retinavision.exception.auth.AccountNotFoundException;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
 import com.example.retinavision.pojo.auth.dto.UserLoginDTO;
 import com.example.retinavision.pojo.user.entity.UserEntity;

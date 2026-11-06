@@ -62,7 +62,7 @@ public class RagGroundingValidator {
                         hit.chunkId(), hit.source(), quote, hit.score()));
             }
             return new Validation(true, answer, List.copyOf(citations));
-        } catch (com.example.retinavision.exception.BaseException exception) {
+        } catch (com.example.retinavision.exception.shared.BaseException exception) {
             throw exception;
         } catch (Exception exception) {
             return Validation.invalid();

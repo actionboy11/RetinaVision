@@ -12,7 +12,7 @@ import com.example.retinavision.enumeration.cases.EyeSide;
 
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;

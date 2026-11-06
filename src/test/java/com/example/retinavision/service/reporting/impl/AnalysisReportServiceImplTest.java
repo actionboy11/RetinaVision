@@ -5,7 +5,7 @@ import com.example.retinavision.enumeration.reporting.ReportStatus;
 import com.example.retinavision.enumeration.clinical.ReviewStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.clinical.AnalysisCorrectionMapper;
 import com.example.retinavision.mapper.reporting.AnalysisReportMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;

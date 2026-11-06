@@ -25,10 +25,10 @@ class LayerFunctionalPackageArchitectureTest {
             "operations", "shared");
 
     private static final Set<String> TRACKED_ROOTS = Set.of(
-            "agent", "ai", "analysis", "common", "config", "constant",
+            "agent", "ai", "analysis", "application", "common", "config", "constant",
             "controller", "enumeration", "exception", "filter", "llm",
-            "mapper", "mq", "pojo", "rag", "redis", "result", "service",
-            "utils");
+            "infrastructure", "mapper", "mq", "pojo", "port", "rag", "redis",
+            "result", "service", "utils");
 
     private static final Set<String> FUNCTIONALIZED_ROOTS = Set.of(
             "agent", "ai", "analysis", "common", "config", "constant",

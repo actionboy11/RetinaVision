@@ -1,4 +1,6 @@
-package com.example.retinavision.pojo.analysis.domain;
+package com.example.retinavision.exception.analysis;
+
+import com.example.retinavision.pojo.analysis.domain.AnalysisTaskStatus;
 
 public final class IllegalTaskTransitionException extends IllegalStateException {
 

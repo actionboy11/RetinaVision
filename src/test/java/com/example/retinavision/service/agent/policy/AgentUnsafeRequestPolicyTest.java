@@ -3,7 +3,7 @@ package com.example.retinavision.service.agent.policy;
 import com.example.retinavision.service.agent.policy.AgentUnsafeRequestPolicy;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatCode;

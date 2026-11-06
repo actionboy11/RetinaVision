@@ -1,4 +1,4 @@
-package com.example.retinavision.exception;
+package com.example.retinavision.exception.shared;
 // 基础异常类
 public class BaseException extends RuntimeException {
     private int code;

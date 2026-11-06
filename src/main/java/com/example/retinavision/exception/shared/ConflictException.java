@@ -1,4 +1,4 @@
-package com.example.retinavision.exception;
+package com.example.retinavision.exception.shared;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 // 冲突异常类

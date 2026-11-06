@@ -2,7 +2,7 @@ package com.example.retinavision.service.governance.evaluation;
 
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOutcome;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
-import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationInfrastructureException;
+import com.example.retinavision.exception.evaluation.AgentEvaluationInfrastructureException;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationScore;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

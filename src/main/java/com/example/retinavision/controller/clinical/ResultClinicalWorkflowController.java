@@ -2,7 +2,7 @@ package com.example.retinavision.controller.clinical;
 
 import com.example.retinavision.enumeration.reporting.ReportStatus;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.clinical.dto.SubmitFeedbackDTO;
 import com.example.retinavision.pojo.clinical.dto.SubmitReviewDTO;
 import com.example.retinavision.pojo.reporting.dto.UpdateReportDraftDTO;

@@ -5,7 +5,7 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.AccountNotFoundException;
+import com.example.retinavision.exception.auth.AccountNotFoundException;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
 import com.example.retinavision.pojo.auth.dto.UserLoginDTO;
 import com.example.retinavision.pojo.auth.dto.UserRegisterDTO;
@@ -17,7 +17,7 @@ import com.example.retinavision.service.auth.LoginAttemptService;
 import com.example.retinavision.service.auth.JwtBlacklistService;
 import com.example.retinavision.service.patient.PatientProfileService;
 import com.example.retinavision.utils.auth.JwtUtil;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import io.jsonwebtoken.Claims;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

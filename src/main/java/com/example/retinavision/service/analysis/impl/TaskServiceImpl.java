@@ -15,7 +15,7 @@ import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.example.retinavision.mapper.imaging.ImageMapper;
 import com.example.retinavision.mapper.analysis.LogMapper;

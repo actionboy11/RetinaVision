@@ -1,5 +1,6 @@
 package com.example.retinavision.llm.shared;
 
+import com.example.retinavision.exception.llm.LlmException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.MediaType;

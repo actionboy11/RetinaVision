@@ -14,7 +14,7 @@ import com.example.retinavision.rag.knowledge.RagGroundingValidator;
 import com.example.retinavision.enumeration.user.UserRole;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatMessageMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatSessionMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;

@@ -1,5 +1,6 @@
 package com.example.retinavision.llm.shared;
 
+import com.example.retinavision.exception.llm.LlmException;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;

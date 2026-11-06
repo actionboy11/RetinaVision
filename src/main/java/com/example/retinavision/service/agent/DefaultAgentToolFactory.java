@@ -8,7 +8,7 @@ import com.example.retinavision.enumeration.patient.PatientGender;
 import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.agent.AgentToolCallLogMapper;
 import com.example.retinavision.pojo.agent.entity.AgentToolCallLogEntity;
 import com.example.retinavision.pojo.agent.vo.AgentCitationVO;

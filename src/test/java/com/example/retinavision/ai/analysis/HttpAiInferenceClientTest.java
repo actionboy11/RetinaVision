@@ -1,5 +1,7 @@
 package com.example.retinavision.ai.analysis;
 
+import com.example.retinavision.exception.analysis.AiInferenceException;
+
 import com.example.retinavision.ai.analysis.dto.AiInferenceResponse;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;

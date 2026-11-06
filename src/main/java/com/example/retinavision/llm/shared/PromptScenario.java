@@ -1,5 +1,7 @@
 package com.example.retinavision.llm.shared;
 
+import com.example.retinavision.exception.llm.LlmException;
+
 public enum PromptScenario {
     REPORT_DRAFT_GENERATION,
     RAG_KNOWLEDGE_CHAT,

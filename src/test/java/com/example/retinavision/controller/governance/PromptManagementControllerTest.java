@@ -1,7 +1,7 @@
 package com.example.retinavision.controller.governance;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.governance.dto.UpdateActivePromptVersionDTO;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;

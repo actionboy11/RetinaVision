@@ -8,7 +8,7 @@ import com.example.retinavision.rag.knowledge.QdrantPoint;
 import com.example.retinavision.enumeration.knowledge.KnowledgeAudience;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.knowledge.KnowledgeChunkMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;

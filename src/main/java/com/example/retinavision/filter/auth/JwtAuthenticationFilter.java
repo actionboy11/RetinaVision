@@ -6,7 +6,7 @@ import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.utils.auth.JwtUtil;
 import com.example.retinavision.service.auth.JwtBlacklistService;
-import com.example.retinavision.exception.RedisUnavailableException;
+import com.example.retinavision.exception.shared.RedisUnavailableException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;

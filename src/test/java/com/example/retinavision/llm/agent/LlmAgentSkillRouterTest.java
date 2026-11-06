@@ -9,7 +9,7 @@ import com.example.retinavision.pojo.agent.AgentSkillRoute;
 import com.example.retinavision.service.agent.AgentSkillRegistry;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

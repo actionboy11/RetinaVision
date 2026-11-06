@@ -3,8 +3,8 @@ package com.example.retinavision.service.analysis.impl;
 import com.example.retinavision.config.shared.RedisFeatureProperties;
 import com.example.retinavision.redis.shared.RedisKeyFactory;
 
-import com.example.retinavision.exception.RateLimitException;
-import com.example.retinavision.exception.RedisUnavailableException;
+import com.example.retinavision.exception.shared.RateLimitException;
+import com.example.retinavision.exception.shared.RedisUnavailableException;
 import com.example.retinavision.service.analysis.AiQuotaReservation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

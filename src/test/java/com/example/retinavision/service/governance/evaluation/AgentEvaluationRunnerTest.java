@@ -1,7 +1,7 @@
 package com.example.retinavision.service.governance.evaluation;
 
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOutcome;
-import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationInfrastructureException;
+import com.example.retinavision.exception.evaluation.AgentEvaluationInfrastructureException;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationCaseExecutor;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationRunner;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationScorer;

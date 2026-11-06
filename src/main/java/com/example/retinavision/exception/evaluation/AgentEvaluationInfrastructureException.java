@@ -1,4 +1,4 @@
-package com.example.retinavision.pojo.governance.evaluation;
+package com.example.retinavision.exception.evaluation;
 
 public class AgentEvaluationInfrastructureException extends RuntimeException {
     public AgentEvaluationInfrastructureException(String message) {

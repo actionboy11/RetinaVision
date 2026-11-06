@@ -2,7 +2,7 @@ package com.example.retinavision.service.clinical.impl;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.clinical.AnalysisCorrectionMapper;
 import com.example.retinavision.mapper.clinical.AnalysisFeedbackMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;

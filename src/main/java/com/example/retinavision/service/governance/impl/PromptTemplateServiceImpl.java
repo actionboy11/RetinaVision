@@ -10,7 +10,7 @@ import com.example.retinavision.service.governance.evaluation.AgentEvaluationEli
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.PromptTemplateMapper;
 import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 import com.example.retinavision.mapper.governance.PromptEvaluationRunMapper;

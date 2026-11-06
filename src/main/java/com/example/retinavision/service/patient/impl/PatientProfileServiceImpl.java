@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.patient.PatientProfileSource;
 import com.example.retinavision.enumeration.patient.PatientProfileStatus;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.example.retinavision.mapper.patient.PatientProfileMapper;
 import com.example.retinavision.mapper.user.UserRegisterMapper;

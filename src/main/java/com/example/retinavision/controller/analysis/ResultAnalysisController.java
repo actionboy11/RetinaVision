@@ -66,7 +66,7 @@ public class ResultAnalysisController {
                 .filter(report -> report.getStatus() == ReportStatus.SIGNED || report.getStatus() == ReportStatus.SUPERSEDED)
                 .max(java.util.Comparator.comparingInt(com.example.retinavision.pojo.reporting.entity.AnalysisReportEntity::getVersion))
                 .map(report -> analysisReportService.getFile(resultId, report.getVersion()))
-                .orElseThrow(() -> new com.example.retinavision.exception.ConflictException("报告尚未由医生签发"));
+                .orElseThrow(() -> new com.example.retinavision.exception.shared.ConflictException("报告尚未由医生签发"));
         String filename = "report-" + resultId + getExtension(reportPath);
 
         return ResponseEntity.ok()

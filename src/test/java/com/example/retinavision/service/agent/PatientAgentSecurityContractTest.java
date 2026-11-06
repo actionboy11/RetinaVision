@@ -11,7 +11,7 @@ import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.mapper.patient.PatientAgentQueryMapper;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.patient.vo.PatientAgentCaseSummaryVO;
 import com.example.retinavision.pojo.patient.vo.PatientAgentProgressVO;

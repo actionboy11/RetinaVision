@@ -3,7 +3,7 @@ package com.example.retinavision.controller.knowledge;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentStatusDTO;

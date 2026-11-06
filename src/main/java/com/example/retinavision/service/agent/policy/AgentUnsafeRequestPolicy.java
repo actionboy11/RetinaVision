@@ -1,6 +1,7 @@
 package com.example.retinavision.service.agent.policy;
 
 import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.exception.agent.AgentUnsafeRequestException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

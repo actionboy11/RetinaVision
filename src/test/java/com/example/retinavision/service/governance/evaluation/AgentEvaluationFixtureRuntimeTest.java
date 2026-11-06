@@ -7,7 +7,7 @@ import com.example.retinavision.service.agent.AgentSkillRouter;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationFixtureRuntime;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

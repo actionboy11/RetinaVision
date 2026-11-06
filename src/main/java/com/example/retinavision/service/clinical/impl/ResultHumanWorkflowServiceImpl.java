@@ -4,8 +4,8 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.clinical.CorrectionStatus;
-import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.exception.ConflictException;
+import com.example.retinavision.exception.shared.BaseException;
+import com.example.retinavision.exception.shared.ConflictException;
 import com.example.retinavision.mapper.clinical.AnalysisCorrectionMapper;
 import com.example.retinavision.mapper.clinical.AnalysisFeedbackMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;

@@ -29,7 +29,7 @@ import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
 import com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO;

@@ -1,7 +1,11 @@
-package com.example.retinavision.exception;
+package com.example.retinavision.exception.handler;
 
 import com.example.retinavision.constant.shared.ErrorMessageContant;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
+import com.example.retinavision.exception.shared.BaseException;
+import com.example.retinavision.exception.shared.ConflictException;
+import com.example.retinavision.exception.shared.RateLimitException;
+import com.example.retinavision.exception.shared.RedisUnavailableException;
 
 import com.example.retinavision.result.Result;
 import org.springframework.web.bind.annotation.ExceptionHandler;

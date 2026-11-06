@@ -1,8 +1,8 @@
-package com.example.retinavision.service.agent.policy;
+package com.example.retinavision.exception.agent;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 
 public class AgentUnsafeRequestException extends BaseException {
     public AgentUnsafeRequestException() {

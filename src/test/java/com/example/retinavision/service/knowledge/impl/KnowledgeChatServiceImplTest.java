@@ -6,7 +6,7 @@ import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
 import com.example.retinavision.rag.knowledge.RagGroundingValidator;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatMessageMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatSessionMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;

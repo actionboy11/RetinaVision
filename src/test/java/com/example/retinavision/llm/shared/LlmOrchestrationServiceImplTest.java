@@ -1,7 +1,7 @@
 package com.example.retinavision.llm.shared;
 
 import com.example.retinavision.llm.shared.LlmClient;
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmGenerationResult;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.llm.shared.LlmOrchestrationServiceImpl;

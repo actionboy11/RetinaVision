@@ -3,7 +3,7 @@ package com.example.retinavision.llm.agent;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.agent.AgentConversationMessage;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;

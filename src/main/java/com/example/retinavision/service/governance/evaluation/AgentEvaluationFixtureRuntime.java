@@ -19,7 +19,7 @@ import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
 import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.patient.PatientReportExplanationService;
 

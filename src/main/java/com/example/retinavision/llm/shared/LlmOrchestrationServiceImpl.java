@@ -1,5 +1,6 @@
 package com.example.retinavision.llm.shared;
 
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.example.retinavision.service.governance.LlmCallLogService;

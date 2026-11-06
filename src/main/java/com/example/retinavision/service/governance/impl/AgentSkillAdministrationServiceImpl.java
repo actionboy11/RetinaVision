@@ -8,7 +8,7 @@ import com.example.retinavision.service.agent.AgentSkillRouter;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.AgentSkillEvaluationRunMapper;
 import com.example.retinavision.mapper.agent.AgentSkillMapper;
 import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;

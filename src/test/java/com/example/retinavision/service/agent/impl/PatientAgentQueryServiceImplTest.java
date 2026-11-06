@@ -4,7 +4,7 @@ import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
 import com.example.retinavision.service.agent.PatientQualityPresenter;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.patient.PatientAgentQueryMapper;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
