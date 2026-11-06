@@ -19,7 +19,6 @@ export interface AgentSkillVersionItem {
   createdAt: DateTimeString
 }
 
-
 export interface AgentSkillExecutionItem {
   id: ID
   skillCode: string

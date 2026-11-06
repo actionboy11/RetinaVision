@@ -49,25 +49,4 @@ const getTimelineTitle = (log: TaskLogItem) => {
   </el-timeline>
 </template>
 
-<style scoped>
-.timeline-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.timeline-title {
-  color: #111827;
-  font-weight: 600;
-}
-
-.timeline-message {
-  color: #374151;
-  line-height: 22px;
-}
-
-.timeline-meta {
-  color: #6b7280;
-  font-size: 13px;
-}
-</style>
+<style scoped src="./TaskTimeline.css"></style>

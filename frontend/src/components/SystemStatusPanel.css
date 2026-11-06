@@ -1,0 +1,72 @@
+.system-status-panel {
+  min-height: 180px;
+  margin-bottom: 16px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.panel-heading,
+.card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title {
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.status-card {
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.card-heading {
+  color: #111827;
+  font-weight: 600;
+}
+
+dl {
+  margin: 12px 0 0;
+}
+
+dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+}
+
+dt {
+  color: #6b7280;
+}
+
+dd {
+  margin: 0;
+  color: #111827;
+  text-align: right;
+}
+
+.component-error {
+  margin-top: 10px;
+}
+
+@media (max-width: 1000px) {
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,11 +1,22 @@
 import type { DateTimeString, ID } from './common'
 
+export type KnowledgeAudience = 'PUBLIC' | 'PATIENT' | 'CLINICAL' | 'RESEARCH' | 'ADMIN'
+export type KnowledgeDocumentStatus = 'ACTIVE' | 'DISABLED'
+
+export interface CreateKnowledgeDocumentRequest {
+  title: string
+  source: string
+  category: string
+  audience: KnowledgeAudience
+  content: string
+}
+
 export interface KnowledgeDocument {
   id: ID
   title: string
   source: string
   category: string
-  audience: 'PUBLIC' | 'PATIENT' | 'CLINICAL' | 'RESEARCH' | 'ADMIN'
+  audience: KnowledgeAudience
   status: string
   version: number
   chunkCount: number

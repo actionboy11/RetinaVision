@@ -1,18 +1,15 @@
 import request from '@/utils/request'
 import type {
+  CreateKnowledgeDocumentRequest,
   KnowledgeChatMessage,
   KnowledgeChatResponse,
   KnowledgeChatSession,
   KnowledgeDocument,
+  KnowledgeDocumentStatus,
 } from '@/types/knowledge'
 
-export const createKnowledgeDocument = (data: {
-  title: string
-  source: string
-  category: string
-  audience: 'PUBLIC' | 'PATIENT' | 'CLINICAL' | 'RESEARCH' | 'ADMIN'
-  content: string
-}) => request.post<unknown, KnowledgeDocument>('/knowledge/documents', data)
+export const createKnowledgeDocument = (data: CreateKnowledgeDocumentRequest) =>
+  request.post<unknown, KnowledgeDocument>('/knowledge/documents', data)
 
 export const listKnowledgeDocuments = () =>
   request.get<unknown, KnowledgeDocument[]>('/knowledge/documents')
@@ -20,7 +17,7 @@ export const listKnowledgeDocuments = () =>
 export const reindexKnowledgeDocument = (id: number) =>
   request.post<unknown, KnowledgeDocument>(`/knowledge/documents/${id}/reindex`)
 
-export const updateKnowledgeDocumentStatus = (id: number, status: 'ACTIVE' | 'DISABLED') =>
+export const updateKnowledgeDocumentStatus = (id: number, status: KnowledgeDocumentStatus) =>
   request.put<unknown, KnowledgeDocument>(`/knowledge/documents/${id}/status`, { status })
 
 export const deleteKnowledgeDocument = (id: number) =>

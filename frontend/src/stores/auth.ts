@@ -3,13 +3,7 @@ import { computed, ref } from 'vue'
 
 import { getCurrentUser, login, logout } from '@/api/auth'
 import type { CurrentUser, LoginRequest } from '@/types/auth'
-import {
-  getToken,
-  removeToken,
-  setToken,
-  tokenMatchesUser,
-  USER_STORAGE_KEY,
-} from '@/utils/token'
+import { getToken, removeToken, setToken, tokenMatchesUser, USER_STORAGE_KEY } from '@/utils/token'
 
 const readStoredUser = (): CurrentUser | null => {
   const storedUser = localStorage.getItem(USER_STORAGE_KEY)
@@ -37,17 +31,18 @@ const removeStoredUser = () => {
 export const useAuthStore = defineStore('auth', () => {
   const storedToken = getToken()
   const storedUser = readStoredUser()
-  const storedIdentityMatches = Boolean(
+  // token 与 user 必须成对存在，且 JWT 中的身份与本地用户信息一致，会话才算有效
+  const hasValidStoredSession = Boolean(
     storedToken && storedUser && tokenMatchesUser(storedToken, storedUser),
   )
 
-  if (storedToken && storedUser && !storedIdentityMatches) {
+  if (storedToken && !hasValidStoredSession) {
     removeToken()
     removeStoredUser()
   }
 
-  const token = ref(storedIdentityMatches || !storedUser ? storedToken : '')
-  const user = ref<CurrentUser | null>(storedIdentityMatches ? storedUser : null)
+  const token = ref(hasValidStoredSession ? storedToken : '')
+  const user = ref<CurrentUser | null>(hasValidStoredSession ? storedUser : null)
   const sessionValidated = ref(false)
 
   const isLoggedIn = computed(() => Boolean(token.value))
@@ -96,7 +91,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await logout()
     } catch {
-      // Local auth state must be cleared even if server-side logout is unavailable.
+      // 服务端登出不可用时，仍必须清理本地登录态
     } finally {
       resetAuth()
     }

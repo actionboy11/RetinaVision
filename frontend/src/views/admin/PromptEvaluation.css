@@ -1,0 +1,143 @@
+.evaluation-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.page-heading,
+.detail-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+h2 {
+  font-size: 22px;
+}
+h3 {
+  font-size: 16px;
+}
+h4 {
+  font-size: 14px;
+}
+.page-heading p,
+.detail-heading p {
+  margin-top: 5px;
+  color: #6b7280;
+  font-size: 13px;
+}
+.run-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.run-controls label {
+  color: #374151;
+  font-size: 13px;
+}
+.runs-section,
+.detail-section {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 18px;
+}
+.runs-section h3 {
+  margin-bottom: 12px;
+}
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.case-row {
+  border-top: 1px solid #e5e7eb;
+  padding: 15px 0;
+}
+.case-row h4 {
+  margin-bottom: 10px;
+}
+.case-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: 10px;
+  color: #4b5563;
+  font-size: 12px;
+}
+.comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.comparison-side {
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+}
+.side-heading {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #6b7280;
+  font-size: 12px;
+}
+.side-heading strong {
+  margin-right: auto;
+  color: #111827;
+  font-size: 14px;
+}
+dl {
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+dt {
+  color: #6b7280;
+  margin-top: 10px;
+}
+dd {
+  margin: 3px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.empty-output {
+  margin-top: 12px;
+  color: #9ca3af;
+  font-size: 13px;
+}
+.review-summary {
+  color: #374151;
+  font-size: 13px;
+}
+.review-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+  width: 100%;
+}
+.score-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+@media (max-width: 760px) {
+  .comparison {
+    grid-template-columns: 1fr;
+  }
+  .page-heading,
+  .detail-heading {
+    flex-direction: column;
+  }
+  .run-controls {
+    flex-wrap: wrap;
+  }
+}

@@ -1,0 +1,46 @@
+.skill-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.page-heading,
+.table-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+}
+.page-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+.table-panel {
+  padding: 16px;
+}
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-heading h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.section-heading span {
+  color: #6b7280;
+  font-size: 13px;
+}
+.heading-actions {
+  display: flex;
+  gap: 8px;
+}

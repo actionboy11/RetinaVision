@@ -1,15 +1,9 @@
 import request from '@/utils/request'
-import type {
-  AgentChatMessage,
-  AgentChatResponse,
-  AgentChatSession,
-} from '@/types/agent'
+import type { AgentChatMessage, AgentChatResponse, AgentChatSession } from '@/types/agent'
 
-export const createAgentSession = () =>
-  request.post<unknown, AgentChatSession>('/agent/sessions')
+export const createAgentSession = () => request.post<unknown, AgentChatSession>('/agent/sessions')
 
-export const listAgentSessions = () =>
-  request.get<unknown, AgentChatSession[]>('/agent/sessions')
+export const listAgentSessions = () => request.get<unknown, AgentChatSession[]>('/agent/sessions')
 
 export const listAgentMessages = (sessionId: number) =>
   request.get<unknown, AgentChatMessage[]>(`/agent/sessions/${sessionId}/messages`)

@@ -6,10 +6,7 @@ export const getCaseImages = (caseId: number): Promise<ImageFileItem[]> => {
   return request.get<unknown, ImageFileItem[]>(`/cases/${caseId}/images`)
 }
 
-export const uploadCaseImage = (
-  caseId: number,
-  file: File,
-): Promise<ImageFileItem> => {
+export const uploadCaseImage = (caseId: number, file: File): Promise<ImageFileItem> => {
   const formData = new FormData()
   formData.append('file', file)
 

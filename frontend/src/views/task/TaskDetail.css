@@ -1,0 +1,133 @@
+.task-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.page-heading,
+.status-summary,
+.status-primary,
+.heading-actions {
+  display: flex;
+  align-items: center;
+}
+.page-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.page-heading h2,
+.page-heading p {
+  margin: 0;
+}
+.page-heading h2 {
+  color: #111827;
+  font-size: 22px;
+  line-height: 30px;
+}
+.page-heading p {
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 13px;
+}
+.heading-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.detail-content {
+  min-height: 320px;
+}
+.status-summary {
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+.status-primary {
+  min-width: 250px;
+  gap: 12px;
+}
+.status-title {
+  color: #111827;
+  font-size: 17px;
+  font-weight: 700;
+}
+.status-description {
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+.summary-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+  gap: 8px 22px;
+  flex: 1;
+  max-width: 920px;
+}
+.summary-facts span,
+.summary-facts strong {
+  display: block;
+}
+.summary-facts span {
+  margin-bottom: 3px;
+  color: #6b7280;
+  font-size: 11px;
+}
+.summary-facts strong {
+  overflow: hidden;
+  color: #111827;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.detail-tabs {
+  margin-top: 14px;
+  padding: 0 16px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+.detail-tabs :deep(.el-tabs__header) {
+  margin-bottom: 16px;
+}
+.detail-tabs :deep(.el-tabs__item) {
+  height: 48px;
+  padding: 0 22px;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .status-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .summary-facts {
+    width: 100%;
+    max-width: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page-heading {
+    flex-direction: column;
+  }
+  .heading-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .summary-facts {
+    grid-template-columns: 1fr;
+  }
+  .detail-tabs {
+    padding: 0 10px 12px;
+  }
+  .detail-tabs :deep(.el-tabs__nav-wrap) {
+    overflow-x: auto;
+  }
+  .detail-tabs :deep(.el-tabs__item) {
+    padding: 0 14px;
+  }
+}

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import type { AgentAction, AgentPagination, AgentTaskListPayload } from '@/types/agent'
 import { displayTaskStatus, displayTaskType, taskTagType } from '@/utils/agent-display'
 import { formatDateTime } from '@/utils/format'
@@ -10,8 +12,26 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ action: [value: AgentAction] }>()
+
+const MAX_VISIBLE_ROWS = 10
+
 const actionFor = (type: AgentAction['type'], targetId?: number | string | null) =>
-  props.actions?.find((item) => item.type === type && (targetId == null || String(item.targetId) === String(targetId)))
+  props.actions?.find(
+    (item) =>
+      item.type === type && (targetId == null || String(item.targetId) === String(targetId)),
+  ) ?? null
+
+// 每行预算一次 action，避免模板中重复查找与非空断言
+const rows = computed(() =>
+  (props.payload.tasks ?? []).map((item) => ({
+    item,
+    action: actionFor('VIEW_TASK', item.taskId),
+  })),
+)
+const visibleRows = computed(() => rows.value.slice(0, MAX_VISIBLE_ROWS))
+const hasMoreRows = computed(() => rows.value.length > MAX_VISIBLE_ROWS)
+const previousAction = computed(() => actionFor('PREVIOUS_PAGE'))
+const nextAction = computed(() => actionFor('NEXT_PAGE'))
 </script>
 
 <template>
@@ -19,66 +39,55 @@ const actionFor = (type: AgentAction['type'], targetId?: number | string | null)
     <div v-if="!payload.tasks?.length" class="compact-empty">没有符合条件的任务</div>
     <div v-else class="task-table">
       <div class="task-head" aria-hidden="true">
-        <span>序号</span><span>任务与病例</span><span>类型</span><span>状态</span>
-        <span>重试</span><span>最近更新</span><span>操作</span>
+        <span>序号</span><span>任务与病例</span><span>类型</span><span>状态</span> <span>重试</span
+        ><span>最近更新</span><span>操作</span>
       </div>
-      <div v-for="(item, index) in payload.tasks.slice(0, 10)" :key="item.taskId" class="task-row">
+      <div v-for="(row, index) in visibleRows" :key="row.item.taskId" class="task-row">
         <span class="row-index">{{ index + 1 }}</span>
         <div class="identity">
-          <strong>{{ item.taskNo }}</strong>
-          <small>{{ item.caseNo }} · {{ item.patientNo }}</small>
-          <small v-if="item.errorSummary" class="error-summary">{{ item.errorSummary }}</small>
+          <strong>{{ row.item.taskNo }}</strong>
+          <small>{{ row.item.caseNo }} · {{ row.item.patientNo }}</small>
+          <small v-if="row.item.errorSummary" class="error-summary">{{
+            row.item.errorSummary
+          }}</small>
         </div>
-        <span>{{ displayTaskType(item.taskType) }}</span>
-        <el-tag :type="taskTagType(item.status)" size="small" effect="light">
-          {{ displayTaskStatus(item.status) }}
+        <span>{{ displayTaskType(row.item.taskType) }}</span>
+        <el-tag :type="taskTagType(row.item.status)" size="small" effect="light">
+          {{ displayTaskStatus(row.item.status) }}
         </el-tag>
-        <span>{{ item.retryCount }} / {{ item.maxRetryCount }}</span>
-        <small>{{ formatDateTime(item.updatedAt) }}</small>
+        <span>{{ row.item.retryCount }} / {{ row.item.maxRetryCount }}</span>
+        <small>{{ formatDateTime(row.item.updatedAt) }}</small>
         <el-button
           link
           type="primary"
-          :disabled="!actionFor('VIEW_TASK', item.taskId)"
-          @click="actionFor('VIEW_TASK', item.taskId) && emit('action', actionFor('VIEW_TASK', item.taskId)!)"
+          :disabled="!row.action"
+          @click="row.action && emit('action', row.action)"
         >
           查看任务
         </el-button>
       </div>
     </div>
+    <div v-if="hasMoreRows" class="task-more">
+      仅显示前 {{ MAX_VISIBLE_ROWS }} 条，共 {{ rows.length }} 条
+    </div>
     <div v-if="pagination" class="pagination-bar">
       <span>第 {{ pagination.page }} 页，共 {{ pagination.total }} 条</span>
       <div>
-        <el-button size="small" :disabled="!pagination.hasPrevious || !actionFor('PREVIOUS_PAGE')"
-          @click="actionFor('PREVIOUS_PAGE') && emit('action', actionFor('PREVIOUS_PAGE')!)">上一页</el-button>
-        <el-button size="small" :disabled="!pagination.hasNext || !actionFor('NEXT_PAGE')"
-          @click="actionFor('NEXT_PAGE') && emit('action', actionFor('NEXT_PAGE')!)">下一页</el-button>
+        <el-button
+          size="small"
+          :disabled="!pagination.hasPrevious || !previousAction"
+          @click="previousAction && emit('action', previousAction)"
+          >上一页</el-button
+        >
+        <el-button
+          size="small"
+          :disabled="!pagination.hasNext || !nextAction"
+          @click="nextAction && emit('action', nextAction)"
+          >下一页</el-button
+        >
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.task-list-wrap { margin-top: 12px; }
-.task-table { border-top: 1px solid #dfe5ec; }
-.task-head, .task-row {
-  display: grid;
-  grid-template-columns: 42px minmax(190px, 1.45fr) minmax(92px, .8fr) 88px 64px 142px 76px;
-  gap: 10px;
-  align-items: center;
-}
-.task-head { padding: 8px 4px; color: #7a8798; font-size: 12px; }
-.task-row { min-height: 58px; padding: 8px 4px; border-top: 1px solid #edf0f4; color: #334155; font-size: 13px; }
-.row-index { color: #176b87; font-weight: 700; }
-.identity { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
-.identity strong, .identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.identity small, .task-row > small, .pagination-bar { color: #7a8798; font-size: 12px; }
-.identity .error-summary { color: #c2413b; }
-.pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; }
-.compact-empty { padding: 18px 0; color: #8a95a5; text-align: center; }
-@media (max-width: 900px) {
-  .task-head { display: none; }
-  .task-row { grid-template-columns: 28px minmax(0, 1fr) auto; gap: 6px 10px; }
-  .task-row > :nth-child(n + 3):not(:last-child) { grid-column: 2; }
-  .task-row > :last-child { grid-column: 3; grid-row: 1 / span 2; }
-}
-</style>
+<style scoped src="./AgentTaskList.css"></style>

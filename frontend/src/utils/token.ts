@@ -65,8 +65,8 @@ export const tokenMatchesUser = (token: string, user: CurrentUser): boolean => {
 
   return Boolean(
     identity &&
-      identity.userId === Number(user.id) &&
-      identity.username === user.username &&
-      identity.roleCode === user.roleCode,
+    identity.userId === Number(user.id) &&
+    identity.username === user.username &&
+    identity.roleCode === user.roleCode,
   )
 }

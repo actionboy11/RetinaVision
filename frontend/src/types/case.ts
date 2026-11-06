@@ -1,4 +1,4 @@
-import type { DateTimeString, ID, PageQuery } from './common'
+import type { DateTimeString, ID, PageQuery, ReviewStatusValue } from './common'
 import type { ImageQualityStatus, TaskStatus, TaskType } from './task'
 
 export type PatientGender = 'MALE' | 'FEMALE' | 'UNKNOWN'
@@ -92,7 +92,7 @@ export interface CaseAnalysisTimelineItem {
   modelName: string | null
   modelVersion: string | null
   processingTimeMs: number | null
-  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_CHANGES' | null
+  reviewStatus: ReviewStatusValue | null
   reportStatus: 'DRAFT' | 'SIGNED' | 'SUPERSEDED' | null
   reportVersion: number | null
   submittedAt: DateTimeString | null

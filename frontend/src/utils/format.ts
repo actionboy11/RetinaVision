@@ -30,8 +30,17 @@ export const formatFileSize = (size: number | null | undefined) => {
   return `${(sizeInKb / 1024).toFixed(1)} MB`
 }
 
-export const formatDateTime = (value: string | null | undefined) => {
-  return formatEmpty(value)
+/**
+ * 把后端 ISO 风格时间（2026-11-05T12:00:00[.sss][Z]）规范为
+ * 「2026-11-05 12:00:00」；非预期格式原样返回，避免丢信息。
+ */
+const ISO_LIKE_DATE_TIME =
+  /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/
+
+export const formatDateTime = (value: string | null | undefined): string => {
+  if (!value) return EMPTY_TEXT
+  const matched = ISO_LIKE_DATE_TIME.exec(value.trim())
+  return matched ? `${matched[1]} ${matched[2]}:${matched[3] ?? '00'}` : value
 }
 
 export const formatRetryCount = (

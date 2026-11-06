@@ -1,0 +1,157 @@
+.app-shell {
+  min-height: 100vh;
+  background: #f5f7fb;
+}
+
+.app-aside {
+  border-right: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.brand-mark {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 6px;
+  background: #1f7a8c;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.brand-title {
+  color: #1f2937;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.brand-subtitle {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.side-menu {
+  border-right: 0;
+  padding: 12px 8px;
+}
+
+.menu-badge {
+  line-height: 20px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.page-title {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 26px;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.user-role {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.app-main {
+  padding: 24px;
+}
+
+@media (max-width: 620px) {
+  .app-aside {
+    width: 64px !important;
+    flex: 0 0 64px;
+  }
+
+  .brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .brand > div:not(.brand-mark),
+  .side-menu :deep(.el-menu-item span),
+  .side-menu :deep(.el-badge) {
+    display: none;
+  }
+
+  .side-menu {
+    padding: 8px 4px;
+  }
+
+  .side-menu :deep(.el-menu-item) {
+    justify-content: center;
+    padding: 0 !important;
+  }
+
+  .app-header {
+    padding: 0 12px;
+  }
+
+  .page-subtitle,
+  .user-summary {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 0;
+  }
+
+  .header-actions :deep(.el-button) {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+  }
+
+  .header-actions :deep(.el-button span) {
+    display: none;
+  }
+
+  .app-main {
+    padding: 12px;
+  }
+}

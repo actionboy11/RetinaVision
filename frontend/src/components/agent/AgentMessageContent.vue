@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import AgentCaseDetail from '@/components/agent/AgentCaseDetail.vue'
 import AgentCaseList from '@/components/agent/AgentCaseList.vue'
 import AgentComparison from '@/components/agent/AgentComparison.vue'
@@ -19,7 +21,7 @@ import type {
 } from '@/types/agent'
 import { skillNameMap } from '@/utils/agent-display'
 
-defineProps<{
+const props = defineProps<{
   content: string
   structured?: AgentChatResponse
 }>()
@@ -29,11 +31,46 @@ const emit = defineEmits<{
   action: [value: AgentAction]
 }>()
 
-const asPatientCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPayload) =>
-  payload as PatientAgentCaseListPayload
+// 已提供独立操作区的结构化卡片，不再重复渲染底部操作条
+const SELF_ACTION_TYPES = [
+  'TASK_LIST',
+  'TASK_DETAIL',
+  'CLINICAL_QUEUE',
+  'CASE_PROGRESS',
+  'SIGNED_REPORT',
+]
+const PAGING_ACTION_TYPES = ['NEXT_PAGE', 'PREVIOUS_PAGE']
 
-const asDoctorCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPayload) =>
-  payload as AgentCaseListPayload
+const visibleActions = computed(() =>
+  (props.structured?.actions ?? []).filter((item) => !PAGING_ACTION_TYPES.includes(item.type)),
+)
+
+const showActionBar = computed(() => {
+  const data = props.structured?.data
+  if (!data || SELF_ACTION_TYPES.includes(data.type)) return false
+  if (data.type === 'CASE_LIST' && props.structured?.skill?.code === 'MY_CASE_LIST') return false
+  return visibleActions.value.length > 0
+})
+
+/** 按字段判别两种 CASE_LIST payload，不再用 as 强转把医生数据当作患者数据渲染。 */
+const isPatientCaseList = (
+  payload: AgentCaseListPayload | PatientAgentCaseListPayload,
+): payload is PatientAgentCaseListPayload => {
+  const cases = payload.cases
+  return (
+    Array.isArray(cases) &&
+    cases.length > 0 &&
+    cases.every((item) => 'qualityMessage' in item && 'signedReportAvailable' in item)
+  )
+}
+
+const toPatientCaseList = (
+  payload: AgentCaseListPayload | PatientAgentCaseListPayload,
+): PatientAgentCaseListPayload => (isPatientCaseList(payload) ? payload : { cases: [] })
+
+const toDoctorCaseList = (
+  payload: AgentCaseListPayload | PatientAgentCaseListPayload,
+): AgentCaseListPayload => (isPatientCaseList(payload) ? { cases: [] } : payload)
 </script>
 
 <template>
@@ -51,14 +88,14 @@ const asDoctorCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPa
     />
     <PatientCaseList
       v-else-if="structured.data?.type === 'CASE_LIST' && structured.skill?.code === 'MY_CASE_LIST'"
-      :payload="asPatientCaseList(structured.data.payload)"
+      :payload="toPatientCaseList(structured.data.payload)"
       :pagination="structured.pagination"
       :actions="structured.actions"
       @action="emit('action', $event)"
     />
     <AgentCaseList
       v-else-if="structured.data?.type === 'CASE_LIST'"
-      :payload="asDoctorCaseList(structured.data.payload)"
+      :payload="toDoctorCaseList(structured.data.payload)"
       :pagination="structured.pagination"
       :actions="structured.actions"
       @query="emit('query', $event)"
@@ -105,14 +142,9 @@ const asDoctorCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPa
       @action="emit('action', $event)"
     />
 
-    <div
-      v-if="!['TASK_LIST', 'TASK_DETAIL', 'CLINICAL_QUEUE', 'CASE_PROGRESS', 'SIGNED_REPORT'].includes(structured.data?.type || '')
-        && !(structured.data?.type === 'CASE_LIST' && structured.skill?.code === 'MY_CASE_LIST')
-        && structured.actions?.some((item) => !['NEXT_PAGE', 'PREVIOUS_PAGE'].includes(item.type))"
-      class="message-actions"
-    >
+    <div v-if="showActionBar" class="message-actions">
       <el-button
-        v-for="action in structured.actions.filter((item) => !['NEXT_PAGE', 'PREVIOUS_PAGE'].includes(item.type))"
+        v-for="action in visibleActions"
         :key="`${action.type}-${action.targetId || ''}`"
         size="small"
         @click="emit('action', action)"
@@ -125,21 +157,4 @@ const asDoctorCaseList = (payload: AgentCaseListPayload | PatientAgentCaseListPa
   </template>
 </template>
 
-<style scoped>
-.skill-label {
-  display: inline-flex;
-  margin-top: 10px;
-  padding: 3px 7px;
-  border: 1px solid #cad9df;
-  border-radius: 4px;
-  color: #476875;
-  font-size: 11px;
-}
-
-.message-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-</style>
+<style scoped src="./AgentMessageContent.css"></style>

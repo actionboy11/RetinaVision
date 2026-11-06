@@ -45,7 +45,7 @@ const emit = defineEmits<{
 
 const resultJson = computed<Record<string, unknown>>(() => {
   const json = props.result?.resultJson
-  return json && typeof json === 'object' ? json as Record<string, unknown> : {}
+  return json && typeof json === 'object' ? (json as Record<string, unknown>) : {}
 })
 
 const getNumber = (key: string) => {
@@ -69,10 +69,11 @@ const vesselResult = computed<VesselSegmentationResult>(() => ({
 const qualityResult = computed<ImageQualityResult>(() => ({
   grade: (getString('grade') as ImageQualityResult['grade']) || 'FAIL',
   score: getNumber('score') ?? 0,
-  metrics: typeof resultJson.value.metrics === 'object' && resultJson.value.metrics
-    ? resultJson.value.metrics as Record<string, number>
-    : {},
-  reasons: Array.isArray(resultJson.value.reasons) ? resultJson.value.reasons as string[] : [],
+  metrics:
+    typeof resultJson.value.metrics === 'object' && resultJson.value.metrics
+      ? (resultJson.value.metrics as Record<string, number>)
+      : {},
+  reasons: Array.isArray(resultJson.value.reasons) ? (resultJson.value.reasons as string[]) : [],
 }))
 
 const qualityDisplay = computed(() => {
@@ -86,18 +87,16 @@ const qualityDisplay = computed(() => {
 const canContinueSegmentation = computed(() => props.result?.resultType === 'IMAGE_QUALITY_CHECK')
 const hasComparisonCandidates = computed(() => props.comparisonCandidates.length > 0)
 
-const formatNullableNumber = (value: number | null) => (
+const formatNullableNumber = (value: number | null) =>
   typeof value === 'number' ? formatScore(value) : '-'
-)
 
 const formatSignedNumber = (value: number | null) => {
   if (typeof value !== 'number') return '-'
   return `${value >= 0 ? '+' : ''}${formatScore(value)}`
 }
 
-const formatNullablePercent = (value: number | null) => (
+const formatNullablePercent = (value: number | null) =>
   typeof value === 'number' ? formatPercent(value) : '-'
-)
 
 const formatSignedPercent = (value: number | null) => {
   if (typeof value !== 'number') return '-'
@@ -144,8 +143,16 @@ const comparisonMetricRows = computed(() => {
 <template>
   <div class="result-panel" v-loading="props.resultLoading">
     <el-empty v-if="props.unfinished" description="任务尚未完成，暂无分析结果" :image-size="80" />
-    <el-empty v-else-if="props.task.status === 'FAILED'" description="任务执行失败，暂无分析结果" :image-size="80" />
-    <el-empty v-else-if="props.task.status === 'CANCELED'" description="任务已取消，暂无分析结果" :image-size="80" />
+    <el-empty
+      v-else-if="props.task.status === 'FAILED'"
+      description="任务执行失败，暂无分析结果"
+      :image-size="80"
+    />
+    <el-empty
+      v-else-if="props.task.status === 'CANCELED'"
+      description="任务已取消，暂无分析结果"
+      :image-size="80"
+    />
 
     <template v-else>
       <el-alert
@@ -163,14 +170,28 @@ const comparisonMetricRows = computed(() => {
 
       <template v-if="props.result">
         <div class="meta-strip">
-          <div><span>模型</span><strong>{{ formatEmpty(props.result.modelName) }}</strong></div>
-          <div><span>版本</span><strong>{{ formatEmpty(props.result.modelVersion) }}</strong></div>
-          <div><span>类型</span><strong>{{ taskTypeTextMap[props.result.resultType] }}</strong></div>
-          <div><span>处理耗时</span><strong>{{ formatDurationMs(props.result.processingTimeMs) }}</strong></div>
-          <div><span>生成时间</span><strong>{{ formatDateTime(props.result.createdAt) }}</strong></div>
+          <div>
+            <span>模型</span><strong>{{ formatEmpty(props.result.modelName) }}</strong>
+          </div>
+          <div>
+            <span>版本</span><strong>{{ formatEmpty(props.result.modelVersion) }}</strong>
+          </div>
+          <div>
+            <span>类型</span><strong>{{ taskTypeTextMap[props.result.resultType] }}</strong>
+          </div>
+          <div>
+            <span>处理耗时</span
+            ><strong>{{ formatDurationMs(props.result.processingTimeMs) }}</strong>
+          </div>
+          <div>
+            <span>生成时间</span><strong>{{ formatDateTime(props.result.createdAt) }}</strong>
+          </div>
         </div>
 
-        <div class="visual-grid" :class="{ 'quality-only': props.result.resultType === 'IMAGE_QUALITY_CHECK' }">
+        <div
+          class="visual-grid"
+          :class="{ 'quality-only': props.result.resultType === 'IMAGE_QUALITY_CHECK' }"
+        >
           <section class="visual-section">
             <div class="section-title">原始图像</div>
             <div class="image-frame">
@@ -179,7 +200,9 @@ const comparisonMetricRows = computed(() => {
                 :src="props.originalImageUrl"
                 fit="contain"
                 class="result-image"
-                @click="emit('preview', props.originalImageUrl, '原始图像', props.task.originalFilename)"
+                @click="
+                  emit('preview', props.originalImageUrl, '原始图像', props.task.originalFilename)
+                "
               />
               <el-empty v-else description="暂无原始图像" :image-size="64" />
             </div>
@@ -187,8 +210,11 @@ const comparisonMetricRows = computed(() => {
               v-if="props.originalImageUrl"
               :icon="Picture"
               plain
-              @click="emit('preview', props.originalImageUrl, '原始图像', props.task.originalFilename)"
-            >放大预览</el-button>
+              @click="
+                emit('preview', props.originalImageUrl, '原始图像', props.task.originalFilename)
+              "
+              >放大预览</el-button
+            >
           </section>
 
           <section v-if="props.result.resultType === 'VESSEL_SEGMENTATION'" class="visual-section">
@@ -208,27 +234,58 @@ const comparisonMetricRows = computed(() => {
               :icon="Picture"
               plain
               @click="emit('preview', props.maskImageUrl, '分割结果图')"
-            >放大预览</el-button>
+              >放大预览</el-button
+            >
           </section>
 
           <section class="metrics-section">
             <div class="section-title">结果指标</div>
             <div v-if="props.result.resultType === 'VESSEL_SEGMENTATION'" class="metric-grid">
-              <div class="metric-item"><span>血管面积占比</span><strong>{{ formatPercent(vesselResult.vesselAreaRatio) }}</strong></div>
-              <div class="metric-item"><span>图像质量</span><strong>{{ qualityDisplay }}</strong></div>
-              <div class="metric-item"><span>处理耗时</span><strong>{{ formatDurationMs(vesselResult.processingTimeMs) }}</strong></div>
-              <div class="metric-item"><span>模型版本</span><strong>{{ formatEmpty(vesselResult.modelVersion) }}</strong></div>
-              <div class="metric-item metric-wide"><span>分析结论</span><strong>{{ formatEmpty(vesselResult.conclusion) }}</strong></div>
+              <div class="metric-item">
+                <span>血管面积占比</span
+                ><strong>{{ formatPercent(vesselResult.vesselAreaRatio) }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>图像质量</span><strong>{{ qualityDisplay }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>处理耗时</span
+                ><strong>{{ formatDurationMs(vesselResult.processingTimeMs) }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>模型版本</span><strong>{{ formatEmpty(vesselResult.modelVersion) }}</strong>
+              </div>
+              <div class="metric-item metric-wide">
+                <span>分析结论</span><strong>{{ formatEmpty(vesselResult.conclusion) }}</strong>
+              </div>
             </div>
             <div v-else class="metric-grid">
-              <div class="metric-item"><span>综合质量评分</span><strong>{{ formatScore(qualityResult.score) }}</strong></div>
-              <div class="metric-item"><span>模糊评分</span><strong>{{ formatScore(qualityResult.metrics.sharpness ?? 0) }}</strong></div>
-              <div class="metric-item"><span>亮度评分</span><strong>{{ formatScore(qualityResult.metrics.exposure ?? 0) }}</strong></div>
-              <div class="metric-item"><span>对比度评分</span><strong>{{ formatScore(qualityResult.metrics.contrast ?? 0) }}</strong></div>
-              <div class="metric-item metric-wide"><span>质量结论</span><strong>{{ qualityResult.grade }} {{ qualityResult.reasons.join(', ') }}</strong></div>
+              <div class="metric-item">
+                <span>综合质量评分</span><strong>{{ formatScore(qualityResult.score) }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>模糊评分</span
+                ><strong>{{ formatScore(qualityResult.metrics.sharpness ?? 0) }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>亮度评分</span
+                ><strong>{{ formatScore(qualityResult.metrics.exposure ?? 0) }}</strong>
+              </div>
+              <div class="metric-item">
+                <span>对比度评分</span
+                ><strong>{{ formatScore(qualityResult.metrics.contrast ?? 0) }}</strong>
+              </div>
+              <div class="metric-item metric-wide">
+                <span>质量结论</span
+                ><strong>{{ qualityResult.grade }} {{ qualityResult.reasons.join(', ') }}</strong>
+              </div>
             </div>
             <div class="result-actions">
-              <el-button v-if="canContinueSegmentation" type="primary" @click="emit('continueSegmentation')">
+              <el-button
+                v-if="canContinueSegmentation"
+                type="primary"
+                @click="emit('continueSegmentation')"
+              >
                 继续血管分割
               </el-button>
               <span v-if="props.result.resultType === 'VESSEL_SEGMENTATION'" class="muted-text">
@@ -239,10 +296,15 @@ const comparisonMetricRows = computed(() => {
         </div>
 
         <el-collapse class="secondary-collapse">
-          <el-collapse-item v-if="props.result.resultType === 'VESSEL_SEGMENTATION'" name="comparison">
+          <el-collapse-item
+            v-if="props.result.resultType === 'VESSEL_SEGMENTATION'"
+            name="comparison"
+          >
             <template #title>
               <span>历史结果对比</span>
-              <el-tag class="title-tag" size="small" type="info">{{ props.comparisonCandidates.length }}</el-tag>
+              <el-tag class="title-tag" size="small" type="info">{{
+                props.comparisonCandidates.length
+              }}</el-tag>
             </template>
             <div class="comparison-heading">
               <p>选择同病例历史血管分割结果作为基线，仅比较结构化指标。</p>
@@ -260,13 +322,28 @@ const comparisonMetricRows = computed(() => {
                     :value="item.resultId"
                   />
                 </el-select>
-                <el-button type="primary" :loading="props.comparisonLoading" :disabled="!hasComparisonCandidates" @click="emit('compare')">
+                <el-button
+                  type="primary"
+                  :loading="props.comparisonLoading"
+                  :disabled="!hasComparisonCandidates"
+                  @click="emit('compare')"
+                >
                   开始对比
                 </el-button>
               </div>
             </div>
-            <el-alert v-if="props.comparisonError" :title="props.comparisonError" show-icon type="warning" :closable="false" />
-            <el-empty v-if="!hasComparisonCandidates" description="暂无可对比的历史结果" :image-size="64" />
+            <el-alert
+              v-if="props.comparisonError"
+              :title="props.comparisonError"
+              show-icon
+              type="warning"
+              :closable="false"
+            />
+            <el-empty
+              v-if="!hasComparisonCandidates"
+              description="暂无可对比的历史结果"
+              :image-size="64"
+            />
             <template v-else-if="props.comparison">
               <el-table :data="comparisonMetricRows" border size="small">
                 <el-table-column prop="label" label="指标" min-width="130" />
@@ -274,9 +351,20 @@ const comparisonMetricRows = computed(() => {
                 <el-table-column prop="target" label="当前结果" min-width="150" />
                 <el-table-column prop="delta" label="变化" min-width="120" />
               </el-table>
-              <el-alert v-if="props.comparison.notes.length" :title="props.comparison.notes.join('；')" show-icon type="info" :closable="false" />
+              <el-alert
+                v-if="props.comparison.notes.length"
+                :title="props.comparison.notes.join('；')"
+                show-icon
+                type="info"
+                :closable="false"
+              />
             </template>
-            <el-alert title="结果对比受图像质量、拍摄条件和模型版本影响，只作为医生复核线索。" show-icon type="info" :closable="false" />
+            <el-alert
+              title="结果对比受图像质量、拍摄条件和模型版本影响，只作为医生复核线索。"
+              show-icon
+              type="info"
+              :closable="false"
+            />
           </el-collapse-item>
           <el-collapse-item title="结果 JSON 原文" name="json">
             <pre class="json-block">{{ props.resultJsonText || EMPTY_TEXT }}</pre>
@@ -287,222 +375,4 @@ const comparisonMetricRows = computed(() => {
   </div>
 </template>
 
-<style scoped>
-.result-panel {
-  min-height: 260px;
-}
-
-.meta-strip {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #e5e7eb;
-}
-
-.meta-strip > div {
-  min-width: 0;
-  padding: 10px 12px;
-  background: #ffffff;
-}
-
-.meta-strip span,
-.metric-item span {
-  display: block;
-  margin-bottom: 5px;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.meta-strip strong {
-  display: block;
-  overflow: hidden;
-  color: #111827;
-  font-size: 13px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.visual-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(280px, 1fr)) minmax(300px, 0.9fr);
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.visual-grid.quality-only {
-  grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
-}
-
-.visual-section,
-.metrics-section {
-  min-width: 0;
-}
-
-.section-title {
-  margin-bottom: 10px;
-  color: #374151;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.image-frame {
-  display: grid;
-  height: 300px;
-  margin-bottom: 10px;
-  place-items: center;
-  overflow: hidden;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.result-image {
-  width: 100%;
-  height: 100%;
-  cursor: zoom-in;
-}
-
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.metric-item {
-  min-height: 72px;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.metric-item strong {
-  color: #111827;
-  font-size: 16px;
-  line-height: 22px;
-}
-
-.metric-wide {
-  grid-column: 1 / -1;
-}
-
-.result-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.muted-text {
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.secondary-collapse {
-  margin-top: 16px;
-  padding: 0 14px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.title-tag {
-  margin-left: 8px;
-}
-
-.comparison-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.comparison-heading p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.comparison-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.comparison-actions .el-select {
-  width: 280px;
-}
-
-.comparison-heading + .el-alert,
-.el-table + .el-alert,
-.el-empty + .el-alert {
-  margin-top: 12px;
-}
-
-.json-block {
-  max-height: 320px;
-  margin: 0;
-  overflow: auto;
-  padding: 14px;
-  border-radius: 6px;
-  background: #111827;
-  color: #e5e7eb;
-  font-size: 12px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-@media (max-width: 1280px) {
-  .visual-grid,
-  .visual-grid.quality-only {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .metrics-section {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 900px) {
-  .meta-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .visual-grid,
-  .visual-grid.quality-only {
-    grid-template-columns: 1fr;
-  }
-
-  .metrics-section {
-    grid-column: auto;
-  }
-
-  .comparison-heading,
-  .comparison-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .comparison-actions .el-select {
-    width: 100%;
-  }
-}
-
-@media (max-width: 560px) {
-  .meta-strip,
-  .metric-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .metric-wide {
-    grid-column: auto;
-  }
-
-  .image-frame {
-    height: 240px;
-  }
-}
-</style>
+<style scoped src="./TaskResultPanel.css"></style>

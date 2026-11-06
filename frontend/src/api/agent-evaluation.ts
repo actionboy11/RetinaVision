@@ -3,8 +3,10 @@ import type {
   AgentEvaluationDataset,
   AgentEvaluationOptions,
   AgentEvaluationResultPage,
+  AgentEvaluationResultQuery,
   AgentEvaluationRun,
   AgentEvaluationRunPage,
+  AgentEvaluationRunQuery,
   StartAgentEvaluationRequest,
 } from '@/types/agent-evaluation'
 
@@ -17,19 +19,25 @@ export const getAgentEvaluationDatasets = () =>
 export const startAgentEvaluation = (payload: StartAgentEvaluationRequest) =>
   request.post<unknown, AgentEvaluationRun>('/agent-evaluations/runs', payload)
 
-export const getAgentEvaluationRuns = (params: Record<string, unknown> = {}) =>
+export const getAgentEvaluationRuns = (params: AgentEvaluationRunQuery = {}) =>
   request.get<unknown, AgentEvaluationRunPage>('/agent-evaluations/runs', { params })
 
 export const getAgentEvaluationRun = (runId: number) =>
   request.get<unknown, AgentEvaluationRun>(`/agent-evaluations/runs/${runId}`)
 
-export const getAgentEvaluationResults = (runId: number, params: Record<string, unknown> = {}) =>
-  request.get<unknown, AgentEvaluationResultPage>(`/agent-evaluations/runs/${runId}/results`, { params })
+export const getAgentEvaluationResults = (runId: number, params: AgentEvaluationResultQuery = {}) =>
+  request.get<unknown, AgentEvaluationResultPage>(`/agent-evaluations/runs/${runId}/results`, {
+    params,
+  })
 
 export const cancelAgentEvaluation = (runId: number) =>
   request.post<unknown, void>(`/agent-evaluations/runs/${runId}/cancel`)
 
-export const reviewAgentEvaluation = (runId: number, reviewDecision: 'APPROVED' | 'REJECTED', reviewNote: string) =>
+export const reviewAgentEvaluation = (
+  runId: number,
+  reviewDecision: 'APPROVED' | 'REJECTED',
+  reviewNote: string,
+) =>
   request.put<unknown, AgentEvaluationRun>(`/agent-evaluations/runs/${runId}/review`, {
     reviewDecision,
     reviewNote,

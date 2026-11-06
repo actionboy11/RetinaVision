@@ -1,0 +1,27 @@
+.composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.composer :deep(.el-textarea__inner) {
+  min-height: 54px !important;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px #d5dde5 inset;
+}
+
+.composer .el-button {
+  min-width: 82px;
+  height: 38px;
+}
+
+@media (max-width: 540px) {
+  .composer {
+    grid-template-columns: 1fr;
+  }
+
+  .composer .el-button {
+    width: 100%;
+  }
+}

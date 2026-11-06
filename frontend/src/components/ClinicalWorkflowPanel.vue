@@ -1,40 +1,19 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref } from 'vue'
 
+import { useClinicalWorkflow } from '@/composables/use-clinical-workflow'
+import type { Correction, Report } from '@/types/clinical'
 import {
-  addCorrection,
-  addFeedback,
-  downloadReportVersion,
-  generateReportDraft,
-  getReportDraft,
-  getReview,
-  listCorrections,
-  listFeedback,
-  listReports,
-  signReport,
-  submitReview,
-} from '@/api/clinical'
-import { useAuthStore } from '@/stores/auth'
-import type {
-  Correction,
-  Feedback,
-  FeedbackVerdict,
-  Report,
-  Review,
-  ReviewStatus,
-} from '@/types/clinical'
+  correctionStatusTextMap,
+  correctionStatusType,
+  feedbackVerdictTextMap,
+  reportStatusTextMap,
+  reportStatusType,
+  stepStatus,
+  WORKFLOW_STAGES,
+  type WorkflowStage,
+} from '@/utils/clinical-workflow'
 import { formatDateTime, formatEmpty } from '@/utils/format'
-
-type DraftForm = {
-  findings: string
-  conclusion: string
-  recommendation: string
-  explanation: string
-  disclaimer: string
-}
-
-type WorkflowStage = 'feedback' | 'correction' | 'draft' | 'review'
 
 const props = defineProps<{ resultId: number; stage?: WorkflowStage }>()
 const emit = defineEmits<{
@@ -42,385 +21,50 @@ const emit = defineEmits<{
   stageChange: [stage: WorkflowStage]
 }>()
 
-const auth = useAuthStore()
-const roleCode = computed(() => auth.user?.roleCode ?? '')
-const doctor = computed(() => roleCode.value === 'DOCTOR')
-const canCorrect = computed(() => ['DOCTOR', 'RESEARCHER'].includes(roleCode.value))
-
-const feedback = ref<Feedback[]>([])
-const corrections = ref<Correction[]>([])
-const review = ref<Review | null>(null)
-const reports = ref<Report[]>([])
-const loading = ref(false)
-const maskFile = ref<File | null>(null)
+// 模板 ref 必须由 SFC 自身声明，编译器才能静态识别并回填 DOM 元素
 const fileInput = ref<HTMLInputElement | null>(null)
-const draftParseError = ref('')
-const draftRaw = ref<Record<string, unknown>>({})
 
-const submittingFeedback = ref(false)
-const submittingCorrection = ref(false)
-const savingReview = ref(false)
-const generatingDraft = ref(false)
-const signingReport = ref(false)
-const showAllReports = ref(false)
-
-const feedbackForm = reactive<{ verdict: FeedbackVerdict; comment: string }>({
-  verdict: 'ACCEPTED',
-  comment: '',
+const {
+  doctor,
+  canCorrect,
+  feedback,
+  corrections,
+  review,
+  reports,
+  loading,
+  draftParseError,
+  submittingFeedback,
+  submittingCorrection,
+  savingReview,
+  generatingDraft,
+  signingReport,
+  showAllReports,
+  feedbackForm,
+  correctionForm,
+  reviewForm,
+  draftForm,
+  latestCorrectionVersion,
+  llmDraftMeta,
+  activeStep,
+  currentStage,
+  visibleReports,
+  selectStage,
+  toggleAllReports,
+  pickFile,
+  sendFeedback,
+  sendCorrection,
+  sendReview,
+  copyDraftToReview,
+  generateDraft,
+  sign,
+  download,
+} = useClinicalWorkflow({
+  resultId: () => props.resultId,
+  stage: () => props.stage,
+  fileInput,
+  onStageChange: (stage) => emit('stageChange', stage),
+  onWorkflowUpdated: () => emit('workflowUpdated'),
 })
-
-const correctionForm = reactive({
-  reason: '',
-  correctedResultJson: '{}',
-})
-
-const reviewForm = reactive<{
-  status: ReviewStatus
-  correctionVersion: number | null
-  findings: string
-  conclusion: string
-  recommendation: string
-}>({
-  status: 'PENDING',
-  correctionVersion: null,
-  findings: '',
-  conclusion: '',
-  recommendation: '',
-})
-
-const draftForm = reactive<DraftForm>({
-  findings: '',
-  conclusion: '',
-  recommendation: '',
-  explanation: '',
-  disclaimer: 'AI 辅助分析，不等同于独立医学诊断。',
-})
-
-const feedbackVerdictTextMap: Record<FeedbackVerdict, string> = {
-  ACCEPTED: '接受',
-  PARTIAL: '部分正确',
-  INCORRECT: '不正确',
-}
-
-const correctionStatusTextMap: Record<Correction['status'], string> = {
-  DRAFT: '草稿',
-  SUBMITTED: '已提交',
-  ACCEPTED: '已采纳',
-  REJECTED: '已拒绝',
-}
-
-const reportStatusTextMap: Record<Report['status'], string> = {
-  DRAFT: '草稿',
-  SIGNED: '已签发',
-  SUPERSEDED: '历史版本',
-}
-
-const signedReports = computed(() => reports.value.filter((item) => item.status !== 'DRAFT'))
-const latestCorrectionVersion = computed(
-  () => corrections.value[corrections.value.length - 1]?.version ?? 0,
-)
-
-const llmDraftMeta = computed(() => {
-  const provider = typeof draftRaw.value.llmProvider === 'string' ? draftRaw.value.llmProvider : ''
-  const model = typeof draftRaw.value.llmModel === 'string' ? draftRaw.value.llmModel : ''
-  const generatedAt =
-    typeof draftRaw.value.llmGeneratedAt === 'string' ? draftRaw.value.llmGeneratedAt : ''
-
-  return {
-    provider,
-    model,
-    generatedAt,
-    visible: Boolean(provider || model || generatedAt),
-  }
-})
-
-const hasAiDraftReference = computed(() =>
-  Boolean(
-    draftForm.findings.trim() ||
-      draftForm.conclusion.trim() ||
-      draftForm.recommendation.trim() ||
-      draftForm.explanation.trim() ||
-      llmDraftMeta.value.visible,
-  ),
-)
-
-const savedReviewReadyForSign = computed(
-  () =>
-    review.value?.status === 'APPROVED' &&
-    Boolean(
-      review.value.findings?.trim() &&
-        review.value.conclusion?.trim() &&
-        review.value.recommendation?.trim(),
-    ),
-)
-
-const activeStep = computed(() => {
-  if (signedReports.value.length > 0) return 3
-  if (review.value) return 3
-  if (hasAiDraftReference.value) return 2
-  if (corrections.value.length > 0) return 1
-  return 0
-})
-
-const workflowStages: Array<{ key: WorkflowStage; title: string }> = [
-  { key: 'feedback', title: '人工反馈' },
-  { key: 'correction', title: '修正版本' },
-  { key: 'draft', title: 'AI 草稿参考' },
-  { key: 'review', title: '医生审核与签发' },
-]
-
-const recommendedStage = computed<WorkflowStage>(() => workflowStages[activeStep.value]?.key ?? 'feedback')
-const currentStage = computed<WorkflowStage>(() => (
-  props.stage && workflowStages.some((item) => item.key === props.stage)
-    ? props.stage
-    : recommendedStage.value
-))
-const orderedReports = computed(() => [...reports.value].sort((a, b) => b.version - a.version))
-const visibleReports = computed(() => showAllReports.value ? orderedReports.value : orderedReports.value.slice(0, 1))
-
-const selectStage = (stage: WorkflowStage) => emit('stageChange', stage)
-
-const stepStatus = (index: number) => {
-  if (activeStep.value > index) return 'finish'
-  if (activeStep.value === index) return 'process'
-  return 'wait'
-}
-
-const reportStatusType = (status: Report['status']) => {
-  if (status === 'SIGNED') return 'success'
-  if (status === 'SUPERSEDED') return 'info'
-  return 'warning'
-}
-
-const correctionStatusType = (status: Correction['status']) => {
-  if (status === 'ACCEPTED') return 'success'
-  if (status === 'REJECTED') return 'danger'
-  if (status === 'SUBMITTED') return 'warning'
-  return 'info'
-}
-
-const correctionStatusText = (status: Correction['status']) => correctionStatusTextMap[status]
-
-const reportStatusText = (status: Report['status']) => reportStatusTextMap[status]
-
-const parseDraft = (draftJson: string | null | undefined) => {
-  draftParseError.value = ''
-
-  if (!draftJson || !draftJson.trim()) {
-    draftRaw.value = {}
-    return
-  }
-
-  try {
-    const parsed = JSON.parse(draftJson) as Record<string, unknown>
-    draftRaw.value = parsed
-    draftForm.findings = typeof parsed.findings === 'string' ? parsed.findings : ''
-    draftForm.conclusion = typeof parsed.conclusion === 'string' ? parsed.conclusion : ''
-    draftForm.recommendation =
-      typeof parsed.recommendation === 'string' ? parsed.recommendation : ''
-    draftForm.explanation = typeof parsed.explanation === 'string' ? parsed.explanation : ''
-    draftForm.disclaimer =
-      typeof parsed.disclaimer === 'string'
-        ? parsed.disclaimer
-        : 'AI 辅助分析，不等同于独立医学诊断。'
-  } catch {
-    draftRaw.value = {}
-    draftParseError.value = '报告草稿格式异常，请重新保存草稿。'
-    draftForm.findings = ''
-    draftForm.conclusion = ''
-    draftForm.recommendation = ''
-    draftForm.explanation = ''
-    draftForm.disclaimer = 'AI 辅助分析，不等同于独立医学诊断。'
-  }
-}
-
-const load = async () => {
-  loading.value = true
-  try {
-    const [feedbackList, reportList] = await Promise.all([
-      listFeedback(props.resultId),
-      listReports(props.resultId),
-    ])
-    feedback.value = feedbackList
-    reports.value = reportList
-
-    if (canCorrect.value) {
-      corrections.value = await listCorrections(props.resultId)
-    }
-
-    if (doctor.value) {
-      review.value = await getReview(props.resultId)
-      if (review.value) {
-        reviewForm.status = review.value.status
-        reviewForm.correctionVersion = review.value.correctionVersion
-        reviewForm.findings = review.value.findings ?? ''
-        reviewForm.conclusion = review.value.conclusion ?? ''
-        reviewForm.recommendation = review.value.recommendation ?? ''
-      }
-
-      const reportDraft = await getReportDraft(props.resultId)
-      parseDraft(reportDraft.draftJson)
-    }
-  } finally {
-    if (!props.stage) emit('stageChange', recommendedStage.value)
-    loading.value = false
-  }
-}
-
-const sendFeedback = async () => {
-  submittingFeedback.value = true
-  try {
-    await addFeedback(props.resultId, {
-      ...feedbackForm,
-      issueCodes: [],
-    })
-    feedbackForm.comment = ''
-    feedback.value = await listFeedback(props.resultId)
-    ElMessage.success('反馈已提交')
-  } finally {
-    submittingFeedback.value = false
-  }
-}
-
-const pickFile = (event: Event) => {
-  maskFile.value = (event.target as HTMLInputElement).files?.[0] ?? null
-}
-
-const resetCorrectionForm = () => {
-  maskFile.value = null
-  correctionForm.reason = ''
-  correctionForm.correctedResultJson = '{}'
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
-}
-
-const sendCorrection = async () => {
-  if (!maskFile.value || !correctionForm.reason.trim()) {
-    ElMessage.warning('请选择 PNG、JPEG 或 TIFF 图片并填写修正原因')
-    return
-  }
-
-  submittingCorrection.value = true
-  try {
-    const data = new FormData()
-    data.append('file', maskFile.value)
-    data.append('reason', correctionForm.reason)
-    data.append('correctedResultJson', correctionForm.correctedResultJson)
-    data.append('expectedVersion', String(latestCorrectionVersion.value))
-
-    await addCorrection(props.resultId, data)
-    corrections.value = await listCorrections(props.resultId)
-    resetCorrectionForm()
-    ElMessage.success('修正版本已提交')
-  } finally {
-    submittingCorrection.value = false
-  }
-}
-
-const sendReview = async () => {
-  savingReview.value = true
-  try {
-    review.value = await submitReview(props.resultId, {
-      ...reviewForm,
-      expectedVersion: review.value?.version ?? 0,
-    })
-    emit('workflowUpdated')
-    ElMessage.success('审核已保存')
-  } finally {
-    savingReview.value = false
-  }
-}
-
-const hasReviewFormContent = () =>
-  Boolean(
-    reviewForm.findings.trim() || reviewForm.conclusion.trim() || reviewForm.recommendation.trim(),
-  )
-
-const copyDraftToReview = async (askBeforeOverwrite: boolean) => {
-  const findings = draftForm.findings.trim()
-  const conclusion = draftForm.conclusion.trim()
-  const recommendation = draftForm.recommendation.trim()
-
-  if (!findings && !conclusion && !recommendation) {
-    ElMessage.warning('暂无可带入医生审核的 AI 草稿内容')
-    return false
-  }
-
-  if (askBeforeOverwrite && hasReviewFormContent()) {
-    try {
-      await ElMessageBox.confirm(
-        'AI 草稿会覆盖当前医生审核表单中的所见、结论和建议，是否继续？',
-        '带入医生审核',
-        { type: 'warning' },
-      )
-    } catch {
-      return false
-    }
-  }
-
-  reviewForm.findings = findings
-  reviewForm.conclusion = conclusion
-  reviewForm.recommendation = recommendation
-  return true
-}
-
-const generateDraft = async () => {
-  const hasManualDraft = Boolean(
-    draftForm.findings.trim() || draftForm.conclusion.trim() || draftForm.recommendation.trim(),
-  )
-  if (hasManualDraft) {
-    await ElMessageBox.confirm('AI 生成会覆盖当前草稿中的所见、结论和建议，是否继续？', 'AI 生成草稿', {
-      type: 'warning',
-    })
-  }
-
-  generatingDraft.value = true
-  try {
-    const reportDraft = await generateReportDraft(props.resultId)
-    parseDraft(reportDraft.draftJson)
-    const copied = await copyDraftToReview(true)
-    emit('workflowUpdated')
-    ElMessage.success(
-      copied ? 'AI 草稿已生成并带入医生审核表单，请复核后保存' : 'AI 草稿已生成',
-    )
-  } finally {
-    generatingDraft.value = false
-  }
-}
-
-const sign = async () => {
-  if (!savedReviewReadyForSign.value) {
-    ElMessage.warning('请先保存完整且已通过的医生审核意见后再签发 PDF')
-    return
-  }
-
-  await ElMessageBox.confirm('签发后本版本不可修改，确认签发 PDF？', '签发报告', {
-    type: 'warning',
-  })
-
-  signingReport.value = true
-  try {
-    await signReport(props.resultId)
-    reports.value = await listReports(props.resultId)
-    emit('workflowUpdated')
-    ElMessage.success('报告已签发')
-  } finally {
-    signingReport.value = false
-  }
-}
-
-const download = async (report: Report) => {
-  const blob = await downloadReportVersion(props.resultId, report.version)
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `report-${props.resultId}-v${report.version}.pdf`
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-onMounted(load)
 </script>
 
 <template>
@@ -439,10 +83,10 @@ onMounted(load)
 
     <el-steps class="workflow-steps" :active="activeStep" finish-status="success" align-center>
       <el-step
-        v-for="(item, index) in workflowStages"
+        v-for="(item, index) in WORKFLOW_STAGES"
         :key="item.key"
         :title="item.title"
-        :status="stepStatus(index)"
+        :status="stepStatus(activeStep, index)"
         :class="{ 'is-selected': currentStage === item.key }"
         @click="selectStage(item.key)"
       />
@@ -473,24 +117,22 @@ onMounted(load)
               show-word-limit
             />
           </el-form-item>
-          <el-button
-            type="primary"
-            :loading="submittingFeedback"
-            @click="sendFeedback"
-          >
+          <el-button type="primary" :loading="submittingFeedback" @click="sendFeedback">
             提交反馈
           </el-button>
         </el-form>
 
         <div class="history-list">
           <el-empty v-if="feedback.length === 0" description="暂无反馈" />
-          <div v-for="item in feedback" v-else :key="item.id" class="history-item">
-            <div class="history-main">
-              <el-tag size="small">{{ feedbackVerdictTextMap[item.verdict] }}</el-tag>
-              <span>{{ formatEmpty(item.comment) }}</span>
+          <template v-else>
+            <div v-for="item in feedback" :key="item.id" class="history-item">
+              <div class="history-main">
+                <el-tag size="small">{{ feedbackVerdictTextMap[item.verdict] }}</el-tag>
+                <span>{{ formatEmpty(item.comment) }}</span>
+              </div>
+              <span class="history-time">{{ formatDateTime(item.createdAt) }}</span>
             </div>
-            <span class="history-time">{{ formatDateTime(item.createdAt) }}</span>
-          </div>
+          </template>
         </div>
       </section>
 
@@ -520,12 +162,7 @@ onMounted(load)
             />
           </el-form-item>
           <div class="section-actions">
-            <el-button
-              type="primary"
-              plain
-              :loading="submittingCorrection"
-              @click="sendCorrection"
-            >
+            <el-button type="primary" plain :loading="submittingCorrection" @click="sendCorrection">
               上传修正版本
             </el-button>
           </div>
@@ -538,9 +175,9 @@ onMounted(load)
               <template #default="{ row }">V{{ row.version }}</template>
             </el-table-column>
             <el-table-column label="状态" width="110">
-              <template #default="{ row }">
+              <template #default="{ row }: { row: Correction }">
                 <el-tag :type="correctionStatusType(row.status)" size="small">
-                  {{ correctionStatusText(row.status) }}
+                  {{ correctionStatusTextMap[row.status] }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -649,9 +286,7 @@ onMounted(load)
               <el-button type="primary" :loading="savingReview" @click="sendReview">
                 保存审核
               </el-button>
-              <el-button type="danger" :loading="signingReport" @click="sign">
-                签发 PDF
-              </el-button>
+              <el-button type="danger" :loading="signingReport" @click="sign"> 签发 PDF </el-button>
             </div>
           </el-form>
         </template>
@@ -664,9 +299,9 @@ onMounted(load)
               <template #default="{ row }">V{{ row.version }}</template>
             </el-table-column>
             <el-table-column label="状态" width="120">
-              <template #default="{ row }">
+              <template #default="{ row }: { row: Report }">
                 <el-tag :type="reportStatusType(row.status)" size="small">
-                  {{ reportStatusText(row.status) }}
+                  {{ reportStatusTextMap[row.status] }}
                 </el-tag>
               </template>
             </el-table-column>
@@ -678,12 +313,7 @@ onMounted(load)
             </el-table-column>
             <el-table-column label="操作" width="100">
               <template #default="{ row }">
-                <el-button
-                  v-if="row.status !== 'DRAFT'"
-                  link
-                  type="primary"
-                  @click="download(row)"
-                >
+                <el-button v-if="row.status !== 'DRAFT'" link type="primary" @click="download(row)">
                   下载
                 </el-button>
                 <span v-else class="muted">未签发</span>
@@ -695,7 +325,7 @@ onMounted(load)
             link
             type="primary"
             class="history-toggle"
-            @click="showAllReports = !showAllReports"
+            @click="toggleAllReports"
           >
             {{ showAllReports ? '收起历史版本' : `查看全部 ${reports.length} 个版本` }}
           </el-button>
@@ -705,227 +335,4 @@ onMounted(load)
   </div>
 </template>
 
-<style scoped>
-.workflow-panel {
-  min-height: 360px;
-}
-
-.workflow-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.workflow-title {
-  color: #111827;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.workflow-subtitle {
-  margin-top: 4px;
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.workflow-steps {
-  margin: 0 0 14px;
-  padding: 14px 18px;
-  overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.workflow-steps :deep(.el-step) {
-  cursor: pointer;
-}
-
-.workflow-steps :deep(.el-step.is-selected .el-step__title) {
-  color: #409eff;
-  font-weight: 700;
-}
-
-.workflow-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.workflow-section {
-  min-width: 0;
-  padding: 16px 0 0;
-  border-top: 1px solid #eef2f7;
-}
-
-.section-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.section-heading h3 {
-  margin: 0;
-  color: #111827;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.section-heading p {
-  margin: 6px 0 0;
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.feedback-form,
-.correction-form,
-.review-form,
-.draft-form {
-  padding: 14px;
-  border-radius: 10px;
-  background: #f9fafb;
-}
-
-.feedback-form {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.feedback-form :deep(.el-form-item) {
-  margin-bottom: 0;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.hint {
-  margin-top: 6px;
-  color: #909399;
-  font-size: 12px;
-}
-
-.section-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.sticky-actions {
-  position: sticky;
-  z-index: 3;
-  bottom: 0;
-  margin: 0 -14px -14px;
-  padding: 12px 14px;
-  border-top: 1px solid #e5e7eb;
-  background: rgb(249 250 251 / 96%);
-  backdrop-filter: blur(6px);
-}
-
-.history-list {
-  margin-top: 14px;
-}
-
-.history-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #eef2f7;
-}
-
-.history-item:last-child {
-  border-bottom: 0;
-}
-
-.history-main {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 10px;
-  color: #374151;
-}
-
-.history-main span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.history-time,
-.muted {
-  color: #909399;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.compact-table,
-.report-history {
-  margin-top: 14px;
-}
-
-.history-title {
-  margin: 8px 0 12px;
-  color: #374151;
-  font-weight: 600;
-}
-
-.history-toggle {
-  margin-top: 8px;
-}
-
-.draft-alert {
-  margin-bottom: 12px;
-}
-
-.llm-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin: -8px 0 16px;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-@media (max-width: 1080px) {
-  .feedback-form,
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .section-actions {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 700px) {
-  .workflow-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .workflow-steps {
-    justify-content: flex-start;
-  }
-
-  .workflow-steps :deep(.el-step) {
-    min-width: 150px;
-    flex-basis: 150px !important;
-  }
-
-  .feedback-form,
-  .correction-form,
-  .review-form,
-  .draft-form {
-    padding: 12px;
-  }
-}
-</style>
+<style scoped src="./ClinicalWorkflowPanel.css"></style>

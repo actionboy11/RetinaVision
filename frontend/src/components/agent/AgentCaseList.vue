@@ -2,6 +2,7 @@
 import type {
   AgentAction,
   AgentCaseListPayload,
+  AgentCaseSummary,
   AgentPagination,
 } from '@/types/agent'
 import {
@@ -28,6 +29,19 @@ const emit = defineEmits<{
 
 const paginationAction = (type: AgentAction['type']) =>
   props.actions?.find((item) => item.type === type)
+
+/**
+ * 优先使用后端下发的 VIEW_CASE action（携带 targetId），避免翻页后「第 N 个病例」
+ * 这类页内序号指向错误数据。后端未提供 action 时，回退为带病例号的精确查询文本。
+ */
+const viewCase = (item: AgentCaseSummary) => {
+  const action = props.actions?.find(
+    (candidate) =>
+      candidate.type === 'VIEW_CASE' && String(candidate.targetId) === String(item.caseId),
+  )
+  if (action) emit('action', action)
+  else emit('query', `查看病例 ${item.caseNo}`)
+}
 </script>
 
 <template>
@@ -58,13 +72,12 @@ const paginationAction = (type: AgentAction['type']) =>
             {{ displayTaskStatus(item.segmentationStatus) }}
           </el-tag>
           <small v-if="item.reviewStatus || item.reportStatus">
-            {{ displayReviewStatus(item.reviewStatus) }} · {{ displayReportStatus(item.reportStatus) }}
+            {{ displayReviewStatus(item.reviewStatus) }} ·
+            {{ displayReportStatus(item.reportStatus) }}
           </small>
         </div>
         <small>{{ item.updatedAt ? formatDateTime(item.updatedAt) : '暂无数据' }}</small>
-        <el-button link type="primary" @click="emit('query', `查看第 ${index + 1} 个病例`)">
-          查看病例
-        </el-button>
+        <el-button link type="primary" @click="viewCase(item)"> 查看病例 </el-button>
       </div>
     </div>
 
@@ -74,7 +87,9 @@ const paginationAction = (type: AgentAction['type']) =>
         <el-button
           size="small"
           :disabled="!pagination.hasPrevious || !paginationAction('PREVIOUS_PAGE')"
-          @click="paginationAction('PREVIOUS_PAGE') && emit('action', paginationAction('PREVIOUS_PAGE')!)"
+          @click="
+            paginationAction('PREVIOUS_PAGE') && emit('action', paginationAction('PREVIOUS_PAGE')!)
+          "
         >
           上一页
         </el-button>
@@ -90,111 +105,4 @@ const paginationAction = (type: AgentAction['type']) =>
   </div>
 </template>
 
-<style scoped>
-.case-list-wrap {
-  margin-top: 12px;
-}
-
-.case-list {
-  border-top: 1px solid #dfe5ec;
-}
-
-.case-head,
-.case-row {
-  display: grid;
-  grid-template-columns: 46px minmax(160px, 1.35fr) 64px minmax(92px, .8fr) minmax(92px, .8fr) 142px 74px;
-  gap: 10px;
-  align-items: center;
-}
-
-.case-head {
-  padding: 8px 4px;
-  color: #7a8798;
-  font-size: 12px;
-}
-
-.case-row {
-  min-height: 56px;
-  padding: 8px 4px;
-  border-top: 1px solid #edf0f4;
-  color: #334155;
-  font-size: 13px;
-}
-
-.case-index {
-  color: #176b87;
-  font-weight: 700;
-}
-
-.case-identity {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.clinical-state {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-}
-
-.clinical-state small {
-  overflow: hidden;
-  max-width: 100%;
-  color: #7a8798;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.case-identity strong,
-.case-identity small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.case-identity small,
-.case-row > small,
-.pagination-bar {
-  color: #7a8798;
-  font-size: 12px;
-}
-
-.pagination-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 10px;
-}
-
-.compact-empty {
-  padding: 18px 0;
-  color: #8a95a5;
-  text-align: center;
-}
-
-@media (max-width: 900px) {
-  .case-head {
-    display: none;
-  }
-
-  .case-row {
-    grid-template-columns: 28px minmax(0, 1fr) auto;
-    gap: 6px 10px;
-  }
-
-  .case-row > :nth-child(n + 3):not(:last-child) {
-    grid-column: 2;
-  }
-
-  .case-row > :last-child {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-  }
-}
-</style>
+<style scoped src="./AgentCaseList.css"></style>
