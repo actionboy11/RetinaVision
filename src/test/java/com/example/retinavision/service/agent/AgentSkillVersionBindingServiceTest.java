@@ -1,0 +1,44 @@
+package com.example.retinavision.service.agent;
+
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
+import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
+
+import com.example.retinavision.mapper.agent.AgentSessionSkillVersionMapper;
+import com.example.retinavision.mapper.agent.AgentSkillMapper;
+import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
+import com.example.retinavision.pojo.agent.entity.AgentSessionSkillVersionEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
+import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class AgentSkillVersionBindingServiceTest {
+    @Test
+    void newSessionBindsActiveVersionAndKeepsItAfterActivationChanges() {
+        AgentSessionSkillVersionMapper bindings = mock(AgentSessionSkillVersionMapper.class);
+        AgentSkillMapper skills = mock(AgentSkillMapper.class);
+        AgentSkillVersionMapper versions = mock(AgentSkillVersionMapper.class);
+        AgentSkillEntity skill = new AgentSkillEntity();
+        skill.setId(3L);
+        skill.setSkillCode("ASSIGNED_CASE_SEARCH");
+        skill.setActiveVersionId(31L);
+        AgentSkillVersionEntity version = new AgentSkillVersionEntity();
+        version.setId(31L);
+        version.setSkillId(3L);
+        version.setVersion(2);
+        when(skills.selectOne(any())).thenReturn(skill);
+        when(versions.selectById(31L)).thenReturn(version);
+
+        AgentSkillVersionBindingService service = new AgentSkillVersionBindingService(bindings, skills, versions);
+        AgentSkillRuntimeVersion resolved = service.resolve(9L, AgentSkillCode.ASSIGNED_CASE_SEARCH);
+
+        assertThat(resolved.version()).isEqualTo(2);
+        verify(bindings).insert(any(AgentSessionSkillVersionEntity.class));
+    }
+}

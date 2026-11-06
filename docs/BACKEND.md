@@ -86,21 +86,38 @@ RabbitMQ 消费者运行在 Java 后端进程中。Python 服务只负责模型�
 
 ```text
 src/main/java/com/example/retinavision/
-├── analysis/       # 任务领域、应用用例和基础设施适配器
-├── agent/          # Skill 路由、上下文和 Tool Calling 编排
-├── ai/             # Python AI HTTP 客户端
-├── config/         # Security、RabbitMQ、Spring AI 配置
-├── controller/     # 浏览器 API
-├── llm/            # Prompt 编排、安全策略与模型客户端
-├── rag/            # Embedding、Qdrant 与引用校验
-├── service/        # 病例、审核、报告和治理业务
-└── pojo/           # DTO、VO 与持久化实体
+├── controller/<功能>/   # 浏览器 API：auth、cases、clinical、governance 等
+├── service/<功能>/      # 接口、实现、编排和业务策略
+├── mapper/<功能>/       # MyBatis Mapper
+├── pojo/<功能>/         # DTO、VO、实体和领域数据结构
+├── enumeration/<功能>/  # 业务枚举
+├── llm/                 # agent、governance、reporting、shared
+├── rag/                 # knowledge、governance
+├── config/              # analysis、auth、clinical、governance、shared
+├── mq/analysis/         # 分析任务消息、Outbox 发布和消费
+├── ai/analysis/         # Python 推理服务客户端与协议
+└── redis/shared/        # Redis Key 统一构造
 
 src/main/resources/
 ├── db/migration/   # Flyway 迁移
 ├── mapper/         # MyBatis XML
 └── application.yaml
 ```
+
+后端采用“技术根目录 + 功能子包”的模块化单体结构。例如病例相关代码分别位于
+`controller/cases`、`service/cases`、`mapper/cases` 和 `pojo/cases`，查找时先按
+技术职责定位，再按功能归属定位。系统仍是一个 Spring Boot 进程和一个业务数据库，
+没有为了整理目录拆成微服务。
+
+Analysis 的行为边界没有因目录扁平化而取消：用例、端口、适配器和本地制品存储分别位于
+`service/analysis` 的子包，命令、领域模型、事件和持久化对象位于 `pojo/analysis`，
+消息、AI 客户端和配置分别位于 `mq/analysis`、`ai/analysis`、`config/analysis`。
+Agent 同样分为 `service/agent` 的 Java 编排、`pojo/agent` 的结构化契约和
+`llm/agent` 的模型路由适配；评测执行归入 governance。
+
+`LayerFunctionalPackageArchitectureTest` 约束技术根下必须使用批准的功能子包，
+`AnalysisModuleArchitectureTest` 继续约束领域模型无框架依赖、Service 不随意依赖具体
+MQ/AI/存储适配器，以及无关 Controller 不直接访问 Analysis 技术适配器。
 
 ## 本地启动
 

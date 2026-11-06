@@ -27,12 +27,17 @@ class LayerFunctionalPackageArchitectureTest {
             "mapper", "mq", "pojo", "rag", "redis", "result", "service",
             "utils");
 
-    private static final Set<String> TECHNICAL_ROOTS = Set.of(
-            "ai", "config", "controller", "enumeration", "filter", "llm",
-            "mapper", "mq", "pojo", "rag", "redis", "service", "utils");
+    private static final Set<String> FUNCTIONALIZED_ROOTS = Set.of(
+            "agent", "ai", "analysis", "common", "config", "constant",
+            "controller", "enumeration", "filter", "llm", "mapper", "mq",
+            "pojo", "rag", "redis", "service", "utils");
 
     private final JavaClasses productionClasses = new ClassFileImporter()
             .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+            .importPackages(BASE_PACKAGE);
+
+    private final JavaClasses testClasses = new ClassFileImporter()
+            .withImportOption(ImportOption.Predefined.ONLY_INCLUDE_TESTS)
             .importPackages(BASE_PACKAGE);
 
     @Test
@@ -60,10 +65,8 @@ class LayerFunctionalPackageArchitectureTest {
                 .map(this::relativePackage)
                 .filter(packageName -> !packageName.isEmpty())
                 .map(packageName -> packageName.split("\\."))
-                .filter(parts -> parts.length >= 2)
-                .filter(parts -> TECHNICAL_ROOTS.contains(parts[0]))
-                .filter(parts -> !isLegacyTechnicalPackage(parts))
-                .filter(parts -> !APPROVED_FUNCTIONS.contains(parts[1]))
+                .filter(parts -> FUNCTIONALIZED_ROOTS.contains(parts[0]))
+                .filter(parts -> parts.length < 2 || !APPROVED_FUNCTIONS.contains(parts[1]))
                 .map(parts -> String.join(".", parts))
                 .distinct()
                 .sorted()
@@ -156,6 +159,23 @@ class LayerFunctionalPackageArchitectureTest {
                 () -> "Remaining classes are not grouped by function: " + violations);
     }
 
+    @Test
+    void migrated_tests_mirror_functional_packages() {
+        List<String> violations = testClasses.stream()
+                .filter(javaClass -> {
+                    String relativePackage = relativePackage(javaClass);
+                    String[] parts = relativePackage.split("\\.");
+                    return FUNCTIONALIZED_ROOTS.contains(parts[0])
+                            && (parts.length < 2 || !APPROVED_FUNCTIONS.contains(parts[1]));
+                })
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Tests still use legacy technical packages: " + violations);
+    }
+
     private String relativePackage(JavaClass javaClass) {
         String packageName = javaClass.getPackageName();
         if (packageName.equals(BASE_PACKAGE)) {
@@ -164,17 +184,4 @@ class LayerFunctionalPackageArchitectureTest {
         return packageName.substring(BASE_PACKAGE.length() + 1);
     }
 
-    private boolean isLegacyTechnicalPackage(String[] parts) {
-        if (parts.length == 1) {
-            return true;
-        }
-        if (parts[0].equals("service") && parts[1].equals("impl")) {
-            return true;
-        }
-        if (parts[0].equals("ai") && parts[1].equals("dto")) {
-            return true;
-        }
-        return parts[0].equals("pojo")
-                && Set.of("DTO", "Entity", "VO").contains(parts[1]);
-    }
 }
