@@ -27,6 +27,7 @@ Detailed documentation:
 | Document | Responsibility |
 |---|---|
 | `README.md` | System architecture, local startup, roles, and verification |
+| `docs/PROJECT_ARCHITECTURE_GUIDE.md` | Backend-focused directory dictionary, core methods, business flows, and reading routes |
 | `API_CONTRACT.md` | Browser frontend to Java backend HTTP contract |
 | `docs/BACKEND.md` | Java configuration, persistence, queues, RAG, and Agent internals |
 | `frontend/README.md` | Frontend requirements, commands, proxy, and security boundary |
