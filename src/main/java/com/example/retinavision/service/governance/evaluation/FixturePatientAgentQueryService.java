@@ -8,8 +8,6 @@ import com.example.retinavision.pojo.patient.vo.PatientAgentProgressVO;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentSignedReportVO;
 
-import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
-import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.result.PageResult;

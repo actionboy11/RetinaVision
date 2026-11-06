@@ -3,8 +3,6 @@ package com.example.retinavision.config.shared;
 import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.rag.knowledge.EmbeddingProperties;
 
-import com.example.retinavision.llm.shared.LlmProperties;
-import com.example.retinavision.rag.knowledge.EmbeddingProperties;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.MetadataMode;

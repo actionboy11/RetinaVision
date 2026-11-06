@@ -5,7 +5,6 @@ import com.example.retinavision.rag.knowledge.QdrantSearchHit;
 import com.example.retinavision.rag.knowledge.RagGroundingValidator;
 
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

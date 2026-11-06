@@ -23,7 +23,6 @@ import com.example.retinavision.service.agent.policy.AgentUnsafeRequestPolicy;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.patient.PatientGender;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.enumeration.cases.EyeSide;

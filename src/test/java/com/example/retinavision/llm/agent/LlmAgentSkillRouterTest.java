@@ -10,8 +10,6 @@ import com.example.retinavision.service.agent.AgentSkillRegistry;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.shared.LlmGenerationResult;
-import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

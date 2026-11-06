@@ -10,14 +10,7 @@ import com.example.retinavision.pojo.agent.SegmentationState;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO;
 
-import com.example.retinavision.pojo.agent.DoctorCaseSearchCriteria;
-import com.example.retinavision.pojo.agent.DoctorDateWindow;
-import com.example.retinavision.pojo.agent.DoctorClinicalQueueCriteria;
-import com.example.retinavision.pojo.agent.DoctorClinicalQueueType;
-import com.example.retinavision.pojo.agent.DoctorTaskSearchCriteria;
-import com.example.retinavision.pojo.agent.DoctorTaskStatusFilter;
 import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
-import com.example.retinavision.pojo.agent.SegmentationState;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.cases.DoctorAgentQueryMapper;

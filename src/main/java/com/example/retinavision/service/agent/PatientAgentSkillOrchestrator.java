@@ -16,7 +16,6 @@ import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
 import com.example.retinavision.pojo.agent.PatientReportExplanationResult;
 import com.example.retinavision.service.agent.policy.AgentUnsafeRequestPolicy;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;

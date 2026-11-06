@@ -22,7 +22,6 @@ import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessagePublisher;
 import com.example.retinavision.service.reporting.AnalysisReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -35,7 +34,6 @@ import java.time.Clock;
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
 @EnableConfigurationProperties(AnalysisOutboxProperties.class)
-@MapperScan(basePackageClasses = AnalysisOutboxMapper.class)
 public class AnalysisModuleConfiguration {
 
     @Bean

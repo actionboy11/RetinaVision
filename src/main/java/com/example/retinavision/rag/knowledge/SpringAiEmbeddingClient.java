@@ -2,7 +2,6 @@ package com.example.retinavision.rag.knowledge;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

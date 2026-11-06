@@ -7,9 +7,7 @@ import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationStartC
 import com.example.retinavision.service.agent.AgentSkillRegistry;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.mapper.governance.AgentEvaluationDatasetMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunMapper;
@@ -20,8 +18,6 @@ import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunBinding
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
-import com.example.retinavision.pojo.agent.AgentSkillCode;
-import com.example.retinavision.service.agent.AgentSkillRegistry;
 import com.example.retinavision.enumeration.user.UserRole;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -5,8 +5,6 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.constant.shared.ErrorMessageContant;
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.imaging.ImageStatus;
 import com.example.retinavision.enumeration.imaging.ImageQualityStatus;

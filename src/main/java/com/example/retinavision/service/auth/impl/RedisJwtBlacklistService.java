@@ -3,7 +3,6 @@ package com.example.retinavision.service.auth.impl;
 import com.example.retinavision.redis.shared.RedisKeyFactory;
 
 import com.example.retinavision.exception.RedisUnavailableException;
-import com.example.retinavision.redis.shared.RedisKeyFactory;
 import com.example.retinavision.service.auth.JwtBlacklistService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;

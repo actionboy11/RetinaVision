@@ -42,8 +42,10 @@ class AnalysisModuleArchitectureTest {
                     "..service.analysis.storage..");
 
     @ArchTest
-    static final ArchRule analysis_domain_models_do_not_use_provider_or_filesystem_types = noClasses()
-            .that().resideInAPackage("..pojo.analysis..")
+    static final ArchRule analysis_use_cases_and_ports_do_not_use_provider_or_filesystem_types = noClasses()
+            .that().resideInAPackage("..service.analysis.port..")
+            .or().haveFullyQualifiedName("com.example.retinavision.service.analysis.ExecuteAnalysisTaskHandler")
+            .or().haveFullyQualifiedName("com.example.retinavision.service.analysis.ExecuteAnalysisTaskUseCase")
             .should().dependOnClassesThat()
             .resideInAnyPackage(
                     "..retinavision.ai..",

@@ -3,7 +3,6 @@ package com.example.retinavision.mapper.patient;
 import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
 import com.example.retinavision.enumeration.cases.EyeSide;
 
-import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentSignedReportVO;
 import lombok.Data;

@@ -12,10 +12,6 @@ import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChunkEntity;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
-import com.example.retinavision.rag.knowledge.EmbeddingClient;
-import com.example.retinavision.rag.knowledge.EmbeddingProperties;
-import com.example.retinavision.rag.knowledge.QdrantClient;
-import com.example.retinavision.rag.knowledge.QdrantPoint;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

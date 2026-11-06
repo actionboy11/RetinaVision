@@ -9,8 +9,6 @@ import com.example.retinavision.pojo.agent.AgentSkillRoute;
 import com.example.retinavision.service.agent.AgentSkillRegistry;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
-import com.example.retinavision.llm.shared.LlmGenerationResult;
-import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;

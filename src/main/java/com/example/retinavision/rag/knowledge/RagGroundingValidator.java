@@ -3,8 +3,6 @@ package com.example.retinavision.rag.knowledge;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.example.retinavision.llm.shared.PromptScenario;
 
-import com.example.retinavision.llm.shared.LlmSafetyPolicy;
-import com.example.retinavision.llm.shared.PromptScenario;
 import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

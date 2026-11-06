@@ -2,7 +2,6 @@ package com.example.retinavision.redis.shared;
 
 import com.example.retinavision.config.shared.RedisFeatureProperties;
 
-import com.example.retinavision.config.shared.RedisFeatureProperties;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;

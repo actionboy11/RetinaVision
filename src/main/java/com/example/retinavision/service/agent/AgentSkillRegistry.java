@@ -10,7 +10,6 @@ import com.example.retinavision.pojo.agent.DoctorTaskStatusFilter;
 import com.example.retinavision.pojo.agent.SegmentationState;
 import com.example.retinavision.enumeration.cases.EyeSide;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;

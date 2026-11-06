@@ -2,7 +2,6 @@ package com.example.retinavision.service.agent;
 
 import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
 
-import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.patient.vo.PatientAgentCaseSummaryVO;
 import com.example.retinavision.pojo.patient.vo.PatientAgentProgressVO;

@@ -2,7 +2,6 @@ package com.example.retinavision.service.cases.impl;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.patient.PatientProfileSource;

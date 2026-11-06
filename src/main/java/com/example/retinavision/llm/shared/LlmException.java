@@ -2,7 +2,6 @@ package com.example.retinavision.llm.shared;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 
 public class LlmException extends BaseException {

@@ -10,21 +10,14 @@ import com.example.retinavision.service.governance.evaluation.AgentEvaluationEli
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.governance.PromptTemplateMapper;
 import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 import com.example.retinavision.mapper.governance.PromptEvaluationRunMapper;
 import com.example.retinavision.pojo.governance.entity.PromptEvaluationRunEntity;
-import com.example.retinavision.llm.shared.LlmProperties;
-import com.example.retinavision.llm.governance.PromptEvaluationService;
-import com.example.retinavision.llm.governance.RagEvaluationService;
-import com.example.retinavision.rag.knowledge.EmbeddingProperties;
-import com.example.retinavision.rag.knowledge.QdrantProperties;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.example.retinavision.service.governance.PromptTemplateService;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

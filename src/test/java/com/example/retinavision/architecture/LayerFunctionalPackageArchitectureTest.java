@@ -1,16 +1,19 @@
 package com.example.retinavision.architecture;
 
+import com.example.retinavision.config.analysis.AnalysisModuleConfiguration;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import org.junit.jupiter.api.Test;
+import org.mybatis.spring.annotation.MapperScan;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class LayerFunctionalPackageArchitectureTest {
 
@@ -174,6 +177,12 @@ class LayerFunctionalPackageArchitectureTest {
 
         assertTrue(violations.isEmpty(),
                 () -> "Tests still use legacy technical packages: " + violations);
+    }
+
+    @Test
+    void analysis_configuration_does_not_repeat_the_global_mapper_scan() {
+        assertFalse(AnalysisModuleConfiguration.class.isAnnotationPresent(MapperScan.class),
+                "Analysis configuration must rely on the application-wide recursive Mapper scan");
     }
 
     private String relativePackage(JavaClass javaClass) {

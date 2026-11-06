@@ -8,17 +8,12 @@ import com.example.retinavision.rag.knowledge.QdrantPoint;
 import com.example.retinavision.enumeration.knowledge.KnowledgeAudience;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.knowledge.KnowledgeChunkMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChunkEntity;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
-import com.example.retinavision.rag.knowledge.EmbeddingClient;
-import com.example.retinavision.rag.knowledge.EmbeddingProperties;
-import com.example.retinavision.rag.knowledge.QdrantClient;
-import com.example.retinavision.rag.knowledge.QdrantPoint;
 import com.example.retinavision.service.knowledge.KnowledgeIngestionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

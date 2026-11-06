@@ -2,7 +2,6 @@ package com.example.retinavision.controller.governance;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.governance.dto.UpdateActivePromptVersionDTO;

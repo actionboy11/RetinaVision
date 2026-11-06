@@ -5,7 +5,6 @@ import com.example.retinavision.rag.knowledge.KnowledgeAudiencePolicy;
 import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
 import com.example.retinavision.enumeration.patient.PatientGender;
 
-import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.enumeration.user.UserRole;
@@ -18,8 +17,6 @@ import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.cases.vo.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
-import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
-import com.example.retinavision.rag.knowledge.KnowledgeAudiencePolicy;
 import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
 import com.example.retinavision.service.agent.AgentClinicalReferenceService;
 import com.example.retinavision.service.cases.ClinicalAccessService;

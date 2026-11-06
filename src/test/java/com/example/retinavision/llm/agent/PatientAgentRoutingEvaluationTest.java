@@ -12,8 +12,6 @@ import com.example.retinavision.pojo.agent.PatientAgentReference;
 import com.example.retinavision.service.agent.AgentSkillRegistry;
 import com.example.retinavision.service.agent.PatientAgentContextCommandParser;
 
-import com.example.retinavision.llm.shared.LlmGenerationResult;
-import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
