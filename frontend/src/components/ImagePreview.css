@@ -1,0 +1,26 @@
+.preview-shell {
+  min-height: 360px;
+}
+
+.preview-filename {
+  margin-bottom: 12px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.preview-empty,
+.preview-image-wrap {
+  display: grid;
+  min-height: 360px;
+  place-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 68vh;
+  object-fit: contain;
+}

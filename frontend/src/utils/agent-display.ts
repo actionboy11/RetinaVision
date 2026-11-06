@@ -19,7 +19,11 @@ export const metricDefinitions = [
   { key: 'patientCount', label: '负责患者', query: '我有多少名患者？' },
   { key: 'caseCount', label: '病例总数', query: '查询我负责的病例' },
   { key: 'unsegmentedCaseCount', label: '尚未分割', query: '哪些病例还没有进行分割？' },
-  { key: 'incompleteSegmentationCaseCount', label: '分割未完成', query: '哪些病例的分割还没有完成？' },
+  {
+    key: 'incompleteSegmentationCaseCount',
+    label: '分割未完成',
+    query: '哪些病例的分割还没有完成？',
+  },
   { key: 'pendingReviewCount', label: '待审核', query: '今天有哪些待审核结果？' },
   { key: 'pendingReportCount', label: '待签发', query: '哪些结果已经审核但还没有签发？' },
 ] as const
@@ -101,7 +105,11 @@ export const workflowTagType = (value?: string | null): ElementTagType =>
     : 'info'
 
 export const displayTaskStatus = (value?: string | null) =>
-  value && value in taskStatusTextMap ? taskStatusTextMap[value as TaskStatus] : value ? value : '尚未分割'
+  value && value in taskStatusTextMap
+    ? taskStatusTextMap[value as TaskStatus]
+    : value
+      ? value
+      : '尚未分割'
 
 export const taskTagType = (value?: string | null): ElementTagType =>
   value && value in taskStatusTagTypeMap ? taskStatusTagTypeMap[value as TaskStatus] : 'info'
@@ -120,7 +128,9 @@ export const displayEyeSide = (value?: string | null) =>
   value && value in eyeSideTextMap ? eyeSideTextMap[value as EyeSide] : formatEmpty(value)
 
 export const displayGender = (value?: string | null) =>
-  value && value in patientGenderTextMap ? patientGenderTextMap[value as PatientGender] : formatEmpty(value)
+  value && value in patientGenderTextMap
+    ? patientGenderTextMap[value as PatientGender]
+    : formatEmpty(value)
 
 export const displayTaskType = (value?: string | null) =>
   value && value in taskTypeTextMap ? taskTypeTextMap[value as TaskType] : formatEmpty(value)

@@ -1,4 +1,4 @@
-import type { DateTimeString, ID } from './common'
+import type { DateTimeString, ID, ReviewStatusValue } from './common'
 import type { CaseWorkflowStatus, EyeSide, PatientGender } from './case'
 import type { ImageQualityStatus, TaskStatus, TaskType } from './task'
 
@@ -45,7 +45,7 @@ export interface AgentCaseSummary {
   qualityStatus?: ImageQualityStatus | null
   qualityScore?: number | null
   segmentationStatus?: TaskStatus | null
-  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED' | null
+  reviewStatus?: ReviewStatusValue | null
   reportStatus?: 'DRAFT' | 'SIGNED' | 'SUPERSEDED' | null
   latestTaskId?: ID | null
   updatedAt?: DateTimeString | null
@@ -118,7 +118,7 @@ export interface AgentClinicalQueueItem {
   resultType: string
   qualityStatus?: ImageQualityStatus | null
   qualityScore?: number | null
-  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CHANGES_REQUESTED' | null
+  reviewStatus?: ReviewStatusValue | null
   reportStatus?: 'DRAFT' | 'SIGNED' | 'SUPERSEDED' | null
   finishedAt?: DateTimeString | null
   resultCreatedAt: DateTimeString
@@ -138,7 +138,7 @@ export interface AgentComparisonSnapshot {
   vesselAreaRatio?: number | null
   modelName?: string | null
   modelVersion?: string | null
-  reviewStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_CHANGES' | null
+  reviewStatus?: ReviewStatusValue | null
   reportStatus?: 'DRAFT' | 'SIGNED' | 'SUPERSEDED' | null
   finishedAt?: DateTimeString | null
   resultCreatedAt?: DateTimeString | null
@@ -163,10 +163,7 @@ export interface AgentComparisonPayload {
 }
 
 export type PatientAgentQualityStatus =
-  | 'CHECKING'
-  | 'ACCEPTABLE'
-  | 'REUPLOAD_RECOMMENDED'
-  | 'UNAVAILABLE'
+  'CHECKING' | 'ACCEPTABLE' | 'REUPLOAD_RECOMMENDED' | 'UNAVAILABLE'
 
 export interface PatientAgentCaseSummary {
   caseId: ID

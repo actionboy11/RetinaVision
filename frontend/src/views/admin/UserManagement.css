@@ -1,0 +1,37 @@
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.page-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+.panel {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.panel-title span {
+  color: #6b7280;
+  font-size: 13px;
+}
+.full-width {
+  width: 100%;
+}

@@ -10,12 +10,39 @@ The backend's layer-oriented packages created broad coupling to Mappers and infr
 
 ## Decision
 
-Migrate one analysis vertical slice to `analysis/application/domain/infrastructure`. The legacy `AnalysisTaskExecutionServiceImpl` remains a transactional compatibility facade for the existing MQ entry point; it adapts the legacy message to the analysis execution use case rather than implementing the execution workflow itself.
+Keep the Analysis behavioral boundary, but normalize its physical packages to
+the repository-wide `<technical root>/<functional owner>` convention. Analysis
+use cases, ports, adapters, and artifact storage live under `service/analysis`;
+commands, domain models, events, and persistence records live under
+`pojo/analysis`; MyBatis, messaging, AI, and configuration code live under
+`mapper/analysis`, `mq/analysis`, `ai/analysis`, and `config/analysis`.
+
+`AnalysisTaskExecutionServiceImpl` remains a transactional compatibility facade
+for the existing MQ entry point. It adapts the message to the Analysis execution
+use case rather than implementing the execution workflow itself.
 
 ## Consequences
 
-Temporary legacy facades and adapters remain while callers and adjacent workflows are migrated incrementally. This is a modular monolith: the Java application remains one deployable process and one database, rather than becoming microservices. The slice provides a boundary and a migration pattern, not a wholesale package rewrite.
+This is still a modular monolith: the Java application remains one deployable
+process and one database rather than becoming microservices. The normalized
+layout improves directory lookup and aligns Analysis with the rest of the
+backend. Behavioral boundaries are expressed through ports, adapters, and
+architecture tests instead of relying on a separate top-level package tree.
+
+Compatibility facades remain where existing callers need their transactional or
+messaging contracts. Moving packages does not change endpoints, SQL, queue
+names, state transitions, or public method signatures.
 
 ## Enforcement
 
-`AnalysisModuleArchitectureTest` enforces a framework-free analysis domain, application-layer independence from analysis infrastructure, and keeps legacy controllers from using analysis infrastructure directly. The application layer coordinates framework-agnostic ports; MyBatis, AI, storage, reporting, and MQ implementations remain infrastructure adapters.
+`AnalysisModuleArchitectureTest` enforces framework-free Analysis domain models,
+prevents Analysis services from acquiring new concrete MQ, AI, or storage
+dependencies outside explicit compatibility baselines, and keeps unrelated
+controllers from using Analysis technical adapters directly. The use-case layer
+coordinates framework-agnostic ports; MyBatis, AI, storage, reporting, and MQ
+implementations remain adapters.
+
+`LayerFunctionalPackageArchitectureTest` independently requires production
+technical roots and migrated tests to use approved functional subpackages. This
+prevents the former flat `service`, `mapper`, `pojo`, Agent, LLM, RAG, and
+configuration layouts from returning.

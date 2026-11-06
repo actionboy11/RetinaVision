@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Refresh, WarningFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '@/plugins/element-plus-api'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -17,12 +17,7 @@ import type {
   RiskAlertItem,
 } from '@/types/quality-control'
 import { taskTypeTextMap } from '@/utils/enums'
-import {
-  EMPTY_TEXT,
-  formatDurationMs,
-  formatEmpty,
-  formatPercent,
-} from '@/utils/format'
+import { EMPTY_TEXT, formatDurationMs, formatEmpty, formatPercent } from '@/utils/format'
 
 const router = useRouter()
 
@@ -38,7 +33,11 @@ const overviewCards = computed(() => [
   { label: '总任务数', value: overview.value?.taskTotalCount, tone: 'neutral' },
   { label: '成功率', value: formatPercent(overview.value?.successRate), tone: 'success' },
   { label: '失败率', value: formatPercent(overview.value?.failedRate), tone: 'danger' },
-  { label: '平均耗时', value: formatDurationMs(overview.value?.averageProcessingTimeMs), tone: 'primary' },
+  {
+    label: '平均耗时',
+    value: formatDurationMs(overview.value?.averageProcessingTimeMs),
+    tone: 'primary',
+  },
   { label: '重试任务', value: overview.value?.retryTaskCount, tone: 'warning' },
   { label: '已签发报告', value: overview.value?.signedReportCount, tone: 'success' },
   { label: '已审核未签发', value: overview.value?.approvedUnsignedCount, tone: 'warning' },
@@ -114,14 +113,14 @@ const goTask = (taskId: number | null) => {
   void router.push(`/tasks/${taskId}`)
 }
 
-const errorText = (error: unknown, fallback: string) => (
+const errorText = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback
-)
 
-const distributionRows = (source?: Record<string, number>) => Object.entries(source || {}).map(([name, count]) => ({
-  name,
-  count,
-}))
+const distributionRows = (source?: Record<string, number>) =>
+  Object.entries(source || {}).map(([name, count]) => ({
+    name,
+    count,
+  }))
 
 const riskTagType = (level: string) => {
   if (level === 'CRITICAL') return 'danger'
@@ -166,7 +165,9 @@ onMounted(() => {
           :class="`tone-${card.tone}`"
         >
           <div class="stat-label">{{ card.label }}</div>
-          <div class="stat-value">{{ typeof card.value === 'number' ? formatEmpty(card.value) : card.value }}</div>
+          <div class="stat-value">
+            {{ typeof card.value === 'number' ? formatEmpty(card.value) : card.value }}
+          </div>
         </div>
       </section>
 
@@ -219,27 +220,41 @@ onMounted(() => {
           </el-table-column>
           <el-table-column label="结果类型" min-width="150">
             <template #default="{ row }: { row: ModelPerformanceItem }">
-              {{ taskTypeTextMap[row.resultType as keyof typeof taskTypeTextMap] || row.resultType }}
+              {{
+                taskTypeTextMap[row.resultType as keyof typeof taskTypeTextMap] || row.resultType
+              }}
             </template>
           </el-table-column>
           <el-table-column prop="resultCount" label="结果数" min-width="90" />
           <el-table-column label="成功率" min-width="100">
-            <template #default="{ row }: { row: ModelPerformanceItem }">{{ formatPercent(row.successRate) }}</template>
+            <template #default="{ row }: { row: ModelPerformanceItem }">{{
+              formatPercent(row.successRate)
+            }}</template>
           </el-table-column>
           <el-table-column label="平均耗时" min-width="110">
-            <template #default="{ row }: { row: ModelPerformanceItem }">{{ formatDurationMs(row.averageProcessingTimeMs) }}</template>
+            <template #default="{ row }: { row: ModelPerformanceItem }">{{
+              formatDurationMs(row.averageProcessingTimeMs)
+            }}</template>
           </el-table-column>
           <el-table-column label="平均血管比例" min-width="130">
-            <template #default="{ row }: { row: ModelPerformanceItem }">{{ formatPercent(row.averageVesselAreaRatio) }}</template>
+            <template #default="{ row }: { row: ModelPerformanceItem }">{{
+              formatPercent(row.averageVesselAreaRatio)
+            }}</template>
           </el-table-column>
           <el-table-column label="审核通过率" min-width="120">
-            <template #default="{ row }: { row: ModelPerformanceItem }">{{ formatPercent(row.reviewApprovedRate) }}</template>
+            <template #default="{ row }: { row: ModelPerformanceItem }">{{
+              formatPercent(row.reviewApprovedRate)
+            }}</template>
           </el-table-column>
           <el-table-column label="需修改率" min-width="110">
-            <template #default="{ row }: { row: ModelPerformanceItem }">{{ formatPercent(row.reviewNeedsChangeRate) }}</template>
+            <template #default="{ row }: { row: ModelPerformanceItem }">{{
+              formatPercent(row.reviewNeedsChangeRate)
+            }}</template>
           </el-table-column>
           <el-table-column label="失败率" min-width="100">
-            <template #default="{ row }: { row: ModelPerformanceItem }">{{ formatPercent(row.failedRate) }}</template>
+            <template #default="{ row }: { row: ModelPerformanceItem }">{{
+              formatPercent(row.failedRate)
+            }}</template>
           </el-table-column>
         </el-table>
       </section>
@@ -262,7 +277,11 @@ onMounted(() => {
           <el-table-column prop="taskNo" label="任务编号" min-width="150" />
           <el-table-column label="任务类型" min-width="150">
             <template #default="{ row }: { row: RiskAlertItem }">
-              {{ row.taskType ? taskTypeTextMap[row.taskType as keyof typeof taskTypeTextMap] || row.taskType : '-' }}
+              {{
+                row.taskType
+                  ? taskTypeTextMap[row.taskType as keyof typeof taskTypeTextMap] || row.taskType
+                  : '-'
+              }}
             </template>
           </el-table-column>
           <el-table-column prop="status" label="状态" min-width="110" />
@@ -280,163 +299,4 @@ onMounted(() => {
   </section>
 </template>
 
-<style scoped>
-.quality-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.page-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.page-heading h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.page-heading p,
-.risk-heading p {
-  margin: 6px 0 0;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.quality-content {
-  min-height: 420px;
-}
-
-.alert-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.stat-card,
-.panel {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.stat-card {
-  padding: 16px;
-}
-
-.stat-label {
-  color: #6b7280;
-  font-size: 13px;
-}
-
-.stat-value {
-  margin-top: 10px;
-  color: #111827;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 32px;
-}
-
-.tone-primary { border-color: #bfdbfe; }
-.tone-success { border-color: #bbf7d0; }
-.tone-warning { border-color: #fde68a; }
-.tone-danger { border-color: #fecaca; }
-
-.two-column {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.panel {
-  margin-top: 16px;
-  padding: 18px;
-}
-
-.two-column .panel {
-  margin-top: 0;
-}
-
-.panel-title {
-  margin-bottom: 14px;
-  color: #111827;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.panel-alert {
-  margin-bottom: 14px;
-}
-
-.review-rate {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.review-rate div {
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.review-rate span {
-  display: block;
-  color: #6b7280;
-  font-size: 12px;
-}
-
-.review-rate strong {
-  display: block;
-  margin-top: 6px;
-  color: #111827;
-  font-size: 20px;
-}
-
-.risk-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.risk-heading .el-icon {
-  color: #f59e0b;
-  font-size: 24px;
-}
-
-@media (max-width: 1080px) {
-  .stat-grid,
-  .two-column {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .page-heading,
-  .risk-heading {
-    flex-direction: column;
-  }
-
-  .stat-grid,
-  .two-column,
-  .review-rate {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped src="./QualityControl.css"></style>

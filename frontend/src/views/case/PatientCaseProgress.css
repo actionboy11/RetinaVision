@@ -1,0 +1,74 @@
+.progress-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.page-heading h2 {
+  margin: 10px 0 0;
+  font-size: 22px;
+}
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+.summary-band,
+.progress-panel,
+.detail-panel,
+.report-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+.summary-band {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 18px 22px;
+}
+.summary-band div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.summary-band span,
+dt {
+  color: #6b7280;
+  font-size: 13px;
+}
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1.2fr);
+  gap: 16px;
+}
+.progress-panel,
+.detail-panel,
+.report-panel {
+  padding: 20px;
+}
+h3 {
+  margin: 0 0 18px;
+  font-size: 16px;
+}
+dl {
+  margin: 0 0 18px;
+}
+dl div {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+dd {
+  margin: 0;
+  color: #111827;
+}
+@media (max-width: 900px) {
+  .summary-band,
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}

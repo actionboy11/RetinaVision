@@ -52,8 +52,8 @@ export const renderSafeMarkdown = (content: string): string => {
     ALLOW_DATA_ATTR: false,
   })
 
-  const document = new DOMParser().parseFromString(String(sanitized), 'text/html')
-  document.querySelectorAll('a').forEach((link) => {
+  const parsedDocument = new DOMParser().parseFromString(String(sanitized), 'text/html')
+  parsedDocument.querySelectorAll('a').forEach((link) => {
     const href = link.getAttribute('href') || ''
     if (!isSafeExternalUrl(href)) {
       link.removeAttribute('href')
@@ -62,5 +62,5 @@ export const renderSafeMarkdown = (content: string): string => {
     link.setAttribute('target', '_blank')
     link.setAttribute('rel', 'noopener noreferrer')
   })
-  return document.body.innerHTML
+  return parsedDocument.body.innerHTML
 }

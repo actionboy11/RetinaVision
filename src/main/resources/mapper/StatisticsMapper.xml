@@ -10,8 +10,8 @@
 <!--四舍五入；-->
 <!--如果没有可统计任务，就返回 0；-->
 <!--字段名叫 averageProcessingTimeMs。 &ndash;&gt;-->
-<mapper namespace="com.example.retinavision.mapper.StatisticsMapper">
-    <select id="selectTaskStatistics" resultType="com.example.retinavision.pojo.VO.TaskStatisticsVO">
+<mapper namespace="com.example.retinavision.mapper.operations.StatisticsMapper">
+    <select id="selectTaskStatistics" resultType="com.example.retinavision.pojo.operations.vo.TaskStatisticsVO">
         SELECT
             COALESCE(SUM(CASE WHEN DATE(submitted_at) = CURRENT_DATE THEN 1 ELSE 0 END), 0) AS todaySubmittedCount,
             COALESCE(SUM(CASE WHEN DATE(finished_at) = CURRENT_DATE AND status = 'SUCCESS' THEN 1 ELSE 0 END), 0) AS todaySuccessCount,
@@ -34,7 +34,7 @@
         FROM analysis_task
     </select>
 
-    <select id="selectTaskTrend" resultType="com.example.retinavision.pojo.VO.TaskTrendItemVO">
+    <select id="selectTaskTrend" resultType="com.example.retinavision.pojo.operations.vo.TaskTrendItemVO">
         SELECT
             DATE_FORMAT(submittedDate, '%Y-%m-%d') AS date,
             COUNT(*) AS submittedCount,

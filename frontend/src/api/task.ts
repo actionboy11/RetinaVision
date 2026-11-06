@@ -13,17 +13,13 @@ import type {
   TaskLogItem,
 } from '@/types/task'
 
-export const getTaskPage = (
-  params: TaskListQuery,
-): Promise<PageResult<TaskListItem>> => {
+export const getTaskPage = (params: TaskListQuery): Promise<PageResult<TaskListItem>> => {
   return request.get<unknown, PageResult<TaskListItem>>('/analysis-tasks', {
     params,
   })
 }
 
-export const createTask = (
-  data: CreateTaskRequest,
-): Promise<CreateTaskResponse> => {
+export const createTask = (data: CreateTaskRequest): Promise<CreateTaskResponse> => {
   return request.post<unknown, CreateTaskResponse>('/analysis-tasks', data)
 }
 
@@ -36,15 +32,11 @@ export const cancelTask = (taskId: number): Promise<boolean> => {
 }
 
 export const retryTask = (taskId: number): Promise<RetryTaskResponse> => {
-  return request.post<unknown, RetryTaskResponse>(
-    `/analysis-tasks/${taskId}/retry`,
-  )
+  return request.post<unknown, RetryTaskResponse>(`/analysis-tasks/${taskId}/retry`)
 }
 
 export const getTaskResult = (taskId: number): Promise<AnalysisResult> => {
-  return request.get<unknown, AnalysisResult>(
-    `/analysis-tasks/${taskId}/result`,
-  )
+  return request.get<unknown, AnalysisResult>(`/analysis-tasks/${taskId}/result`)
 }
 
 export const getTaskLogs = (taskId: number): Promise<TaskLogItem[]> => {

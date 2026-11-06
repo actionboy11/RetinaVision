@@ -32,6 +32,37 @@ Detailed documentation:
 | `frontend/README.md` | Frontend requirements, commands, proxy, and security boundary |
 | `ai-service/README.md` | Model placement, inference API, tests, and storage boundary |
 
+### Java source layout
+
+The backend is a modular monolith: it remains one Spring Boot deployment and
+one business database, while source files are organized as
+`<technical root>/<functional owner>`. This keeps familiar Java technical
+roots easy to scan without returning to a single flat `service` or `mapper`
+directory.
+
+```text
+src/main/java/com/example/retinavision/
+|-- controller/{agent,analysis,auth,cases,clinical,...}
+|-- service/{agent,analysis,auth,cases,clinical,...}
+|-- mapper/{agent,analysis,cases,clinical,...}
+|-- pojo/{agent,analysis,auth,cases,clinical,...}
+|-- llm/{agent,governance,reporting,shared}
+|-- rag/{governance,knowledge}
+|-- config/{analysis,auth,clinical,governance,shared}
+|-- mq/analysis
+|-- ai/analysis
+`-- redis/shared
+```
+
+Analysis behavioral boundaries remain explicit inside this layout. Its use
+cases, ports, adapters, and artifact storage live below `service/analysis`;
+commands, domain models, events, and persistence records live below
+`pojo/analysis`. Agent orchestration follows the same rule: Java execution is
+under `service/agent`, structured contracts under `pojo/agent`, and model
+adapters under `llm/agent`. ArchUnit tests prevent classes from being placed
+directly in functionalized technical roots and keep the Analysis dependency
+rules enforceable.
+
 ## Architecture
 
 ```text

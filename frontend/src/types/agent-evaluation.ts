@@ -1,9 +1,26 @@
 import type { DateTimeString, ID, PageResult } from './common'
 
 export type AgentEvaluationRole = 'DOCTOR' | 'PATIENT'
-export type AgentEvaluationStatus = 'QUEUED' | 'RUNNING' | 'PASSED' | 'FAILED' | 'INVALID' | 'CANCELLED'
+export type AgentEvaluationStatus =
+  'QUEUED' | 'RUNNING' | 'PASSED' | 'FAILED' | 'INVALID' | 'CANCELLED'
 
-export interface EvaluationVersionOption { id: ID; version: number; active: boolean }
+export interface AgentEvaluationRunQuery {
+  page?: number
+  pageSize?: number
+}
+
+export interface AgentEvaluationResultQuery {
+  success?: boolean
+  errorType?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface EvaluationVersionOption {
+  id: ID
+  version: number
+  active: boolean
+}
 export interface AgentEvaluationOptions {
   models: Array<{ key: string; provider: string; model: string }>
   skillVersions: Record<string, EvaluationVersionOption[]>

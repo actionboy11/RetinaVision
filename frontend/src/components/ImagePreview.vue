@@ -1,31 +1,26 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
+
+// 与 TaskResultPanel 保持一致，统一使用 defineModel 实现 v-model
+const dialogVisible = defineModel<boolean>({ default: false })
 
 const props = defineProps<{
-  modelValue: boolean
   imageUrl: string
   title?: string
   filename?: string
 }>()
 
-const emit = defineEmits<{
-  'update:modelValue': [value: boolean]
-}>()
-
 const loading = ref(false)
 const loadFailed = ref(false)
 
-const dialogVisible = computed({
-  get: () => props.modelValue,
-  set: (value: boolean) => emit('update:modelValue', value),
-})
-
 watch(
-  () => [props.modelValue, props.imageUrl],
+  () => [dialogVisible.value, props.imageUrl],
   () => {
-    loading.value = Boolean(props.modelValue && props.imageUrl)
+    loading.value = Boolean(dialogVisible.value && props.imageUrl)
     loadFailed.value = false
   },
+  // immediate 保证「挂载时对话框已打开」也显示 loading 态
+  { immediate: true },
 )
 
 const handleLoad = () => {
@@ -63,31 +58,4 @@ const handleError = () => {
   </el-dialog>
 </template>
 
-<style scoped>
-.preview-shell {
-  min-height: 360px;
-}
-
-.preview-filename {
-  margin-bottom: 12px;
-  color: #4b5563;
-  font-size: 14px;
-}
-
-.preview-empty,
-.preview-image-wrap {
-  display: grid;
-  min-height: 360px;
-  place-items: center;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f9fafb;
-}
-
-.preview-image {
-  display: block;
-  max-width: 100%;
-  max-height: 68vh;
-  object-fit: contain;
-}
-</style>
+<style scoped src="./ImagePreview.css"></style>

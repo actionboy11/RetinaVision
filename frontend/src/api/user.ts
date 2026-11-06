@@ -1,11 +1,5 @@
 import request from '@/utils/request'
+import type { DoctorOption } from '@/types/auth'
 
-export interface DoctorOption {
-  id: number
-  displayName: string
-  professionalNo: string | null
-}
-
-export const getDoctorOptions = (): Promise<DoctorOption[]> => {
-  return request.get<unknown, DoctorOption[]>('/users/doctors')
-}
+export const getDoctorOptions = (): Promise<DoctorOption[]> =>
+  request.get<unknown, DoctorOption[]>('/users/doctors')

@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.retinavision.mapper.TaskMapper">
+<mapper namespace="com.example.retinavision.mapper.analysis.TaskMapper">
     <!--
       任务分页公共筛选条件：
       1. analysis_task 只保存 case_id，不冗余保存 case_no；
@@ -53,7 +53,7 @@
       任务列表返回前端 TaskListItemVO：
       caseNo 来自 medical_case，originalFilename 来自 image_file，submittedByName 来自 sys_user。
     -->
-    <select id="selectTaskPage" resultType="com.example.retinavision.pojo.VO.TaskListItemVO">
+    <select id="selectTaskPage" resultType="com.example.retinavision.pojo.analysis.vo.TaskListItemVO">
         SELECT
             t.id AS id,
             t.task_no AS taskNo,
@@ -82,7 +82,7 @@
         LIMIT #{offset}, #{pageSize}
     </select>
 
-    <select id="getTaskById" resultType="com.example.retinavision.pojo.VO.TaskListItemVO">
+    <select id="getTaskById" resultType="com.example.retinavision.pojo.analysis.vo.TaskListItemVO">
         SELECT
             t.id AS id,
             t.task_no AS taskNo,
@@ -110,7 +110,7 @@
     </select>
 
     <select id="selectCompletedVesselTasksForDoctor"
-            resultType="com.example.retinavision.pojo.Entity.TaskEntity">
+            resultType="com.example.retinavision.pojo.analysis.entity.TaskEntity">
         SELECT t.*
         FROM analysis_task t
         INNER JOIN medical_case c ON c.id = t.case_id
@@ -123,7 +123,7 @@
     </select>
 
     <select id="findAssignedTaskByReference"
-            resultType="com.example.retinavision.pojo.Entity.TaskEntity">
+            resultType="com.example.retinavision.pojo.analysis.entity.TaskEntity">
         SELECT t.*
         FROM analysis_task t
         INNER JOIN medical_case c ON c.id = t.case_id

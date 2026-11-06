@@ -1,0 +1,141 @@
+.agent-page {
+  display: flex;
+  height: calc(100vh - 112px);
+  min-height: 580px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+  padding: 2px 0;
+}
+
+.heading-copy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.page-heading p {
+  margin: 4px 0 0;
+  color: #718096;
+  font-size: 13px;
+}
+
+.agent-workspace {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid #dfe5ec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.agent-workspace.sidebar-collapsed {
+  grid-template-columns: 54px minmax(0, 1fr);
+}
+
+.chat-panel {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  border-left: 1px solid #e3e8ee;
+  background: #fbfcfd;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 10px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  cursor: pointer;
+  border: 1px solid #dce3e9;
+  border-radius: 5px;
+  background: #fff;
+  color: #607080;
+}
+
+.chat-footer {
+  flex: 0 0 auto;
+  padding: 12px clamp(16px, 3vw, 34px) 10px;
+  border-top: 1px solid #e3e8ee;
+  background: #fff;
+}
+
+.disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: #8792a2;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+:global(.session-drawer .el-drawer__body) {
+  padding: 0;
+}
+
+:global(.session-drawer .session-sidebar) {
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .agent-page {
+    height: calc(100vh - 96px);
+    min-height: 520px;
+  }
+
+  .agent-workspace,
+  .agent-workspace.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-panel {
+    border-left: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .agent-page {
+    height: calc(100vh - 82px);
+    gap: 8px;
+  }
+
+  .page-heading h2 {
+    font-size: 18px;
+  }
+
+  .page-heading p {
+    display: none;
+  }
+
+  .page-heading > .el-button {
+    padding-inline: 10px;
+  }
+
+  .chat-footer {
+    padding: 10px 12px 8px;
+  }
+}

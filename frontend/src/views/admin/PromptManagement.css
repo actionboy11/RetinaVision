@@ -1,0 +1,101 @@
+.prompt-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-heading,
+.log-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.heading-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.panel {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.panel-title {
+  margin-bottom: 14px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.panel-title span {
+  margin-left: 10px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.version-detail {
+  display: grid;
+  gap: 14px;
+  padding: 4px 18px 14px 48px;
+}
+
+.version-detail h4 {
+  margin: 0 0 8px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.version-detail pre,
+.version-detail p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #4b5563;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.log-heading .panel-title {
+  margin-bottom: 0;
+}
+
+.log-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.log-filters .el-select {
+  width: 180px;
+}
+
+@media (max-width: 760px) {
+  .page-heading,
+  .log-heading,
+  .log-filters {
+    flex-direction: column;
+  }
+
+  .log-filters,
+  .log-filters .el-select {
+    width: 100%;
+  }
+}

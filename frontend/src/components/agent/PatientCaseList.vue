@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import type {
-  AgentAction,
-  AgentPagination,
-  PatientAgentCaseListPayload,
-} from '@/types/agent'
+import type { AgentAction, AgentPagination, PatientAgentCaseListPayload } from '@/types/agent'
 import {
   displayEyeSide,
   displayWorkflowStatus,
@@ -24,7 +20,9 @@ const emit = defineEmits<{
 }>()
 
 const findAction = (type: AgentAction['type'], caseId?: number) =>
-  props.actions?.find((item) => item.type === type && (caseId === undefined || item.targetId === caseId))
+  props.actions?.find(
+    (item) => item.type === type && (caseId === undefined || item.targetId === caseId),
+  )
 </script>
 
 <template>
@@ -43,7 +41,11 @@ const findAction = (type: AgentAction['type'], caseId?: number) =>
         </div>
 
         <div class="quality-line">
-          <el-tag :type="patientQualityStatusTagMap[item.qualityStatus] || 'info'" size="small" effect="plain">
+          <el-tag
+            :type="patientQualityStatusTagMap[item.qualityStatus] || 'info'"
+            size="small"
+            effect="plain"
+          >
             {{ patientQualityStatusTextMap[item.qualityStatus] || '图像质量状态待确认' }}
           </el-tag>
           <span>{{ item.qualityMessage }}</span>
@@ -80,30 +82,17 @@ const findAction = (type: AgentAction['type'], caseId?: number) =>
           size="small"
           :disabled="!pagination.hasPrevious || !findAction('PREVIOUS_PAGE')"
           @click="findAction('PREVIOUS_PAGE') && emit('action', findAction('PREVIOUS_PAGE')!)"
-        >上一页</el-button>
+          >上一页</el-button
+        >
         <el-button
           size="small"
           :disabled="!pagination.hasNext || !findAction('NEXT_PAGE')"
           @click="findAction('NEXT_PAGE') && emit('action', findAction('NEXT_PAGE')!)"
-        >下一页</el-button>
+          >下一页</el-button
+        >
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.patient-case-list { margin-top: 12px; }
-.case-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.case-item { padding: 13px; border: 1px solid #dfe5ec; border-radius: 7px; background: #fbfcfd; }
-.case-title, .case-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.case-title > div { display: flex; min-width: 0; flex-direction: column; gap: 3px; }
-.case-title strong { overflow: hidden; color: #263244; text-overflow: ellipsis; white-space: nowrap; }
-.case-title span, .case-actions > span, .pagination-bar { color: #7a8798; font-size: 12px; }
-.quality-line { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0; color: #526173; font-size: 12px; line-height: 1.5; }
-.quality-line span { min-width: 0; overflow-wrap: anywhere; }
-.case-actions > div { display: flex; gap: 6px; }
-.pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; }
-.compact-empty { padding: 18px 0; color: #8a95a5; text-align: center; }
-@media (max-width: 760px) { .case-grid { grid-template-columns: 1fr; } }
-@media (max-width: 460px) { .case-actions { align-items: flex-start; flex-direction: column; } }
-</style>
+<style scoped src="./PatientCaseList.css"></style>

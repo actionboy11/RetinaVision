@@ -15,9 +15,7 @@ import type {
 import type { TaskType } from '@/types/task'
 import type { PageResult } from '@/types/common'
 
-export const getCasePage = (
-  params: CaseListQuery,
-): Promise<PageResult<CaseListItem>> => {
+export const getCasePage = (params: CaseListQuery): Promise<PageResult<CaseListItem>> => {
   return request.get<unknown, PageResult<CaseListItem>>('/cases', { params })
 }
 
@@ -25,23 +23,15 @@ export const getCaseDetail = (caseId: number): Promise<CaseDetail> => {
   return request.get<unknown, CaseDetail>(`/cases/${caseId}`)
 }
 
-export const createCase = (
-  data: CreateCaseRequest,
-): Promise<CaseDetail> => {
+export const createCase = (data: CreateCaseRequest): Promise<CaseDetail> => {
   return request.post<unknown, CaseDetail>('/cases', data)
 }
 
-export const updateCase = (
-  caseId: number,
-  data: UpdateCaseRequest,
-): Promise<CaseDetail> => {
+export const updateCase = (caseId: number, data: UpdateCaseRequest): Promise<CaseDetail> => {
   return request.put<unknown, CaseDetail>(`/cases/${caseId}`, data)
 }
 
-export const assignCaseDoctor = (
-  caseId: number,
-  assignedDoctorId: number,
-): Promise<CaseDetail> => {
+export const assignCaseDoctor = (caseId: number, assignedDoctorId: number): Promise<CaseDetail> => {
   return request.put<unknown, CaseDetail>(`/cases/${caseId}/doctor-assignment`, {
     assignedDoctorId,
   })
@@ -63,17 +53,20 @@ export const getPatientCaseProgress = (caseId: number): Promise<PatientCaseProgr
 export const getPatientSignedReports = (caseId: number): Promise<PatientSignedReport[]> =>
   request.get<unknown, PatientSignedReport[]>(`/cases/${caseId}/signed-reports`)
 
-export const getPatientSignedReportDownloadUrl = (caseId: number, resultId: number, version: number) =>
-  `/cases/${caseId}/signed-reports/${resultId}/${version}/download`
+export const getPatientSignedReportDownloadUrl = (
+  caseId: number,
+  resultId: number,
+  version: number,
+) => `/cases/${caseId}/signed-reports/${resultId}/${version}/download`
 
 export const downloadPatientSignedReport = (
   caseId: number,
   resultId: number,
   version: number,
-): Promise<Blob> => request.get<unknown, Blob>(
-  getPatientSignedReportDownloadUrl(caseId, resultId, version),
-  { responseType: 'blob' },
-)
+): Promise<Blob> =>
+  request.get<unknown, Blob>(getPatientSignedReportDownloadUrl(caseId, resultId, version), {
+    responseType: 'blob',
+  })
 
 export const getCaseAnalysisTimeline = (
   caseId: number,
@@ -84,10 +77,9 @@ export const getCaseAnalysisTimeline = (
     endTime?: string
   },
 ): Promise<CaseAnalysisTimeline> => {
-  return request.get<unknown, CaseAnalysisTimeline>(
-    `/cases/${caseId}/analysis-timeline`,
-    { params },
-  )
+  return request.get<unknown, CaseAnalysisTimeline>(`/cases/${caseId}/analysis-timeline`, {
+    params,
+  })
 }
 
 export const generateCaseTrendSummary = (

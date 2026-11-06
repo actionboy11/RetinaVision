@@ -46,6 +46,7 @@ uploads/
 ### Monorepo frontend ###
 frontend/node_modules/
 frontend/dist/
+frontend/.workbuddy/
 frontend/.env*
 !frontend/.env*.example
 *.log

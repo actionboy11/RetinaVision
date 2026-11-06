@@ -1,0 +1,166 @@
+.quality-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.page-heading p,
+.risk-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.quality-content {
+  min-height: 420px;
+}
+
+.alert-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card,
+.panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.stat-card {
+  padding: 16px;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.stat-value {
+  margin-top: 10px;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+.tone-primary {
+  border-color: #bfdbfe;
+}
+.tone-success {
+  border-color: #bbf7d0;
+}
+.tone-warning {
+  border-color: #fde68a;
+}
+.tone-danger {
+  border-color: #fecaca;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.panel {
+  margin-top: 16px;
+  padding: 18px;
+}
+
+.two-column .panel {
+  margin-top: 0;
+}
+
+.panel-title {
+  margin-bottom: 14px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.panel-alert {
+  margin-bottom: 14px;
+}
+
+.review-rate {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.review-rate div {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.review-rate span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.review-rate strong {
+  display: block;
+  margin-top: 6px;
+  color: #111827;
+  font-size: 20px;
+}
+
+.risk-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.risk-heading .el-icon {
+  color: #f59e0b;
+  font-size: 24px;
+}
+
+@media (max-width: 1080px) {
+  .stat-grid,
+  .two-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .page-heading,
+  .risk-heading {
+    flex-direction: column;
+  }
+
+  .stat-grid,
+  .two-column,
+  .review-rate {
+    grid-template-columns: 1fr;
+  }
+}

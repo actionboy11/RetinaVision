@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.retinavision.mapper.PatientAgentQueryMapper">
+<mapper namespace="com.example.retinavision.mapper.patient.PatientAgentQueryMapper">
 
     <sql id="caseFilters">
         AND c.status != 'DELETED'
@@ -30,7 +30,7 @@
         <include refid="caseFilters" />
     </select>
 
-    <select id="selectMyCases" resultType="com.example.retinavision.mapper.PatientAgentQueryMapper$CaseProjection">
+    <select id="selectMyCases" resultType="com.example.retinavision.mapper.patient.PatientAgentQueryMapper$CaseProjection">
         SELECT c.id AS caseId, c.case_no AS caseNo, c.eye_side AS eyeSide,
                c.workflow_status AS workflowStatus,
                (SELECT latest_image.quality_status FROM image_file latest_image
@@ -56,7 +56,7 @@
         LIMIT #{offset}, #{pageSize}
     </select>
 
-    <select id="selectMyCaseProgress" resultType="com.example.retinavision.mapper.PatientAgentQueryMapper$ProgressProjection">
+    <select id="selectMyCaseProgress" resultType="com.example.retinavision.mapper.patient.PatientAgentQueryMapper$ProgressProjection">
         SELECT c.id AS caseId, c.case_no AS caseNo,
                (SELECT COUNT(*) FROM image_file image
                 WHERE image.case_id = c.id AND image.status != 'DELETED') AS imageCount,
@@ -102,7 +102,7 @@
         </if>
     </select>
 
-    <select id="selectMySignedReports" resultType="com.example.retinavision.pojo.VO.PatientAgentSignedReportVO">
+    <select id="selectMySignedReports" resultType="com.example.retinavision.pojo.reporting.vo.PatientAgentSignedReportVO">
         SELECT c.id AS caseId, c.case_no AS caseNo, result.id AS resultId,
                report.version, report.signed_at AS signedAt,
                report.signer_name_snapshot AS signerName, review.conclusion
@@ -122,7 +122,7 @@
         LIMIT #{offset}, #{pageSize}
     </select>
 
-    <select id="selectMySignedReport" resultType="com.example.retinavision.pojo.VO.PatientAgentReportDetailVO">
+    <select id="selectMySignedReport" resultType="com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO">
         SELECT c.id AS caseId, c.case_no AS caseNo, result.id AS resultId,
                report.version, report.signed_at AS signedAt,
                report.signer_name_snapshot AS signerName,

@@ -1,0 +1,55 @@
+.task-list-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.filter-panel,
+.table-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.filter-panel {
+  padding: 18px 18px 0;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.error-alert {
+  margin: 0;
+}
+
+.table-panel {
+  padding: 16px;
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+}

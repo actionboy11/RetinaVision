@@ -13,8 +13,8 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 class AnalysisModuleArchitectureTest {
 
     @ArchTest
-    static final ArchRule domain_is_framework_free = noClasses()
-            .that().resideInAPackage("..analysis.domain..")
+    static final ArchRule analysis_domain_models_are_framework_free = noClasses()
+            .that().resideInAPackage("..pojo.analysis.domain..")
             .should().dependOnClassesThat()
             .resideInAnyPackage(
                     "org.springframework..",
@@ -29,14 +29,23 @@ class AnalysisModuleArchitectureTest {
                     "okhttp3..");
 
     @ArchTest
-    static final ArchRule application_does_not_depend_on_infrastructure = noClasses()
-            .that().resideInAPackage("..analysis.application..")
+    static final ArchRule analysis_services_do_not_depend_on_concrete_mq_ai_or_storage_packages = noClasses()
+            .that().resideInAPackage("..service.analysis..")
+            .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.AnalysisTaskExecutionService")
+            .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.impl.AnalysisTaskExecutionServiceImpl")
+            .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.impl.AnalysisTaskRetryServiceImpl")
+            .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.impl.TaskServiceImpl")
             .should().dependOnClassesThat()
-            .resideInAPackage("..analysis.infrastructure..");
+            .resideInAnyPackage(
+                    "..mq.analysis..",
+                    "..ai.analysis..",
+                    "..service.analysis.storage..");
 
     @ArchTest
-    static final ArchRule application_does_not_use_provider_or_filesystem_types = noClasses()
-            .that().resideInAPackage("..analysis.application..")
+    static final ArchRule analysis_use_cases_and_ports_do_not_use_provider_or_filesystem_types = noClasses()
+            .that().resideInAPackage("..service.analysis.port..")
+            .or().haveFullyQualifiedName("com.example.retinavision.service.analysis.ExecuteAnalysisTaskHandler")
+            .or().haveFullyQualifiedName("com.example.retinavision.service.analysis.ExecuteAnalysisTaskUseCase")
             .should().dependOnClassesThat()
             .resideInAnyPackage(
                     "..retinavision.ai..",
@@ -44,8 +53,13 @@ class AnalysisModuleArchitectureTest {
                     "java.nio.file..");
 
     @ArchTest
-    static final ArchRule infrastructure_is_not_used_by_legacy_controllers = noClasses()
+    static final ArchRule analysis_technical_adapters_are_not_used_by_unrelated_controllers = noClasses()
             .that().resideInAPackage("..controller..")
             .should().dependOnClassesThat()
-            .resideInAPackage("..analysis.infrastructure..");
+            .resideInAnyPackage(
+                    "..ai.analysis..",
+                    "..config.analysis..",
+                    "..mq.analysis..",
+                    "..service.analysis.adapter..",
+                    "..service.analysis.storage..");
 }

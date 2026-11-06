@@ -1,19 +1,15 @@
-import type { DateTimeString, ID, PageQuery } from './common'
+import type { DateTimeString, ID, PageQuery, ReviewStatusValue } from './common'
+import type { ImageQualityStatus } from './image'
+
+// 图像质量状态统一定义在 types/image.ts，此处 re-export 以兼容既有引用
+export type { ImageQualityStatus } from './image'
 
 export type TaskType = 'VESSEL_SEGMENTATION' | 'IMAGE_QUALITY_CHECK'
 
 export type TaskStatus =
-  | 'CREATED'
-  | 'WAITING'
-  | 'RUNNING'
-  | 'SUCCESS'
-  | 'FAILED'
-  | 'RETRYING'
-  | 'CANCELED'
+  'CREATED' | 'WAITING' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'RETRYING' | 'CANCELED'
 
 export type OperatorType = 'USER' | 'SYSTEM' | 'WORKER' | 'ADMIN'
-
-export type ImageQualityStatus = 'NOT_CHECKED' | 'CHECKING' | 'PASS' | 'WARNING' | 'FAIL' | 'ERROR'
 
 export interface ImageQualitySummary {
   status: ImageQualityStatus | null
@@ -104,10 +100,7 @@ export interface AnalysisResult {
   id: ID
   taskId: ID
   resultType: TaskType
-  resultJson:
-    | VesselSegmentationResult
-    | ImageQualityResult
-    | Record<string, unknown>
+  resultJson: VesselSegmentationResult | ImageQualityResult | Record<string, unknown>
   maskPreviewUrl: string | null
   reportDownloadUrl: string | null
   modelName: string
@@ -137,7 +130,7 @@ export interface AnalysisResultComparisonSnapshot {
   vesselAreaRatio: number | null
   modelName: string | null
   modelVersion: string | null
-  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_CHANGES' | null
+  reviewStatus: ReviewStatusValue | null
   reportStatus: 'DRAFT' | 'SIGNED' | 'SUPERSEDED' | null
   finishedAt: DateTimeString | null
   resultCreatedAt: DateTimeString | null

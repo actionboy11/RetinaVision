@@ -1,0 +1,19 @@
+package com.example.retinavision.llm.shared;
+
+public enum PromptScenario {
+    REPORT_DRAFT_GENERATION,
+    RAG_KNOWLEDGE_CHAT,
+    CASE_TREND_SUMMARY,
+    CLINICAL_ASSISTANT_AGENT,
+    PATIENT_ASSISTANT_AGENT,
+    PATIENT_SIGNED_REPORT_EXPLANATION,
+    AGENT_SKILL_ROUTER;
+
+    public static PromptScenario fromTemplateCode(String templateCode) {
+        try {
+            return valueOf(templateCode);
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new LlmException("Unsupported Prompt template code: " + templateCode);
+        }
+    }
+}

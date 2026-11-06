@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Refresh, Select, View } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from '@/plugins/element-plus-api'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -26,8 +26,8 @@ const logFilters = ref<{ templateCode: string; success: '' | 'true' | 'false' }>
   success: '',
 })
 
-const selectedTemplate = computed(() =>
-  templates.value.find((item) => item.templateCode === selectedCode.value) || null,
+const selectedTemplate = computed(
+  () => templates.value.find((item) => item.templateCode === selectedCode.value) || null,
 )
 
 const loadTemplates = async () => {
@@ -103,11 +103,12 @@ const refreshAll = async () => {
   ElMessage.success('Prompt 管理数据已刷新')
 }
 
-const scenarioLabel = (scenario: string) => ({
-  REPORT_DRAFT_GENERATION: 'AI 报告草稿',
-  RAG_KNOWLEDGE_CHAT: 'RAG 知识问答',
-  CASE_TREND_SUMMARY: '病例趋势摘要',
-}[scenario] || scenario)
+const scenarioLabel = (scenario: string) =>
+  ({
+    REPORT_DRAFT_GENERATION: 'AI 报告草稿',
+    RAG_KNOWLEDGE_CHAT: 'RAG 知识问答',
+    CASE_TREND_SUMMARY: '病例趋势摘要',
+  })[scenario] || scenario
 
 onMounted(async () => {
   await loadTemplates()
@@ -144,7 +145,9 @@ onMounted(async () => {
       <el-table v-loading="templateLoading" :data="templates" border empty-text="暂无 Prompt 模板">
         <el-table-column prop="name" label="模板" min-width="160" />
         <el-table-column label="场景" min-width="160">
-          <template #default="{ row }: { row: PromptTemplate }">{{ scenarioLabel(row.scenario) }}</template>
+          <template #default="{ row }: { row: PromptTemplate }">{{
+            scenarioLabel(row.scenario)
+          }}</template>
         </el-table-column>
         <el-table-column prop="description" label="说明" min-width="300" />
         <el-table-column label="状态" width="100">
@@ -159,7 +162,9 @@ onMounted(async () => {
         </el-table-column>
         <el-table-column fixed="right" label="操作" width="120">
           <template #default="{ row }: { row: PromptTemplate }">
-            <el-button link type="primary" :icon="View" @click="showVersions(row)">查看版本</el-button>
+            <el-button link type="primary" :icon="View" @click="showVersions(row)"
+              >查看版本</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -195,7 +200,9 @@ onMounted(async () => {
         <el-table-column prop="createdAt" label="创建时间" min-width="180" />
         <el-table-column label="状态" width="100">
           <template #default="{ row }: { row: PromptTemplateVersion }">
-            <el-tag :type="row.active ? 'success' : 'info'">{{ row.active ? '当前启用' : '未启用' }}</el-tag>
+            <el-tag :type="row.active ? 'success' : 'info'">{{
+              row.active ? '当前启用' : '未启用'
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column fixed="right" label="操作" width="120">
@@ -219,8 +226,18 @@ onMounted(async () => {
       <div class="log-heading">
         <div class="panel-title">最近调用</div>
         <div class="log-filters">
-          <el-select v-model="logFilters.templateCode" clearable placeholder="全部模板" @change="loadLogs">
-            <el-option v-for="item in templates" :key="item.templateCode" :label="item.name" :value="item.templateCode" />
+          <el-select
+            v-model="logFilters.templateCode"
+            clearable
+            placeholder="全部模板"
+            @change="loadLogs"
+          >
+            <el-option
+              v-for="item in templates"
+              :key="item.templateCode"
+              :label="item.name"
+              :value="item.templateCode"
+            />
           </el-select>
           <el-select v-model="logFilters.success" placeholder="全部状态" @change="loadLogs">
             <el-option label="全部状态" value="" />
@@ -232,125 +249,37 @@ onMounted(async () => {
       <el-table v-loading="logLoading" :data="logs" border empty-text="暂无调用记录">
         <el-table-column prop="createdAt" label="调用时间" min-width="180" />
         <el-table-column label="场景" min-width="150">
-          <template #default="{ row }: { row: LlmCallLog }">{{ scenarioLabel(row.scenario) }}</template>
+          <template #default="{ row }: { row: LlmCallLog }">{{
+            scenarioLabel(row.scenario)
+          }}</template>
         </el-table-column>
         <el-table-column label="版本" width="90">
           <template #default="{ row }: { row: LlmCallLog }">v{{ row.templateVersion }}</template>
         </el-table-column>
         <el-table-column label="供应商 / 模型" min-width="180">
-          <template #default="{ row }: { row: LlmCallLog }">{{ row.provider }} / {{ row.model }}</template>
+          <template #default="{ row }: { row: LlmCallLog }"
+            >{{ row.provider }} / {{ row.model }}</template
+          >
         </el-table-column>
         <el-table-column label="耗时" width="110">
           <template #default="{ row }: { row: LlmCallLog }">{{ row.latencyMs }} ms</template>
         </el-table-column>
         <el-table-column label="状态" width="90">
           <template #default="{ row }: { row: LlmCallLog }">
-            <el-tag :type="row.success ? 'success' : 'danger'">{{ row.success ? '成功' : '失败' }}</el-tag>
+            <el-tag :type="row.success ? 'success' : 'danger'">{{
+              row.success ? '成功' : '失败'
+            }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="errorSummary" label="错误摘要" min-width="180" show-overflow-tooltip />
+        <el-table-column
+          prop="errorSummary"
+          label="错误摘要"
+          min-width="180"
+          show-overflow-tooltip
+        />
       </el-table>
     </section>
   </section>
 </template>
 
-<style scoped>
-.prompt-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.page-heading,
-.log-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.heading-actions { display: flex; gap: 8px; }
-
-.page-heading h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 22px;
-  line-height: 30px;
-}
-
-.page-heading p {
-  margin: 6px 0 0;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.panel {
-  padding: 18px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.panel-title {
-  margin-bottom: 14px;
-  color: #111827;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.panel-title span {
-  margin-left: 10px;
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 400;
-}
-
-.version-detail {
-  display: grid;
-  gap: 14px;
-  padding: 4px 18px 14px 48px;
-}
-
-.version-detail h4 {
-  margin: 0 0 8px;
-  color: #374151;
-  font-size: 13px;
-}
-
-.version-detail pre,
-.version-detail p {
-  margin: 0;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  color: #4b5563;
-  font-family: inherit;
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.log-heading .panel-title {
-  margin-bottom: 0;
-}
-
-.log-filters {
-  display: flex;
-  gap: 10px;
-}
-
-.log-filters .el-select {
-  width: 180px;
-}
-
-@media (max-width: 760px) {
-  .page-heading,
-  .log-heading,
-  .log-filters {
-    flex-direction: column;
-  }
-
-  .log-filters,
-  .log-filters .el-select {
-    width: 100%;
-  }
-}
-</style>
+<style scoped src="./PromptManagement.css"></style>

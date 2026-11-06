@@ -1,0 +1,16 @@
+.skill-label {
+  display: inline-flex;
+  margin-top: 10px;
+  padding: 3px 7px;
+  border: 1px solid #cad9df;
+  border-radius: 4px;
+  color: #476875;
+  font-size: 11px;
+}
+
+.message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

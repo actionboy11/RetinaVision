@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.retinavision.mapper.CaseMapper">
+<mapper namespace="com.example.retinavision.mapper.cases.CaseMapper">
     <!--
       公共筛选条件：
       1. status 不传时默认排除 DELETED；
@@ -45,7 +45,7 @@
     </select>
 
     <!-- 查询当前页数据；createdByName 来自 sys_user.real_name，因此这里需要 join 用户表。 -->
-    <select id="selectCasePage" resultType="com.example.retinavision.pojo.VO.CaseListItemVO">
+    <select id="selectCasePage" resultType="com.example.retinavision.pojo.cases.vo.CaseListItemVO">
         SELECT
             c.id AS id,
             c.case_no AS caseNo,
@@ -73,7 +73,7 @@
         ORDER BY c.created_at DESC, c.id DESC
         LIMIT #{offset}, #{pageSize}
     </select>
-    <select id="getCaseById" resultType="com.example.retinavision.pojo.VO.CaseListItemVO">
+    <select id="getCaseById" resultType="com.example.retinavision.pojo.cases.vo.CaseListItemVO">
         SELECT
             c.id AS id,
             c.case_no AS caseNo,
@@ -99,7 +99,7 @@
         LEFT JOIN sys_user d ON d.id = c.assigned_doctor_id
         WHERE c.id = #{id}
     </select>
-    <select id="findAssignedCaseByReference" resultType="com.example.retinavision.pojo.VO.CaseListItemVO">
+    <select id="findAssignedCaseByReference" resultType="com.example.retinavision.pojo.cases.vo.CaseListItemVO">
         SELECT
             c.id AS id,
             c.case_no AS caseNo,

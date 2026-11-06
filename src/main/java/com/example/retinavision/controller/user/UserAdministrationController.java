@@ -1,0 +1,40 @@
+package com.example.retinavision.controller.user;
+
+import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.result.Result;
+import com.example.retinavision.service.user.UserAdministrationService;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping;
+import com.example.retinavision.pojo.user.vo.AdminUserItemVO;
+import java.util.List;
+
+@RestController
+@RequestMapping("/admin/users")
+// 管理员用户管理控制器，提供用户列表和角色分配功能
+public class UserAdministrationController {
+    private final UserAdministrationService userAdministrationService;
+
+    public UserAdministrationController(UserAdministrationService userAdministrationService) {
+        this.userAdministrationService = userAdministrationService;
+    }
+
+    @GetMapping
+    public Result<List<AdminUserItemVO>> listUsers() {
+        return Result.success(userAdministrationService.listUsers());
+    }
+
+    @PutMapping("/{userId}/role")
+    public Result<Boolean> assignRole(@PathVariable Integer userId,
+                                      @RequestBody UpdateUserRoleDTO request,
+                                      Authentication authentication) {
+        CurrentUserVO administrator = (CurrentUserVO) authentication.getPrincipal();
+        userAdministrationService.assignRole(userId, request, administrator.getId());
+        return Result.success(true);
+    }
+}

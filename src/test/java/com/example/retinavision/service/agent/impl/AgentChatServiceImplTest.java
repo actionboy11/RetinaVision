@@ -1,0 +1,239 @@
+package com.example.retinavision.service.agent.impl;
+
+import com.example.retinavision.llm.agent.AgentModelGateway;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.PromptRenderService;
+import com.example.retinavision.pojo.agent.AgentAction;
+import com.example.retinavision.pojo.agent.AgentPagination;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
+import com.example.retinavision.pojo.agent.AgentStructuredData;
+import com.example.retinavision.pojo.agent.DoctorAgentSkillResult;
+import com.example.retinavision.pojo.agent.PatientAgentSkillResult;
+import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
+import com.example.retinavision.service.agent.AgentToolBundle;
+import com.example.retinavision.service.agent.AgentToolFactory;
+import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
+import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
+
+import com.example.retinavision.enumeration.user.UserRole;
+import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.mapper.agent.AgentChatMessageMapper;
+import com.example.retinavision.mapper.agent.AgentChatSessionMapper;
+import com.example.retinavision.mapper.governance.AgentSkillExecutionLogMapper;
+import com.example.retinavision.pojo.agent.dto.AgentChatRequestDTO;
+import com.example.retinavision.pojo.agent.entity.AgentChatMessageEntity;
+import com.example.retinavision.pojo.agent.entity.AgentChatSessionEntity;
+import com.example.retinavision.pojo.governance.entity.AgentSkillExecutionLogEntity;
+import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
+import com.example.retinavision.pojo.agent.vo.AgentChatResponseVO;
+import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
+import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.LlmCallLogService;
+import com.example.retinavision.service.agent.impl.AgentChatServiceImpl;
+import org.junit.jupiter.api.Test;
+import org.springframework.ai.tool.ToolCallback;
+import org.mockito.ArgumentCaptor;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.argThat;
+
+class AgentChatServiceImplTest {
+    private final AgentChatSessionMapper sessions = mock(AgentChatSessionMapper.class);
+    private final AgentChatMessageMapper messages = mock(AgentChatMessageMapper.class);
+    private final PromptTemplateService prompts = mock(PromptTemplateService.class);
+    private final AgentModelGateway gateway = mock(AgentModelGateway.class);
+    private final AgentToolFactory tools = mock(AgentToolFactory.class);
+    private final LlmCallLogService callLogs = mock(LlmCallLogService.class);
+    private final DoctorAgentSkillOrchestrator skillOrchestrator = mock(DoctorAgentSkillOrchestrator.class);
+    private final PatientAgentSkillOrchestrator patientSkillOrchestrator = mock(PatientAgentSkillOrchestrator.class);
+    private final AgentSkillExecutionLogMapper skillLogs = mock(AgentSkillExecutionLogMapper.class);
+    private final AgentSkillVersionBindingService skillVersions = mock(AgentSkillVersionBindingService.class);
+
+    @Test
+    void doctorCanChatAndAgentPersistsBothMessages() {
+        PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
+        version.setSystemPrompt("仅执行只读工具");
+        when(prompts.requireActiveVersion("CLINICAL_ASSISTANT_AGENT")).thenReturn(version);
+        AgentToolBundle bundle = new AgentToolBundle(new ToolCallback[0]);
+        when(tools.create(any(), any(), any(), any())).thenReturn(bundle);
+        when(gateway.generate(any(), any(), any())).thenReturn("当前任务已经完成，建议医生结合结果复核。");
+        when(skillVersions.resolve(any(), any())).thenReturn(new AgentSkillRuntimeVersion(51L, 2));
+
+        AgentChatResponseVO response = service().chat(
+                new AgentChatRequestDTO(null, "任务 12 现在是什么状态？"), doctor());
+
+        assertThat(response.answer()).contains("结合结果复核");
+        assertThat(response.disclaimer()).contains("只读辅助查询");
+        assertThat(response.skill().code()).isEqualTo("MEDICAL_KNOWLEDGE_QA");
+        assertThat(response.skill().version()).isEqualTo(2);
+        verify(sessions).insert(any(AgentChatSessionEntity.class));
+        verify(messages, times(2)).insert(any(AgentChatMessageEntity.class));
+        verify(callLogs).record(any());
+    }
+
+    @Test
+    void patientKnowledgeUsesPatientPromptAndOnlyKnowledgeTool() {
+        CurrentUserVO user = new CurrentUserVO(9, "user", "用户", UserRole.USER);
+        PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
+        version.setSystemPrompt("患者只读工具");
+        when(prompts.requireActiveVersion("PATIENT_ASSISTANT_AGENT")).thenReturn(version);
+        when(patientSkillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.empty());
+        when(tools.create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge"))))
+                .thenReturn(new AgentToolBundle(new ToolCallback[0]));
+        when(skillVersions.resolve(any(), eq(AgentSkillCode.PATIENT_KNOWLEDGE_QA)))
+                .thenReturn(new AgentSkillRuntimeVersion(61L, 1));
+        when(gateway.generate(any(), any(), any())).thenReturn("这是面向患者的知识解释。");
+
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "血管分割是什么意思？"), user);
+
+        assertThat(response.answer()).contains("知识解释");
+        assertThat(response.skill().code()).isEqualTo("PATIENT_KNOWLEDGE_QA");
+        verify(prompts).requireActiveVersion("PATIENT_ASSISTANT_AGENT");
+        verify(tools).create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge")));
+    }
+
+    @Test
+    void researcherCannotUseAgent() {
+        CurrentUserVO user = new CurrentUserVO(9, "researcher", "研究员", UserRole.RESEARCHER);
+
+        assertThatThrownBy(() -> service().chat(new AgentChatRequestDTO(null, "查询任务"), user))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("患者、医生或管理员");
+    }
+
+    @Test
+    void doctorNaturalLanguageQueryUsesStructuredSkillResult() {
+        DoctorAgentSkillResult skillResult = new DoctorAgentSkillResult(
+                AgentSkillCode.DOCTOR_WORKLOAD_OVERVIEW, 0.98, "你目前负责 8 名患者。",
+                new AgentStructuredData("METRICS", Map.of("patientCount", 8)), null, List.of());
+        when(skillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "我有多少名患者？"), doctor());
+
+        assertThat(response.skill().code()).isEqualTo("DOCTOR_WORKLOAD_OVERVIEW");
+        assertThat(response.data().type()).isEqualTo("METRICS");
+        verify(gateway, times(0)).generate(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any(), any());
+        verify(messages, times(2)).insert(any(AgentChatMessageEntity.class));
+        verify(skillLogs).insert(any(AgentSkillExecutionLogEntity.class));
+    }
+
+    @Test
+    void doctorTaskNativeSkillDoesNotInvokeModelOrToolFactory() {
+        DoctorAgentSkillResult skillResult = new DoctorAgentSkillResult(
+                AgentSkillCode.DOCTOR_TASK_SEARCH, 1, 0.98, "共找到 2 个任务。",
+                new AgentStructuredData("TASK_LIST", Map.of("tasks", List.of())),
+                new AgentPagination(1, 10, 2, false, false), List.of());
+        when(skillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "查询失败任务"), doctor());
+
+        assertThat(response.data().type()).isEqualTo("TASK_LIST");
+        verify(gateway, never()).generate(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any(), any());
+    }
+
+    @Test
+    void patientNativeSkillPersistsBothMessagesAndFullStructuredResponseWithoutModel() {
+        CurrentUserVO patient = new CurrentUserVO(9, "patient", "患者", UserRole.USER);
+        PatientAgentSkillResult skillResult = new PatientAgentSkillResult(
+                AgentSkillCode.MY_CASE_PROGRESS, 1, 0.99, "检查当前处于医生处理阶段。",
+                new AgentStructuredData("CASE_PROGRESS", Map.of("progress", Map.of("caseId", 12))),
+                null, List.of(new AgentAction("VIEW_CASE_PROGRESS", "查看进度", 12L,
+                "/cases/12/progress")));
+        when(patientSkillOrchestrator.handle(any(), any(), eq(patient))).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(
+                new AgentChatRequestDTO(null, "我的检查到哪一步了"), patient);
+
+        assertThat(response.data().type()).isEqualTo("CASE_PROGRESS");
+        verify(gateway, never()).generate(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any());
+        verify(tools, never()).create(any(), any(), any(), any());
+        ArgumentCaptor<AgentChatMessageEntity> saved = ArgumentCaptor.forClass(AgentChatMessageEntity.class);
+        verify(messages, times(2)).insert(saved.capture());
+        assertThat(saved.getAllValues()).extracting(AgentChatMessageEntity::getRole)
+                .containsExactly("USER", "ASSISTANT");
+        assertThat(saved.getAllValues().get(1).getStructuredContentJson())
+                .contains("CASE_PROGRESS", "VIEW_CASE_PROGRESS", "/cases/12/progress");
+    }
+
+    @Test
+    void unavailablePatientReportExplanationKeepsStructuredReport() {
+        CurrentUserVO patient = new CurrentUserVO(9, "patient", "患者", UserRole.USER);
+        PatientAgentSkillResult skillResult = new PatientAgentSkillResult(
+                AgentSkillCode.MY_SIGNED_REPORT, 1, 0.99,
+                "报告通俗解释暂不可用，您仍可查看医生签发的正式报告",
+                new AgentStructuredData("SIGNED_REPORT", Map.of(
+                        "report", Map.of("caseId", 12, "resultId", 91, "conclusion", "医生结论"),
+                        "explanationAvailable", false,
+                        "explanationMessage", "报告通俗解释暂不可用，您仍可查看医生签发的正式报告")),
+                null, List.of());
+        when(patientSkillOrchestrator.handle(any(), any(), eq(patient))).thenReturn(Optional.of(skillResult));
+
+        AgentChatResponseVO response = service().chat(new AgentChatRequestDTO(null, "解释这份报告"), patient);
+
+        assertThat(response.data().payload()).containsKey("report")
+                .containsEntry("explanationAvailable", false);
+        verify(gateway, never()).generate(any(), any(), any());
+    }
+
+    @Test
+    void doctorKnowledgeRouteRegistersOnlyKnowledgeTool() {
+        PromptTemplateVersionEntity version = new PromptTemplateVersionEntity();
+        version.setSystemPrompt("医学知识问答");
+        when(prompts.requireActiveVersion("CLINICAL_ASSISTANT_AGENT")).thenReturn(version);
+        when(skillOrchestrator.handle(any(), any(), any())).thenReturn(Optional.empty());
+        when(tools.create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge"))))
+                .thenReturn(new AgentToolBundle(new ToolCallback[0]));
+        when(gateway.generate(any(), any(), any())).thenReturn("基于知识库引用回答。");
+        when(skillVersions.resolve(any(), eq(AgentSkillCode.MEDICAL_KNOWLEDGE_QA)))
+                .thenReturn(new AgentSkillRuntimeVersion(51L, 2));
+
+        service().chat(new AgentChatRequestDTO(null, "血管分割有什么作用？"), doctor());
+
+        verify(tools).create(any(), any(), any(), eq(java.util.Set.of("searchMedicalKnowledge")));
+        verify(gateway).generate(any(), any(), any());
+    }
+
+    @Test
+    void doctorSkillFailureIsAuditedBeforeTheErrorIsReturned() {
+        when(skillOrchestrator.handle(any(), any(), any()))
+                .thenThrow(new BaseException("查询上下文已过期"));
+
+        assertThatThrownBy(() -> service().chat(new AgentChatRequestDTO(null, "继续"), doctor()))
+                .isInstanceOf(BaseException.class)
+                .hasMessageContaining("查询上下文已过期");
+
+        verify(skillLogs).insert(argThat((AgentSkillExecutionLogEntity log) ->
+                !Boolean.TRUE.equals(log.getSuccess()) && "BaseException".equals(log.getErrorType())));
+        verify(messages, times(0)).insert(any(AgentChatMessageEntity.class));
+    }
+
+    private AgentChatServiceImpl service() {
+        LlmProperties properties = new LlmProperties();
+        properties.setProvider("qwen");
+        properties.setModel("qwen-plus");
+        return new AgentChatServiceImpl(sessions, messages, prompts, new PromptRenderService(), gateway,
+                tools, new LlmSafetyPolicy(), properties, callLogs, skillOrchestrator,
+                patientSkillOrchestrator, new com.fasterxml.jackson.databind.ObjectMapper(), skillLogs, skillVersions);
+    }
+
+    private CurrentUserVO doctor() {
+        return new CurrentUserVO(7, "doctor", "医生", UserRole.DOCTOR);
+    }
+}

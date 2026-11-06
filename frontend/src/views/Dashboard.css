@@ -1,0 +1,184 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-heading h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.page-heading p {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.dashboard-content {
+  min-height: 420px;
+}
+
+.alert-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.stat-card,
+.panel,
+.queue-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.stat-card {
+  padding: 16px;
+}
+
+.stat-label,
+.queue-label {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.stat-value {
+  margin-top: 10px;
+  color: #111827;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 34px;
+}
+
+.tone-primary {
+  border-color: #bfdbfe;
+}
+
+.tone-success {
+  border-color: #bbf7d0;
+}
+
+.tone-warning {
+  border-color: #fde68a;
+}
+
+.tone-danger {
+  border-color: #fecaca;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.panel {
+  padding: 18px;
+}
+
+.panel-title {
+  margin-bottom: 14px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.success-rate-box {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.success-rate-label {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.success-rate-value {
+  margin-top: 6px;
+  color: #111827;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.success-rate-meta {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.queue-name {
+  margin-bottom: 14px;
+  color: #374151;
+  font-size: 14px;
+}
+
+.queue-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.queue-card {
+  padding: 14px;
+}
+
+.queue-value {
+  margin-top: 8px;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+.queue-desc {
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.panel + .panel {
+  margin-top: 16px;
+}
+
+@media (max-width: 1180px) {
+  .stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .two-column,
+  .queue-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-heading,
+  .success-rate-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}

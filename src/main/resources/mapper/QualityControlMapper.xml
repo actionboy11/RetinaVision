@@ -3,8 +3,8 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.retinavision.mapper.QualityControlMapper">
-    <select id="selectOverview" resultType="com.example.retinavision.mapper.QualityControlMapper$OverviewRow">
+<mapper namespace="com.example.retinavision.mapper.governance.QualityControlMapper">
+    <select id="selectOverview" resultType="com.example.retinavision.mapper.governance.QualityControlMapper$OverviewRow">
         SELECT
             COUNT(t.id) AS taskTotalCount,
             CASE WHEN COUNT(t.id) = 0 THEN 0 ELSE SUM(CASE WHEN t.status = 'SUCCESS' THEN 1 ELSE 0 END) / COUNT(t.id) END AS successRate,
@@ -49,20 +49,20 @@
         FROM analysis_task t
     </select>
 
-    <select id="selectQualityDistribution" resultType="com.example.retinavision.mapper.QualityControlMapper$CountRow">
+    <select id="selectQualityDistribution" resultType="com.example.retinavision.mapper.governance.QualityControlMapper$CountRow">
         SELECT COALESCE(quality_status, 'NOT_CHECKED') AS name, COUNT(*) AS count
         FROM image_file
         WHERE deleted_at IS NULL
         GROUP BY COALESCE(quality_status, 'NOT_CHECKED')
     </select>
 
-    <select id="selectReviewDistribution" resultType="com.example.retinavision.mapper.QualityControlMapper$CountRow">
+    <select id="selectReviewDistribution" resultType="com.example.retinavision.mapper.governance.QualityControlMapper$CountRow">
         SELECT status AS name, COUNT(*) AS count
         FROM analysis_review
         GROUP BY status
     </select>
 
-    <select id="selectModelPerformance" resultType="com.example.retinavision.pojo.VO.ModelPerformanceItemVO">
+    <select id="selectModelPerformance" resultType="com.example.retinavision.pojo.operations.vo.ModelPerformanceItemVO">
         SELECT
             COALESCE(r.model_name, 'UNKNOWN') AS modelName,
             COALESCE(r.model_version, 'UNKNOWN') AS modelVersion,
@@ -89,7 +89,7 @@
         ORDER BY resultCount DESC, modelName, modelVersion
     </select>
 
-    <select id="selectRiskAlerts" resultType="com.example.retinavision.pojo.VO.RiskAlertItemVO">
+    <select id="selectRiskAlerts" resultType="com.example.retinavision.pojo.governance.vo.RiskAlertItemVO">
         SELECT *
         FROM (
             SELECT

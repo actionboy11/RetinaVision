@@ -17,10 +17,13 @@ export interface QualityControlOverview {
   abnormalHighVesselRatioCount: number
 }
 
+/** 风险等级由后端质控规则输出，前端按此映射标签颜色。 */
+export type RiskLevel = 'CRITICAL' | 'WARNING' | 'INFO'
+
 export interface ModelPerformanceItem {
   modelName: string
   modelVersion: string
-  resultType: TaskType | string
+  resultType: TaskType
   resultCount: number
   successRate: number
   averageProcessingTimeMs: number
@@ -41,13 +44,13 @@ export interface ReviewStatistics {
 }
 
 export interface RiskAlertItem {
-  level: 'CRITICAL' | 'WARNING' | 'INFO' | string
+  level: RiskLevel
   reason: string
   taskId: ID | null
   taskNo: string | null
   resultId: ID | null
   caseId: ID | null
-  taskType: TaskType | string | null
-  status: TaskStatus | string | null
+  taskType: TaskType | null
+  status: TaskStatus | null
   createdAt: DateTimeString | null
 }

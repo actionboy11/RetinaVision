@@ -8,8 +8,7 @@ import type {
   RagEvaluationRun,
 } from '@/types/prompt'
 
-export const getPromptTemplates = () =>
-  request.get<unknown, PromptTemplate[]>('/prompt-templates')
+export const getPromptTemplates = () => request.get<unknown, PromptTemplate[]>('/prompt-templates')
 
 export const getPromptTemplateVersions = (templateCode: string) =>
   request.get<unknown, PromptTemplateVersion[]>(`/prompt-templates/${templateCode}/versions`)
@@ -29,8 +28,17 @@ export const getPromptEvaluationRun = (id: number) =>
 export const startPromptEvaluation = (candidateVersionId: number) =>
   request.post<unknown, PromptEvaluationRun>('/prompt-evaluations/runs', { candidateVersionId })
 
-export const reviewPromptEvaluation = (id: number, approved: boolean, score: number, note: string) =>
-  request.put<unknown, PromptEvaluationRun>(`/prompt-evaluations/runs/${id}/review`, { approved, score, note })
+export const reviewPromptEvaluation = (
+  id: number,
+  approved: boolean,
+  score: number,
+  note: string,
+) =>
+  request.put<unknown, PromptEvaluationRun>(`/prompt-evaluations/runs/${id}/review`, {
+    approved,
+    score,
+    note,
+  })
 
 export const getRagEvaluationRuns = () =>
   request.get<unknown, RagEvaluationRun[]>('/rag-evaluations/runs')
@@ -42,4 +50,8 @@ export const startRagEvaluation = (candidateVersionId: number) =>
   request.post<unknown, RagEvaluationRun>('/rag-evaluations/runs', { candidateVersionId })
 
 export const reviewRagEvaluation = (id: number, approved: boolean, score: number, note: string) =>
-  request.put<unknown, RagEvaluationRun>(`/rag-evaluations/runs/${id}/review`, { approved, score, note })
+  request.put<unknown, RagEvaluationRun>(`/rag-evaluations/runs/${id}/review`, {
+    approved,
+    score,
+    note,
+  })
