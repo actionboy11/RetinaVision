@@ -93,12 +93,13 @@ class PatientAgentSecurityContractTest {
     void javaAndBrowserKeepPatientNavigationOnTheThreeApprovedRoutes() throws IOException {
         String orchestrator = Files.readString(Path.of(
                 "src/main/java/com/example/retinavision/service/agent/PatientAgentSkillOrchestrator.java"));
-        String frontend = Files.readString(Path.of("frontend/src/views/agent/ClinicalAgent.vue"));
+        String navigationGuard = Files.readString(Path.of(
+                "frontend/src/composables/use-clinical-agent.ts"));
 
         assertThat(orchestrator).contains(
                 "VIEW_CASE_PROGRESS", "VIEW_SIGNED_REPORT", "GO_TO_IMAGE_UPLOAD",
                 "?section=reports");
-        assertThat(frontend).contains("progress(\\?section=reports)?|images")
+        assertThat(navigationGuard).contains("progress(\\?section=reports)?|images")
                 .doesNotContain("router.push(action.targetPath)");
         assertThat(ALLOWED_ACTION_PATHS).allMatch(path -> path.startsWith("/cases/11/"));
     }
