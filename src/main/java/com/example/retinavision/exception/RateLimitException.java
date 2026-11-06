@@ -1,6 +1,8 @@
 package com.example.retinavision.exception;
 
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 
 // 业务异常：请求过于频繁，触发限流机制

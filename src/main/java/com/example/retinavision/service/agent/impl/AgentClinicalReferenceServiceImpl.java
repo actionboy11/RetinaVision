@@ -1,6 +1,8 @@
 package com.example.retinavision.service.agent.impl;
 
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.cases.CaseMapper;

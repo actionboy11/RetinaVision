@@ -1,8 +1,11 @@
 package com.example.retinavision.service.auth.impl;
 
+import com.example.retinavision.constant.shared.ErrorMessageContant;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.example.retinavision.constant.ErrorMessageContant;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageContant;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.AccountNotFoundException;
 import com.example.retinavision.mapper.user.UserRegisterMapper;

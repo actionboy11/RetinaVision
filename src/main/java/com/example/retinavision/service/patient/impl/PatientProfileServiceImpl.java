@@ -1,7 +1,9 @@
 package com.example.retinavision.service.patient.impl;
 
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.patient.PatientProfileSource;
 import com.example.retinavision.enumeration.patient.PatientProfileStatus;
 import com.example.retinavision.enumeration.user.UserRole;

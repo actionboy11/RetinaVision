@@ -1,6 +1,8 @@
 package com.example.retinavision.pojo.patient.vo;
 
-import com.example.retinavision.agent.PatientQualityDisplayStatus;
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
+
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

@@ -1,4 +1,12 @@
 package com.example.retinavision.agent;
+
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillRoute;
+import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
+import com.example.retinavision.service.agent.PatientAgentQueryContextService;
+import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
 import com.example.retinavision.enumeration.cases.EyeSide;
 import com.example.retinavision.mapper.patient.PatientAgentQueryMapper;
 
@@ -84,7 +92,7 @@ class PatientAgentSecurityContractTest {
     @Test
     void javaAndBrowserKeepPatientNavigationOnTheThreeApprovedRoutes() throws IOException {
         String orchestrator = Files.readString(Path.of(
-                "src/main/java/com/example/retinavision/agent/PatientAgentSkillOrchestrator.java"));
+                "src/main/java/com/example/retinavision/service/agent/PatientAgentSkillOrchestrator.java"));
         String frontend = Files.readString(Path.of("frontend/src/views/agent/ClinicalAgent.vue"));
 
         assertThat(orchestrator).contains(

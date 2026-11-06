@@ -1,4 +1,9 @@
 package com.example.retinavision.agent;
+
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillDefinition;
+import com.example.retinavision.pojo.agent.AgentSkillExecutionMode;
+import com.example.retinavision.service.agent.AgentSkillRegistry;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.example.retinavision.enumeration.user.UserRole;

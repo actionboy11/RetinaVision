@@ -1,4 +1,7 @@
 package com.example.retinavision.agent.evaluation;
+
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationAdministrationService;
 import com.example.retinavision.mapper.agent.AgentSkillMapper;
 import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationCaseMapper;
@@ -11,7 +14,7 @@ import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.LlmProperties;
+import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
 import com.example.retinavision.pojo.governance.vo.AgentEvaluationResultVO;
 import com.example.retinavision.pojo.governance.vo.AgentEvaluationRunVO;

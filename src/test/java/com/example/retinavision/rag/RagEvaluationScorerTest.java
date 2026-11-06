@@ -1,5 +1,8 @@
 package com.example.retinavision.rag;
 
+import com.example.retinavision.rag.governance.RagEvaluationScorer;
+import com.example.retinavision.rag.knowledge.QdrantSearchHit;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

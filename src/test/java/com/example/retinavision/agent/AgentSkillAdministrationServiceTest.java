@@ -1,5 +1,13 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillDefinition;
+import com.example.retinavision.pojo.agent.AgentSkillRoute;
+import com.example.retinavision.pojo.agent.SegmentationState;
+import com.example.retinavision.service.agent.AgentSkillCatalogService;
+import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.governance.AgentSkillEvaluationRunMapper;
 import com.example.retinavision.mapper.agent.AgentSkillMapper;
@@ -8,7 +16,7 @@ import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.governance.entity.AgentSkillEvaluationRunEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 import com.example.retinavision.service.governance.impl.AgentSkillAdministrationServiceImpl;
-import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

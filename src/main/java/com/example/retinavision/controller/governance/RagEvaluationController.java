@@ -1,9 +1,12 @@
 package com.example.retinavision.controller.governance;
 
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+import com.example.retinavision.llm.governance.RagEvaluationService;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.RagEvaluationService;
+import com.example.retinavision.llm.governance.RagEvaluationService;
 import com.example.retinavision.pojo.governance.entity.PromptEvaluationRunEntity;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.governance.vo.PromptEvaluationRunVO;

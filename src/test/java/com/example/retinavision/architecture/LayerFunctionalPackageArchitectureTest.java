@@ -135,6 +135,27 @@ class LayerFunctionalPackageArchitectureTest {
                 () -> "Legacy analysis packages still contain classes: " + violations);
     }
 
+    @Test
+    void remaining_technical_roots_are_grouped_by_function() {
+        Set<String> directRoots = Set.of(
+                "llm", "rag", "config", "redis", "constant", "common", "utils");
+
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> {
+                    String relativePackage = relativePackage(javaClass);
+                    if (relativePackage.equals("agent") || relativePackage.startsWith("agent.")) {
+                        return true;
+                    }
+                    return directRoots.contains(relativePackage);
+                })
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Remaining classes are not grouped by function: " + violations);
+    }
+
     private String relativePackage(JavaClass javaClass) {
         String packageName = javaClass.getPackageName();
         if (packageName.equals(BASE_PACKAGE)) {

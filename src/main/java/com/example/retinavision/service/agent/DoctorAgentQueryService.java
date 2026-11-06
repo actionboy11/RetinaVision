@@ -1,8 +1,12 @@
 package com.example.retinavision.service.agent;
 
-import com.example.retinavision.agent.DoctorCaseSearchCriteria;
-import com.example.retinavision.agent.DoctorTaskSearchCriteria;
-import com.example.retinavision.agent.DoctorClinicalQueueCriteria;
+import com.example.retinavision.pojo.agent.DoctorCaseSearchCriteria;
+import com.example.retinavision.pojo.agent.DoctorClinicalQueueCriteria;
+import com.example.retinavision.pojo.agent.DoctorTaskSearchCriteria;
+
+import com.example.retinavision.pojo.agent.DoctorCaseSearchCriteria;
+import com.example.retinavision.pojo.agent.DoctorTaskSearchCriteria;
+import com.example.retinavision.pojo.agent.DoctorClinicalQueueCriteria;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
 import com.example.retinavision.pojo.cases.vo.DoctorWorkloadVO;

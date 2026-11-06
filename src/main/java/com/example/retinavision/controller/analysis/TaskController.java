@@ -1,4 +1,6 @@
 package com.example.retinavision.controller.analysis;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
 import com.example.retinavision.pojo.analysis.vo.RetryTaskVO;
 import com.example.retinavision.pojo.analysis.vo.TaskDetailVO;
@@ -10,7 +12,7 @@ import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
 import com.example.retinavision.pojo.analysis.dto.TaskListQueryDTO;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;

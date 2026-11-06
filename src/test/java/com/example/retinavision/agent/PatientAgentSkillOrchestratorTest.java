@@ -1,5 +1,16 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillRoute;
+import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
+import com.example.retinavision.pojo.agent.PatientAgentQueryContextSnapshot;
+import com.example.retinavision.pojo.agent.PatientAgentReference;
+import com.example.retinavision.pojo.agent.PatientReportExplanationResult;
+import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
+import com.example.retinavision.service.agent.PatientAgentQueryContextService;
+import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
+
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;

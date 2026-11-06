@@ -1,6 +1,8 @@
 package com.example.retinavision.service.reporting.impl;
 
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.service.reporting.ReportPdfDocument;
 import com.example.retinavision.service.reporting.ReportPdfRenderer;

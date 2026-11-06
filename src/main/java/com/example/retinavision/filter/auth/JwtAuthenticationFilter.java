@@ -1,5 +1,7 @@
 package com.example.retinavision.filter.auth;
 
+import com.example.retinavision.config.auth.SecurityConfig;
+
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.utils.auth.JwtUtil;

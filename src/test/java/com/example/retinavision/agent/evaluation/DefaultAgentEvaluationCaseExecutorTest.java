@@ -1,15 +1,24 @@
 package com.example.retinavision.agent.evaluation;
+
+import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.llm.shared.LlmGenerationResult;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOutcome;
+import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
+import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.service.governance.evaluation.DefaultAgentEvaluationCaseExecutor;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationCaseEntity;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunBindingEntity;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;
 
-import com.example.retinavision.agent.AgentSkillCode;
-import com.example.retinavision.agent.AgentSkillRegistry;
-import com.example.retinavision.llm.LlmGenerationResult;
-import com.example.retinavision.llm.LlmException;
-import com.example.retinavision.llm.LlmOrchestrationService;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.llm.shared.LlmGenerationResult;
+import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
 import com.example.retinavision.mapper.agent.AgentSkillMapper;
 import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;

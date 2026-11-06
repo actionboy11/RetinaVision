@@ -1,5 +1,10 @@
 package com.example.retinavision.agent.evaluation;
 
+import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOutcome;
+import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
+import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationScore;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationScorer;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -1,5 +1,10 @@
 package com.example.retinavision.rag;
 
+import com.example.retinavision.rag.knowledge.QdrantClient;
+import com.example.retinavision.rag.knowledge.QdrantPoint;
+import com.example.retinavision.rag.knowledge.QdrantProperties;
+import com.example.retinavision.rag.knowledge.QdrantSearchHit;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;

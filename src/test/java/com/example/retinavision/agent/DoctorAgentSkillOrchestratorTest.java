@@ -1,4 +1,27 @@
 package com.example.retinavision.agent;
+
+import com.example.retinavision.pojo.agent.AgentQueryContextSnapshot;
+import com.example.retinavision.pojo.agent.AgentReferenceType;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillRoute;
+import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
+import com.example.retinavision.pojo.agent.DoctorAgentSkillResult;
+import com.example.retinavision.pojo.agent.DoctorCaseSearchCriteria;
+import com.example.retinavision.pojo.agent.DoctorClinicalQueueCriteria;
+import com.example.retinavision.pojo.agent.DoctorClinicalQueueType;
+import com.example.retinavision.pojo.agent.DoctorClinicalState;
+import com.example.retinavision.pojo.agent.DoctorDateWindow;
+import com.example.retinavision.pojo.agent.DoctorTaskSearchCriteria;
+import com.example.retinavision.pojo.agent.DoctorTaskStatusFilter;
+import com.example.retinavision.pojo.agent.SegmentationState;
+import com.example.retinavision.service.agent.AgentContextCommandParser;
+import com.example.retinavision.service.agent.AgentQueryContextService;
+import com.example.retinavision.service.agent.AgentSkillCatalogService;
+import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
+import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
+import com.example.retinavision.service.agent.policy.AgentUnsafeRequestPolicy;
 import com.example.retinavision.enumeration.analysis.TaskType;
 
 import com.example.retinavision.enumeration.user.UserRole;

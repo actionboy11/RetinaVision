@@ -1,5 +1,9 @@
 package com.example.retinavision.llm;
 
+import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.llm.shared.OpenAiCompatibleLlmClient;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;

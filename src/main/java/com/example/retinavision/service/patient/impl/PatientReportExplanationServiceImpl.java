@@ -1,9 +1,14 @@
 package com.example.retinavision.service.patient.impl;
 
-import com.example.retinavision.agent.PatientReportExplanationResult;
-import com.example.retinavision.llm.LlmOrchestrationService;
-import com.example.retinavision.llm.LlmSafetyPolicy;
-import com.example.retinavision.llm.PromptScenario;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.PromptScenario;
+import com.example.retinavision.pojo.agent.PatientReportExplanationResult;
+
+import com.example.retinavision.pojo.agent.PatientReportExplanationResult;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.PromptScenario;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
 import com.example.retinavision.service.patient.PatientReportExplanationService;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -1,11 +1,16 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.rag.knowledge.KnowledgeAudiencePolicy;
+import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
+import com.example.retinavision.service.agent.AgentToolBundle;
+import com.example.retinavision.service.agent.DefaultAgentToolFactory;
+
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.mapper.agent.AgentToolCallLogMapper;
 import com.example.retinavision.pojo.agent.entity.AgentToolCallLogEntity;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.rag.KnowledgeDocumentRetriever;
-import com.example.retinavision.rag.KnowledgeAudiencePolicy;
+import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
+import com.example.retinavision.rag.knowledge.KnowledgeAudiencePolicy;
 import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
 import com.example.retinavision.service.agent.AgentClinicalReferenceService;
 import com.example.retinavision.service.cases.ClinicalAccessService;

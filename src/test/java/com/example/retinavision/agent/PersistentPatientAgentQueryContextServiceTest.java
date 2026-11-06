@@ -1,5 +1,10 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.PatientAgentQueryContextSnapshot;
+import com.example.retinavision.pojo.agent.PatientAgentReference;
+import com.example.retinavision.service.agent.PersistentPatientAgentQueryContextService;
+
 import com.example.retinavision.mapper.agent.AgentQueryContextMapper;
 import com.example.retinavision.pojo.agent.entity.AgentQueryContextEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;

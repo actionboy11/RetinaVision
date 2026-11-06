@@ -1,6 +1,8 @@
 package com.example.retinavision.service.clinical.impl;
 
-import com.example.retinavision.config.DoctorReviewReminderProperties;
+import com.example.retinavision.config.clinical.DoctorReviewReminderProperties;
+
+import com.example.retinavision.config.clinical.DoctorReviewReminderProperties;
 import com.example.retinavision.enumeration.reporting.ReportStatus;
 import com.example.retinavision.enumeration.clinical.ReviewStatus;
 import com.example.retinavision.enumeration.analysis.TaskStatus;

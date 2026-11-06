@@ -1,8 +1,12 @@
 package com.example.retinavision.pojo.agent.vo;
 
-import com.example.retinavision.agent.AgentAction;
-import com.example.retinavision.agent.AgentPagination;
-import com.example.retinavision.agent.AgentStructuredData;
+import com.example.retinavision.pojo.agent.AgentAction;
+import com.example.retinavision.pojo.agent.AgentPagination;
+import com.example.retinavision.pojo.agent.AgentStructuredData;
+
+import com.example.retinavision.pojo.agent.AgentAction;
+import com.example.retinavision.pojo.agent.AgentPagination;
+import com.example.retinavision.pojo.agent.AgentStructuredData;
 
 import java.util.List;
 

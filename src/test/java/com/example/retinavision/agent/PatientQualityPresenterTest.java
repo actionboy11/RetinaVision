@@ -1,5 +1,8 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
+import com.example.retinavision.service.agent.PatientQualityPresenter;
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

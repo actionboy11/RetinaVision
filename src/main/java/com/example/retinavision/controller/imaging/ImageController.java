@@ -1,10 +1,12 @@
 package com.example.retinavision.controller.imaging;
 
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
 
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.imaging.vo.ImageFileItemVO;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.imaging.ImageService;

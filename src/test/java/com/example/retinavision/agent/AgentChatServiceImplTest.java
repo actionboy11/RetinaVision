@@ -1,10 +1,27 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.llm.agent.AgentModelGateway;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.PromptRenderService;
+import com.example.retinavision.pojo.agent.AgentAction;
+import com.example.retinavision.pojo.agent.AgentPagination;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
+import com.example.retinavision.pojo.agent.AgentStructuredData;
+import com.example.retinavision.pojo.agent.DoctorAgentSkillResult;
+import com.example.retinavision.pojo.agent.PatientAgentSkillResult;
+import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
+import com.example.retinavision.service.agent.AgentToolBundle;
+import com.example.retinavision.service.agent.AgentToolFactory;
+import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
+import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
+
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.LlmProperties;
-import com.example.retinavision.llm.LlmSafetyPolicy;
-import com.example.retinavision.llm.PromptRenderService;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.PromptRenderService;
 import com.example.retinavision.mapper.agent.AgentChatMessageMapper;
 import com.example.retinavision.mapper.agent.AgentChatSessionMapper;
 import com.example.retinavision.mapper.governance.AgentSkillExecutionLogMapper;

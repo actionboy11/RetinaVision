@@ -1,12 +1,19 @@
 package com.example.retinavision.service.governance.impl;
 
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.AgentSkillDefinition;
+import com.example.retinavision.service.agent.AgentSkillCatalogService;
+import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.agent.AgentSkillCode;
-import com.example.retinavision.agent.AgentSkillRouter;
-import com.example.retinavision.agent.AgentSkillCatalogService;
-import com.example.retinavision.agent.AgentSkillDefinition;
-import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.service.agent.AgentSkillCatalogService;
+import com.example.retinavision.pojo.agent.AgentSkillDefinition;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.governance.AgentSkillEvaluationRunMapper;
 import com.example.retinavision.mapper.agent.AgentSkillMapper;

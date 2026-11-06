@@ -1,15 +1,22 @@
 package com.example.retinavision.service.governance.impl;
 
+import com.example.retinavision.llm.governance.PromptEvaluationService;
+import com.example.retinavision.llm.governance.RagEvaluationService;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.rag.knowledge.EmbeddingProperties;
+import com.example.retinavision.rag.knowledge.QdrantProperties;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.governance.PromptTemplateMapper;
 import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 import com.example.retinavision.mapper.governance.PromptEvaluationRunMapper;
 import com.example.retinavision.pojo.governance.entity.PromptEvaluationRunEntity;
-import com.example.retinavision.llm.LlmProperties;
-import com.example.retinavision.llm.PromptEvaluationService;
-import com.example.retinavision.llm.RagEvaluationService;
-import com.example.retinavision.rag.EmbeddingProperties;
-import com.example.retinavision.rag.QdrantProperties;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.llm.governance.PromptEvaluationService;
+import com.example.retinavision.llm.governance.RagEvaluationService;
+import com.example.retinavision.rag.knowledge.EmbeddingProperties;
+import com.example.retinavision.rag.knowledge.QdrantProperties;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
@@ -25,7 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import com.example.retinavision.agent.evaluation.AgentEvaluationEligibilityService;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
 
 class PromptTemplateServiceImplTest {
     private PromptTemplateMapper templates;

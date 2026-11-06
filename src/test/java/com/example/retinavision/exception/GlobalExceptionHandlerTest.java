@@ -1,6 +1,8 @@
 package com.example.retinavision.exception;
 
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 

@@ -1,5 +1,7 @@
 package com.example.retinavision.controller.clinical;
 
+import com.example.retinavision.config.auth.SecurityConfig;
+
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;

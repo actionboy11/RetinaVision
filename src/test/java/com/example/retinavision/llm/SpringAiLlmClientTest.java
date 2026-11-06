@@ -1,5 +1,8 @@
 package com.example.retinavision.llm;
 
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.llm.shared.SpringAiLlmClient;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.ai.chat.messages.AssistantMessage;

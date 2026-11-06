@@ -1,7 +1,11 @@
 package com.example.retinavision.agent;
 
+import com.example.retinavision.llm.agent.SpringAiAgentModelGateway;
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.pojo.agent.AgentConversationMessage;
+
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.LlmProperties;
+import com.example.retinavision.llm.shared.LlmProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatModel;

@@ -1,9 +1,11 @@
 package com.example.retinavision.pojo.cases.entity;
 
+import com.example.retinavision.common.shared.Deletable;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.example.retinavision.common.Deletable;
+import com.example.retinavision.common.shared.Deletable;
 import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.cases.EyeSide;

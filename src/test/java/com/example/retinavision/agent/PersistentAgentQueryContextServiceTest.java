@@ -1,4 +1,14 @@
 package com.example.retinavision.agent;
+
+import com.example.retinavision.pojo.agent.AgentQueryContextSnapshot;
+import com.example.retinavision.pojo.agent.AgentReferenceType;
+import com.example.retinavision.pojo.agent.AgentSkillCode;
+import com.example.retinavision.pojo.agent.DoctorClinicalQueueType;
+import com.example.retinavision.pojo.agent.DoctorClinicalState;
+import com.example.retinavision.pojo.agent.DoctorDateWindow;
+import com.example.retinavision.pojo.agent.DoctorTaskStatusFilter;
+import com.example.retinavision.pojo.agent.SegmentationState;
+import com.example.retinavision.service.agent.PersistentAgentQueryContextService;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
 

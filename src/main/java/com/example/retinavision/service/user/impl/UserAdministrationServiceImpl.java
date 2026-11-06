@@ -1,7 +1,9 @@
 package com.example.retinavision.service.user.impl;
 
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.user.UserRegisterMapper;

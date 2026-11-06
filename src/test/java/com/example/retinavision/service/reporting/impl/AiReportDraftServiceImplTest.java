@@ -1,12 +1,17 @@
 package com.example.retinavision.service.reporting.impl;
 
+import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.llm.shared.LlmGenerationResult;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+
 import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
 import com.example.retinavision.enumeration.reporting.ReportStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
-import com.example.retinavision.llm.LlmException;
-import com.example.retinavision.llm.LlmGenerationResult;
-import com.example.retinavision.llm.LlmOrchestrationService;
-import com.example.retinavision.llm.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.llm.shared.LlmGenerationResult;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.example.retinavision.mapper.clinical.AnalysisCorrectionMapper;
 import com.example.retinavision.mapper.reporting.AnalysisReportMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;

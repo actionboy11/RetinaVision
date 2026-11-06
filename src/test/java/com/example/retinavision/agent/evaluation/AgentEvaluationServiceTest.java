@@ -1,10 +1,15 @@
 package com.example.retinavision.agent.evaluation;
+
+import com.example.retinavision.llm.shared.LlmProperties;
+import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationStartCommand;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationRunner;
+import com.example.retinavision.service.governance.evaluation.AgentEvaluationService;
 import com.example.retinavision.mapper.governance.AgentEvaluationDatasetMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunBindingMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationRunMapper;
 
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.LlmProperties;
+import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationDatasetEntity;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunBindingEntity;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationRunEntity;

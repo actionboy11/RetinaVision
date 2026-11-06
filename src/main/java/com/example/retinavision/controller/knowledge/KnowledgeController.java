@@ -1,5 +1,7 @@
 package com.example.retinavision.controller.knowledge;
 
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;
@@ -28,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-import static com.example.retinavision.constant.ErrorMessageSignal.FORBIDDEN;
+import static com.example.retinavision.constant.shared.ErrorMessageSignal.FORBIDDEN;
 
 @RestController
 @RequestMapping("/knowledge")

@@ -1,7 +1,10 @@
 package com.example.retinavision.service.agent.impl;
 
-import com.example.retinavision.agent.PatientCaseSearchCriteria;
-import com.example.retinavision.agent.PatientQualityPresenter;
+import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
+import com.example.retinavision.service.agent.PatientQualityPresenter;
+
+import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
+import com.example.retinavision.service.agent.PatientQualityPresenter;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;
 import com.example.retinavision.mapper.patient.PatientAgentQueryMapper;

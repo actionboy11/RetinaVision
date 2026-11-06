@@ -1,7 +1,9 @@
 package com.example.retinavision.pojo.patient.vo;
+
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
 import com.example.retinavision.enumeration.cases.EyeSide;
 
-import com.example.retinavision.agent.PatientQualityDisplayStatus;
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import lombok.Data;
 

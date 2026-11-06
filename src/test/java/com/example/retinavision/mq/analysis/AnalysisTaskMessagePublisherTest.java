@@ -1,7 +1,10 @@
 package com.example.retinavision.mq.analysis;
 
-import com.example.retinavision.constant.ErrorMessageContant;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageContant;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
+import com.example.retinavision.constant.shared.ErrorMessageContant;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.analysis.TaskType;
 import com.example.retinavision.exception.BaseException;
 import org.junit.jupiter.api.BeforeEach;

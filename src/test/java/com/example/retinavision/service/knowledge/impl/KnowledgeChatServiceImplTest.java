@@ -1,17 +1,23 @@
 package com.example.retinavision.service.knowledge.impl;
 
+import com.example.retinavision.llm.shared.LlmGenerationResult;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
+import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
+import com.example.retinavision.rag.knowledge.RagGroundingValidator;
+
 import com.example.retinavision.exception.BaseException;
-import com.example.retinavision.llm.LlmGenerationResult;
-import com.example.retinavision.llm.LlmOrchestrationService;
-import com.example.retinavision.llm.LlmSafetyPolicy;
+import com.example.retinavision.llm.shared.LlmGenerationResult;
+import com.example.retinavision.llm.shared.LlmOrchestrationService;
+import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatMessageMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatSessionMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatMessageEntity;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatSessionEntity;
 import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
-import com.example.retinavision.rag.KnowledgeDocumentRetriever;
-import com.example.retinavision.rag.RagGroundingValidator;
+import com.example.retinavision.rag.knowledge.KnowledgeDocumentRetriever;
+import com.example.retinavision.rag.knowledge.RagGroundingValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;

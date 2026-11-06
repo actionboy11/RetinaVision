@@ -1,9 +1,14 @@
 package com.example.retinavision.service.agent.impl;
 
-import com.example.retinavision.agent.PatientCaseSearchCriteria;
-import com.example.retinavision.agent.PatientQualityDisplayStatus;
-import com.example.retinavision.agent.PatientQualityPresenter;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
+import com.example.retinavision.service.agent.PatientQualityPresenter;
+
+import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
+import com.example.retinavision.pojo.agent.PatientQualityDisplayStatus;
+import com.example.retinavision.service.agent.PatientQualityPresenter;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.BaseException;

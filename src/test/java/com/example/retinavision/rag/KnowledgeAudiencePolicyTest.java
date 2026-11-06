@@ -1,5 +1,7 @@
 package com.example.retinavision.rag;
 
+import com.example.retinavision.rag.knowledge.KnowledgeAudiencePolicy;
+
 import com.example.retinavision.enumeration.knowledge.KnowledgeAudience;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;

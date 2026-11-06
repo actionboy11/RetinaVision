@@ -1,5 +1,9 @@
 package com.example.retinavision.rag;
 
+import com.example.retinavision.rag.knowledge.QdrantClient;
+import com.example.retinavision.rag.knowledge.QdrantDocumentRetriever;
+import com.example.retinavision.rag.knowledge.QdrantSearchHit;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;

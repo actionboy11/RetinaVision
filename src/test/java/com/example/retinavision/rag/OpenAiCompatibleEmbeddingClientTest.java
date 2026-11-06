@@ -1,5 +1,8 @@
 package com.example.retinavision.rag;
 
+import com.example.retinavision.rag.knowledge.EmbeddingProperties;
+import com.example.retinavision.rag.knowledge.OpenAiCompatibleEmbeddingClient;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;

@@ -1,10 +1,12 @@
 package com.example.retinavision.service.analysis.impl;
+
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 import com.example.retinavision.pojo.analysis.event.AnalysisTaskRequestedEvent;
 import com.example.retinavision.service.analysis.port.AnalysisTaskEventOutbox;
 import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.imaging.ImageStatus;

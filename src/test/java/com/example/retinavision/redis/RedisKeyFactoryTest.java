@@ -1,6 +1,9 @@
 package com.example.retinavision.redis;
 
-import com.example.retinavision.config.RedisFeatureProperties;
+import com.example.retinavision.config.shared.RedisFeatureProperties;
+import com.example.retinavision.redis.shared.RedisKeyFactory;
+
+import com.example.retinavision.config.shared.RedisFeatureProperties;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

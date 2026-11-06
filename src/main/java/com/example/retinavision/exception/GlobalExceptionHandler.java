@@ -1,7 +1,10 @@
 package com.example.retinavision.exception;
 
-import com.example.retinavision.constant.ErrorMessageContant;
-import com.example.retinavision.constant.ErrorMessageSignal;
+import com.example.retinavision.constant.shared.ErrorMessageContant;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
+
+import com.example.retinavision.constant.shared.ErrorMessageContant;
+import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.result.Result;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
