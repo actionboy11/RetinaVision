@@ -11,8 +11,8 @@ import com.example.retinavision.llm.shared.PromptRenderService;
 
 import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
-import com.example.retinavision.service.governance.LlmCallLogService;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

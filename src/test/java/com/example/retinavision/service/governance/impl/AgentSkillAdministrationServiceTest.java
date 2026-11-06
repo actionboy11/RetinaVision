@@ -6,7 +6,7 @@ import com.example.retinavision.pojo.agent.AgentSkillRoute;
 import com.example.retinavision.pojo.agent.SegmentationState;
 import com.example.retinavision.application.agent.routing.AgentSkillCatalogService;
 import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+import com.example.retinavision.application.governance.evaluation.policy.AgentEvaluationEligibilityService;
 
 import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.AgentSkillEvaluationRunMapper;

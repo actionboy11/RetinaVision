@@ -29,8 +29,8 @@ import com.example.retinavision.pojo.governance.entity.AgentSkillExecutionLogEnt
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.example.retinavision.pojo.agent.vo.AgentChatResponseVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.governance.PromptTemplateService;
-import com.example.retinavision.service.governance.LlmCallLogService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
 import com.example.retinavision.service.agent.impl.AgentChatServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.tool.ToolCallback;

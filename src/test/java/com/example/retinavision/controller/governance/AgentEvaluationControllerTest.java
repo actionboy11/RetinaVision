@@ -1,7 +1,7 @@
 package com.example.retinavision.controller.governance;
 
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationAdministrationService;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationService;
+import com.example.retinavision.application.governance.evaluation.usecase.AgentEvaluationAdministrationService;
+import com.example.retinavision.application.governance.evaluation.usecase.AgentEvaluationService;
 
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.shared.BaseException;

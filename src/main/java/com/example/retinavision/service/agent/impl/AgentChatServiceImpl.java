@@ -36,8 +36,8 @@ import com.example.retinavision.pojo.agent.vo.AgentChatResponseVO;
 import com.example.retinavision.pojo.agent.vo.AgentSkillSummaryVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.agent.api.AgentChatService;
-import com.example.retinavision.service.governance.LlmCallLogService;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

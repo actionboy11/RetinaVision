@@ -2,8 +2,8 @@ package com.example.retinavision.controller.governance;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationStartCommand;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationAdministrationService;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationService;
+import com.example.retinavision.application.governance.evaluation.usecase.AgentEvaluationAdministrationService;
+import com.example.retinavision.application.governance.evaluation.usecase.AgentEvaluationService;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.governance.vo.AgentEvaluationDatasetVO;
 import com.example.retinavision.pojo.governance.vo.AgentEvaluationOptionsVO;

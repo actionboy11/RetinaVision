@@ -5,7 +5,7 @@ import com.example.retinavision.llm.governance.RagEvaluationService;
 import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.rag.knowledge.EmbeddingProperties;
 import com.example.retinavision.rag.knowledge.QdrantProperties;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+import com.example.retinavision.application.governance.evaluation.policy.AgentEvaluationEligibilityService;
 
 import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.PromptTemplateMapper;

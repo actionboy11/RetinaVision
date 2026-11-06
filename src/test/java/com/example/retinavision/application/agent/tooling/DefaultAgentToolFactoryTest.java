@@ -12,7 +12,7 @@ import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
 import com.example.retinavision.service.agent.api.AgentClinicalReferenceService;
 import com.example.retinavision.service.cases.ClinicalAccessService;
-import com.example.retinavision.service.governance.QualityControlService;
+import com.example.retinavision.service.governance.api.QualityControlService;
 import com.example.retinavision.service.analysis.api.TaskService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

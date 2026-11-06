@@ -141,4 +141,52 @@ class LayeredPackageStructureTest {
 
         assertEquals(expectedPackages, existingNames);
     }
+
+    @Test
+    void governance_service_api_contains_only_interfaces() {
+        String apiPackage = BASE_PACKAGE + ".service.governance.api";
+        Set<String> expectedInterfaces = Set.of(
+                apiPackage + ".AgentSkillAdministrationService",
+                apiPackage + ".AgentSkillExecutionQueryService",
+                apiPackage + ".LlmCallLogService",
+                apiPackage + ".PromptTemplateService",
+                apiPackage + ".QualityControlService");
+        Set<String> actualTypes = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(apiPackage))
+                .filter(javaClass -> !javaClass.getName().contains("$"))
+                .map(JavaClass::getName)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedInterfaces, actualTypes);
+        assertTrue(productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(apiPackage))
+                .filter(javaClass -> !javaClass.getName().contains("$"))
+                .allMatch(JavaClass::isInterface));
+    }
+
+    @Test
+    void governance_service_root_contains_no_types() {
+        String serviceRoot = BASE_PACKAGE + ".service.governance";
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(serviceRoot))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Types in governance service root: " + violations);
+    }
+
+    @Test
+    void evaluation_components_do_not_reside_under_service() {
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName()
+                        .startsWith(BASE_PACKAGE + ".service.governance.evaluation"))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Evaluation components under service: " + violations);
+    }
 }

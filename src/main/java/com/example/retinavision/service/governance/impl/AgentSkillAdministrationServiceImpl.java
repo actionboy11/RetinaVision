@@ -5,7 +5,7 @@ import com.example.retinavision.pojo.agent.AgentSkillCode;
 import com.example.retinavision.pojo.agent.AgentSkillDefinition;
 import com.example.retinavision.application.agent.routing.AgentSkillCatalogService;
 import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
+import com.example.retinavision.application.governance.evaluation.policy.AgentEvaluationEligibilityService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.exception.shared.BaseException;
@@ -15,7 +15,7 @@ import com.example.retinavision.mapper.agent.AgentSkillVersionMapper;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.governance.entity.AgentSkillEvaluationRunEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
-import com.example.retinavision.service.governance.AgentSkillAdministrationService;
+import com.example.retinavision.service.governance.api.AgentSkillAdministrationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
