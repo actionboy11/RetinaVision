@@ -6,7 +6,7 @@ import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.pojo.agent.AgentSkillCode;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOutcome;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
-import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.application.agent.routing.AgentSkillRegistry;
 import com.example.retinavision.service.governance.evaluation.DefaultAgentEvaluationCaseExecutor;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;

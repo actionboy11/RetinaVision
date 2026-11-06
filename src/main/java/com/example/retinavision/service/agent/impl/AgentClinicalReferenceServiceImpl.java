@@ -9,7 +9,7 @@ import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.agent.AgentClinicalReferenceService;
+import com.example.retinavision.service.agent.api.AgentClinicalReferenceService;
 import org.springframework.stereotype.Service;
 
 @Service

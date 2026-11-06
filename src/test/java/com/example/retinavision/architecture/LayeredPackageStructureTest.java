@@ -76,4 +76,69 @@ class LayeredPackageStructureTest {
         assertTrue(violations.isEmpty(),
                 () -> "Types in analysis service root: " + violations);
     }
+
+    @Test
+    void agent_service_api_contains_only_interfaces() {
+        String apiPackage = BASE_PACKAGE + ".service.agent.api";
+        Set<String> expectedInterfaces = Set.of(
+                apiPackage + ".AgentChatService",
+                apiPackage + ".AgentClinicalReferenceService",
+                apiPackage + ".DoctorAgentQueryService",
+                apiPackage + ".PatientAgentQueryService");
+        Set<String> actualTypes = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(apiPackage))
+                .filter(javaClass -> !javaClass.getName().contains("$"))
+                .map(JavaClass::getName)
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedInterfaces, actualTypes);
+        assertTrue(productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(apiPackage))
+                .filter(javaClass -> !javaClass.getName().contains("$"))
+                .allMatch(JavaClass::isInterface));
+    }
+
+    @Test
+    void agent_service_root_contains_no_types() {
+        String serviceRoot = BASE_PACKAGE + ".service.agent";
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().equals(serviceRoot))
+                .map(JavaClass::getName)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Types in agent service root: " + violations);
+    }
+
+    @Test
+    void agent_application_does_not_depend_on_agent_infrastructure() {
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().startsWith(BASE_PACKAGE + ".application.agent"))
+                .flatMap(javaClass -> javaClass.getDirectDependenciesFromSelf().stream())
+                .filter(dependency -> dependency.getTargetClass().getPackageName()
+                        .startsWith(BASE_PACKAGE + ".infrastructure.agent"))
+                .map(Object::toString)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Agent application depends on infrastructure: " + violations);
+    }
+
+    @Test
+    void agent_adapters_reside_under_infrastructure() {
+        Set<String> expectedPackages = Set.of(
+                BASE_PACKAGE + ".infrastructure.agent.routing.LlmAgentSkillRouter",
+                BASE_PACKAGE + ".infrastructure.agent.context.PersistentAgentQueryContextService",
+                BASE_PACKAGE + ".infrastructure.agent.context.PersistentPatientAgentQueryContextService");
+        Set<String> existingNames = productionClasses.stream()
+                .map(JavaClass::getName)
+                .filter(name -> name.endsWith(".LlmAgentSkillRouter")
+                        || name.endsWith(".PersistentAgentQueryContextService")
+                        || name.endsWith(".PersistentPatientAgentQueryContextService"))
+                .collect(Collectors.toSet());
+
+        assertEquals(expectedPackages, existingNames);
+    }
 }

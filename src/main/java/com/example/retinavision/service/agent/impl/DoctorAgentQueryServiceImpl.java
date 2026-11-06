@@ -15,7 +15,7 @@ import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskDetailVO;
 import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskSummaryVO;
 import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.agent.DoctorAgentQueryService;
+import com.example.retinavision.service.agent.api.DoctorAgentQueryService;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -11,11 +11,11 @@ import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
 import com.example.retinavision.pojo.agent.AgentStructuredData;
 import com.example.retinavision.pojo.agent.DoctorAgentSkillResult;
 import com.example.retinavision.pojo.agent.PatientAgentSkillResult;
-import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
-import com.example.retinavision.service.agent.AgentToolBundle;
-import com.example.retinavision.service.agent.AgentToolFactory;
-import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
-import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
+import com.example.retinavision.application.agent.routing.AgentSkillVersionBindingService;
+import com.example.retinavision.application.agent.tooling.AgentToolBundle;
+import com.example.retinavision.application.agent.tooling.api.AgentToolFactory;
+import com.example.retinavision.application.agent.orchestration.DoctorAgentSkillOrchestrator;
+import com.example.retinavision.application.agent.orchestration.PatientAgentSkillOrchestrator;
 
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.shared.BaseException;

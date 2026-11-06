@@ -6,7 +6,7 @@ import com.example.retinavision.enumeration.patient.PatientGender;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.agent.AgentClinicalReferenceService;
+import com.example.retinavision.service.agent.api.AgentClinicalReferenceService;
 
 import java.time.LocalDateTime;
 

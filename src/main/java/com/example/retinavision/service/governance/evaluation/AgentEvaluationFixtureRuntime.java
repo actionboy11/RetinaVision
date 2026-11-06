@@ -13,10 +13,10 @@ import com.example.retinavision.pojo.agent.PatientAgentSkillResult;
 import com.example.retinavision.pojo.agent.PatientReportExplanationResult;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCitation;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationExecution;
-import com.example.retinavision.service.agent.AgentSkillRouter;
-import com.example.retinavision.service.agent.AgentSkillVersionResolver;
-import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
-import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
+import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
+import com.example.retinavision.application.agent.routing.api.AgentSkillVersionResolver;
+import com.example.retinavision.application.agent.orchestration.DoctorAgentSkillOrchestrator;
+import com.example.retinavision.application.agent.orchestration.PatientAgentSkillOrchestrator;
 
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.shared.BaseException;

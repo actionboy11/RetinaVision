@@ -1,7 +1,7 @@
 package com.example.retinavision.service.agent.impl;
 
 import com.example.retinavision.pojo.agent.PatientCaseSearchCriteria;
-import com.example.retinavision.service.agent.PatientQualityPresenter;
+import com.example.retinavision.application.agent.presentation.PatientQualityPresenter;
 
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.shared.BaseException;

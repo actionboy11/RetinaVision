@@ -3,8 +3,8 @@ package com.example.retinavision.service.governance.impl;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.agent.AgentSkillCode;
 import com.example.retinavision.pojo.agent.AgentSkillDefinition;
-import com.example.retinavision.service.agent.AgentSkillCatalogService;
-import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.application.agent.routing.AgentSkillCatalogService;
+import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

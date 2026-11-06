@@ -4,7 +4,7 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.pojo.agent.AgentSkillCode;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationStartCommand;
-import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.application.agent.routing.AgentSkillRegistry;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.exception.shared.BaseException;

@@ -1,7 +1,7 @@
 package com.example.retinavision.service.governance.evaluation;
 
 import com.example.retinavision.pojo.agent.PatientAgentQueryContextSnapshot;
-import com.example.retinavision.service.agent.PatientAgentQueryContextService;
+import com.example.retinavision.application.agent.context.api.PatientAgentQueryContextService;
 
 
 import java.util.Optional;

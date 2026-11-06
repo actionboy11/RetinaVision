@@ -8,7 +8,7 @@ import com.example.retinavision.pojo.agent.vo.AgentChatResponseVO;
 import com.example.retinavision.pojo.agent.vo.AgentChatSessionVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.agent.AgentChatService;
+import com.example.retinavision.service.agent.api.AgentChatService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

@@ -3,7 +3,7 @@ package com.example.retinavision.service.governance.evaluation;
 import com.example.retinavision.pojo.agent.AgentSkillCode;
 import com.example.retinavision.pojo.agent.AgentSkillRoute;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationExecution;
-import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationFixtureRuntime;
 
 import com.example.retinavision.enumeration.user.UserRole;

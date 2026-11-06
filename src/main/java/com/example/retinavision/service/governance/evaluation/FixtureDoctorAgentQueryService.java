@@ -23,7 +23,7 @@ import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 
 import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.agent.DoctorAgentQueryService;
+import com.example.retinavision.service.agent.api.DoctorAgentQueryService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.example.retinavision.service.governance.evaluation;
 
 import com.example.retinavision.llm.shared.LlmProperties;
-import com.example.retinavision.service.agent.AgentSkillRegistry;
+import com.example.retinavision.application.agent.routing.AgentSkillRegistry;
 import com.example.retinavision.service.governance.evaluation.AgentEvaluationEligibilityService;
 import com.example.retinavision.mapper.agent.AgentSkillMapper;
 import com.example.retinavision.mapper.governance.AgentEvaluationDatasetMapper;

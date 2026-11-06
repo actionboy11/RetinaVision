@@ -1,7 +1,7 @@
 package com.example.retinavision.service.governance.evaluation;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
-import com.example.retinavision.llm.agent.LlmAgentSkillRouter;
+import com.example.retinavision.infrastructure.agent.routing.LlmAgentSkillRouter;
 import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.pojo.agent.AgentSkillCode;
@@ -10,8 +10,8 @@ import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOu
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationExecution;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
 import com.example.retinavision.exception.evaluation.AgentEvaluationInfrastructureException;
-import com.example.retinavision.service.agent.AgentSkillRegistry;
-import com.example.retinavision.service.agent.AgentSkillRouter;
+import com.example.retinavision.application.agent.routing.AgentSkillRegistry;
+import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
 import com.example.retinavision.exception.agent.AgentUnsafeRequestException;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
