@@ -66,16 +66,9 @@ class LayeredPackageStructureTest {
     @Test
     void analysis_service_root_contains_no_types() {
         String serviceRoot = BASE_PACKAGE + ".service.analysis";
-        Set<String> contractsMovingInThisSlice = Set.of(
-                "AiQuotaReservation",
-                "AiTaskQuotaService",
-                "AnalysisResultService",
-                "AnalysisTaskExecutionService",
-                "AnalysisTaskRetryService",
-                "TaskService");
         List<String> violations = productionClasses.stream()
                 .filter(javaClass -> javaClass.getPackageName().equals(serviceRoot))
-                .filter(javaClass -> contractsMovingInThisSlice.contains(javaClass.getSimpleName()))
+                .filter(javaClass -> !javaClass.getSimpleName().equals("package-info"))
                 .map(JavaClass::getName)
                 .sorted()
                 .toList();

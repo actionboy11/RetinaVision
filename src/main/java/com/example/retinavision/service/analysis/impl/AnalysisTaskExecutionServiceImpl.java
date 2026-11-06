@@ -1,6 +1,6 @@
 package com.example.retinavision.service.analysis.impl;
 
-import com.example.retinavision.service.analysis.ExecuteAnalysisTaskUseCase;
+import com.example.retinavision.application.analysis.usecase.ExecuteAnalysisTaskUseCase;
 import com.example.retinavision.pojo.analysis.command.ExecuteAnalysisTaskCommand;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessageAdapter;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessage;

@@ -1,16 +1,16 @@
 package com.example.retinavision.config.analysis;
 
 import com.example.retinavision.ai.analysis.AiInferenceClient;
-import com.example.retinavision.service.analysis.ExecuteAnalysisTaskUseCase;
-import com.example.retinavision.service.analysis.port.AiInferencePort;
-import com.example.retinavision.service.analysis.port.AnalysisResultStore;
-import com.example.retinavision.service.analysis.port.AnalysisTaskEventOutbox;
-import com.example.retinavision.service.analysis.port.AnalysisTaskRepository;
-import com.example.retinavision.service.analysis.port.ArtifactStore;
-import com.example.retinavision.service.analysis.port.ImageQualityProjectionPort;
-import com.example.retinavision.service.analysis.port.ReportDraftPort;
-import com.example.retinavision.service.analysis.port.SourceImageReader;
-import com.example.retinavision.service.analysis.port.TaskAuditLog;
+import com.example.retinavision.application.analysis.usecase.ExecuteAnalysisTaskUseCase;
+import com.example.retinavision.port.analysis.AiInferencePort;
+import com.example.retinavision.port.analysis.AnalysisResultStore;
+import com.example.retinavision.port.analysis.AnalysisTaskEventOutbox;
+import com.example.retinavision.port.analysis.AnalysisTaskRepository;
+import com.example.retinavision.port.analysis.ArtifactStore;
+import com.example.retinavision.port.analysis.ImageQualityProjectionPort;
+import com.example.retinavision.port.analysis.ReportDraftPort;
+import com.example.retinavision.port.analysis.SourceImageReader;
+import com.example.retinavision.port.analysis.TaskAuditLog;
 import com.example.retinavision.mapper.analysis.AnalysisOutboxMapper;
 import com.example.retinavision.config.analysis.AnalysisOutboxProperties;
 import com.example.retinavision.mq.analysis.outbox.AnalysisOutboxPublisher;

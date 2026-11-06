@@ -4,7 +4,7 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 
 import com.example.retinavision.pojo.analysis.event.AnalysisTaskRequestedEvent;
-import com.example.retinavision.service.analysis.port.AnalysisTaskEventOutbox;
+import com.example.retinavision.port.analysis.AnalysisTaskEventOutbox;
 import com.example.retinavision.pojo.analysis.domain.AnalysisTaskType;
 import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
