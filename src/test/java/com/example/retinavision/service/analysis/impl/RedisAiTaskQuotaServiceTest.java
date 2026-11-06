@@ -5,7 +5,7 @@ import com.example.retinavision.redis.shared.RedisKeyFactory;
 
 import com.example.retinavision.exception.shared.RateLimitException;
 import com.example.retinavision.exception.shared.RedisUnavailableException;
-import com.example.retinavision.service.analysis.AiQuotaReservation;
+import com.example.retinavision.pojo.analysis.dto.AiQuotaReservation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

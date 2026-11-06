@@ -4,7 +4,7 @@ import com.example.retinavision.service.analysis.ExecuteAnalysisTaskUseCase;
 import com.example.retinavision.pojo.analysis.dto.ExecutionDisposition;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessageAdapter;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessage;
-import com.example.retinavision.service.analysis.AnalysisTaskExecutionService;
+import com.example.retinavision.service.analysis.api.AnalysisTaskExecutionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

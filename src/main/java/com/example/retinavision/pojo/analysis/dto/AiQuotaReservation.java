@@ -1,4 +1,4 @@
-package com.example.retinavision.service.analysis;
+package com.example.retinavision.pojo.analysis.dto;
 
 /**
  * AI 配额预约记录，包含分钟级和日级的配额键。

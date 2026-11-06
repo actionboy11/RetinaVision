@@ -1,4 +1,4 @@
-package com.example.retinavision.service.analysis;
+package com.example.retinavision.service.analysis.api;
 
 import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
 

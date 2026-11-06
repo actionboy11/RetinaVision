@@ -31,7 +31,7 @@ class AnalysisModuleArchitectureTest {
     @ArchTest
     static final ArchRule analysis_services_do_not_depend_on_concrete_mq_ai_or_storage_packages = noClasses()
             .that().resideInAPackage("..service.analysis..")
-            .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.AnalysisTaskExecutionService")
+            .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.api.AnalysisTaskExecutionService")
             .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.impl.AnalysisTaskExecutionServiceImpl")
             .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.impl.AnalysisTaskRetryServiceImpl")
             .and().doNotHaveFullyQualifiedName("com.example.retinavision.service.analysis.impl.TaskServiceImpl")

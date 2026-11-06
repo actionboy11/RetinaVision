@@ -3,7 +3,7 @@ import com.example.retinavision.pojo.reporting.entity.AnalysisReportEntity;
 
 import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.analysis.AnalysisResultService;
+import com.example.retinavision.service.analysis.api.AnalysisResultService;
 import com.example.retinavision.service.reporting.AnalysisReportService;
 import com.example.retinavision.service.cases.ClinicalAccessService;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;

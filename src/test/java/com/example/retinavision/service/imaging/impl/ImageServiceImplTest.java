@@ -9,7 +9,7 @@ import com.example.retinavision.mapper.user.UserRegisterMapper;
 import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;
 import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
-import com.example.retinavision.service.analysis.TaskService;
+import com.example.retinavision.service.analysis.api.TaskService;
 import com.example.retinavision.pojo.analysis.vo.CreateTaskVO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

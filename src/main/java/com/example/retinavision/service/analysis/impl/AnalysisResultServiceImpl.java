@@ -14,7 +14,7 @@ import com.example.retinavision.pojo.imaging.vo.ImageQualitySummaryVO;
 import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
-import com.example.retinavision.service.analysis.AnalysisResultService;
+import com.example.retinavision.service.analysis.api.AnalysisResultService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

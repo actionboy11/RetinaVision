@@ -1,8 +1,8 @@
 package com.example.retinavision.mq.analysis;
 
-import com.example.retinavision.service.analysis.AnalysisTaskExecutionService;
-import com.example.retinavision.service.analysis.AnalysisTaskRetryService;
-import com.example.retinavision.service.analysis.AnalysisTaskExecutionService.ExecutionDisposition;
+import com.example.retinavision.service.analysis.api.AnalysisTaskExecutionService;
+import com.example.retinavision.service.analysis.api.AnalysisTaskRetryService;
+import com.example.retinavision.service.analysis.api.AnalysisTaskExecutionService.ExecutionDisposition;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

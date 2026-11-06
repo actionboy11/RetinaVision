@@ -1,4 +1,6 @@
-package com.example.retinavision.service.analysis;
+package com.example.retinavision.service.analysis.api;
+
+import com.example.retinavision.pojo.analysis.dto.AiQuotaReservation;
 
 /**
  * AI 任务配额服务接口，定义了预约和释放 AI 任务配额的方法。
