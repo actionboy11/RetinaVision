@@ -9,7 +9,7 @@ import com.example.retinavision.pojo.clinical.dto.SubmitReviewDTO;
 import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.clinical.entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.user.entity.UserEntity;
-import com.example.retinavision.service.clinical.ClinicalTaskLogService;
+import com.example.retinavision.service.clinical.api.ClinicalTaskLogService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

@@ -43,7 +43,7 @@ class CaseServiceImplTest {
     @Mock private TaskMapper taskMapper;
     @Mock private UserRegisterMapper userMapper;
     @Mock private ImageMapper imageMapper;
-    @Mock private com.example.retinavision.service.patient.PatientProfileService patientProfiles;
+    @Mock private com.example.retinavision.service.patient.api.PatientProfileService patientProfiles;
 
     private CaseServiceImpl service;
 

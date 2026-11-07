@@ -21,7 +21,7 @@ import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
 import com.example.retinavision.pojo.imaging.vo.ImageFileItemVO;
-import com.example.retinavision.service.imaging.ImageService;
+import com.example.retinavision.service.imaging.api.ImageService;
 import com.example.retinavision.service.analysis.api.TaskService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

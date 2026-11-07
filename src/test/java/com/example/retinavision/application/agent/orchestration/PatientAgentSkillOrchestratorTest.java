@@ -21,7 +21,7 @@ import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
 import com.example.retinavision.pojo.reporting.vo.PatientAgentSignedReportVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.agent.api.PatientAgentQueryService;
-import com.example.retinavision.service.patient.PatientReportExplanationService;
+import com.example.retinavision.service.patient.api.PatientReportExplanationService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

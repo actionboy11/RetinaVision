@@ -6,7 +6,7 @@ import com.example.retinavision.llm.shared.PromptScenario;
 import com.example.retinavision.pojo.agent.PatientReportExplanationResult;
 
 import com.example.retinavision.pojo.reporting.vo.PatientAgentReportDetailVO;
-import com.example.retinavision.service.patient.PatientReportExplanationService;
+import com.example.retinavision.service.patient.api.PatientReportExplanationService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;

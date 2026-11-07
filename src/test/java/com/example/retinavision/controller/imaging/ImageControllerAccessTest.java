@@ -3,8 +3,8 @@ package com.example.retinavision.controller.imaging;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.imaging.vo.ImageFileItemVO;
-import com.example.retinavision.service.cases.ClinicalAccessService;
-import com.example.retinavision.service.imaging.ImageService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
+import com.example.retinavision.service.imaging.api.ImageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 

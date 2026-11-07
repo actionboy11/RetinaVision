@@ -21,7 +21,7 @@ import com.example.retinavision.application.agent.orchestration.PatientAgentSkil
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.patient.PatientReportExplanationService;
+import com.example.retinavision.service.patient.api.PatientReportExplanationService;
 
 import java.util.List;
 import java.util.Map;

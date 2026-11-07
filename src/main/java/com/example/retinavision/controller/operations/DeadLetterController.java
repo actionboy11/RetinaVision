@@ -2,7 +2,7 @@ package com.example.retinavision.controller.operations;
 
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.operations.DeadLetterRecoveryService;
+import com.example.retinavision.service.operations.api.DeadLetterRecoveryService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

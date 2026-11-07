@@ -22,7 +22,7 @@ import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatMessageEntity
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatSessionEntity;
 import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.knowledge.KnowledgeChatService;
+import com.example.retinavision.service.knowledge.api.KnowledgeChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

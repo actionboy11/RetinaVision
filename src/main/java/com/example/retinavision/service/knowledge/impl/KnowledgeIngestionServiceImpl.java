@@ -14,7 +14,7 @@ import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChunkEntity;
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeDocumentEntity;
-import com.example.retinavision.service.knowledge.KnowledgeIngestionService;
+import com.example.retinavision.service.knowledge.api.KnowledgeIngestionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;

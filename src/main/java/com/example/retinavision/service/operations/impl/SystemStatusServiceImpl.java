@@ -5,8 +5,8 @@ import com.example.retinavision.ai.analysis.dto.AiHealthResponse;
 import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.SystemStatusVO;
 import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
-import com.example.retinavision.service.operations.StatisticsService;
-import com.example.retinavision.service.operations.SystemStatusService;
+import com.example.retinavision.service.operations.api.StatisticsService;
+import com.example.retinavision.service.operations.api.SystemStatusService;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;

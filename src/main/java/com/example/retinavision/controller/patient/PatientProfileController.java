@@ -5,7 +5,7 @@ import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.patient.vo.LegacyPatientProfileVO;
 import com.example.retinavision.pojo.patient.vo.PatientProfileVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.patient.PatientProfileService;
+import com.example.retinavision.service.patient.api.PatientProfileService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

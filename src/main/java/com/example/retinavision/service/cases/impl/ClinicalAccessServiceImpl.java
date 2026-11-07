@@ -16,7 +16,7 @@ import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.pojo.patient.entity.PatientProfileEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.cases.ClinicalAccessService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;

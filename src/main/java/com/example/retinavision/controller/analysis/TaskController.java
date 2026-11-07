@@ -16,7 +16,7 @@ import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
 import com.example.retinavision.service.analysis.api.TaskService;
-import com.example.retinavision.service.cases.ClinicalAccessService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

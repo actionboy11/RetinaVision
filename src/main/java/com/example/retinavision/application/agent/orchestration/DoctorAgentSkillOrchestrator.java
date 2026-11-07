@@ -38,7 +38,7 @@ import com.example.retinavision.pojo.cases.vo.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
 import com.example.retinavision.service.agent.api.AgentClinicalReferenceService;
-import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
+import com.example.retinavision.service.cases.api.CaseAnalysisTimelineService;
 import com.example.retinavision.service.agent.api.DoctorAgentQueryService;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;

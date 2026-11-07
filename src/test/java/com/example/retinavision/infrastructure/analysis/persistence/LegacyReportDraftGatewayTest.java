@@ -2,7 +2,7 @@ package com.example.retinavision.infrastructure.analysis.persistence;
 
 import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
-import com.example.retinavision.service.reporting.AnalysisReportService;
+import com.example.retinavision.service.reporting.api.AnalysisReportService;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

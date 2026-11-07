@@ -1,5 +1,6 @@
 package com.example.retinavision.service.patient.impl;
 
+import com.example.retinavision.application.patient.support.SecurePatientNumberGenerator;
 import com.example.retinavision.enumeration.patient.PatientProfileSource;
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.mapper.cases.CaseMapper;

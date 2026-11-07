@@ -1,6 +1,6 @@
 package com.example.retinavision.filter.auth;
 
-import com.example.retinavision.service.auth.JwtBlacklistService;
+import com.example.retinavision.service.auth.api.JwtBlacklistService;
 import com.example.retinavision.utils.auth.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;

@@ -21,9 +21,9 @@ import com.example.retinavision.pojo.clinical.entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;
-import com.example.retinavision.service.clinical.ClinicalTaskLogService;
-import com.example.retinavision.service.reporting.ReportPdfDocument;
-import com.example.retinavision.service.reporting.ReportPdfRenderer;
+import com.example.retinavision.service.clinical.api.ClinicalTaskLogService;
+import com.example.retinavision.port.reporting.model.ReportPdfDocument;
+import com.example.retinavision.port.reporting.ReportPdfRenderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

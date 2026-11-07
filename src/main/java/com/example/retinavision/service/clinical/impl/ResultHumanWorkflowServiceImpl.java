@@ -13,7 +13,7 @@ import com.example.retinavision.pojo.clinical.dto.SubmitFeedbackDTO;
 import com.example.retinavision.pojo.clinical.entity.AnalysisCorrectionEntity;
 import com.example.retinavision.pojo.clinical.entity.AnalysisFeedbackEntity;
 import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
-import com.example.retinavision.service.clinical.ResultHumanWorkflowService;
+import com.example.retinavision.service.clinical.api.ResultHumanWorkflowService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;

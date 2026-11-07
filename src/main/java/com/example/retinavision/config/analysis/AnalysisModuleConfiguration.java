@@ -20,7 +20,7 @@ import com.example.retinavision.mapper.imaging.ImageMapper;
 import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessagePublisher;
-import com.example.retinavision.service.reporting.AnalysisReportService;
+import com.example.retinavision.service.reporting.api.AnalysisReportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

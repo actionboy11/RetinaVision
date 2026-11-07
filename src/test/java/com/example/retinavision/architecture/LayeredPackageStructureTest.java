@@ -189,4 +189,31 @@ class LayeredPackageStructureTest {
         assertTrue(violations.isEmpty(),
                 () -> "Evaluation components under service: " + violations);
     }
+
+    @Test
+    void remaining_service_domains_use_api_and_impl_packages() {
+        List<String> domains = List.of(
+                "auth", "cases", "clinical", "imaging", "knowledge",
+                "operations", "patient", "reporting", "user");
+
+        for (String domain : domains) {
+            String serviceRoot = BASE_PACKAGE + ".service." + domain;
+            List<String> rootTypes = productionClasses.stream()
+                    .filter(javaClass -> javaClass.getPackageName().equals(serviceRoot))
+                    .map(JavaClass::getName)
+                    .sorted()
+                    .toList();
+            assertTrue(rootTypes.isEmpty(),
+                    () -> "Types in " + serviceRoot + ": " + rootTypes);
+
+            String apiPackage = serviceRoot + ".api";
+            List<JavaClass> apiTypes = productionClasses.stream()
+                    .filter(javaClass -> javaClass.getPackageName().equals(apiPackage))
+                    .filter(javaClass -> !javaClass.getName().contains("$"))
+                    .toList();
+            assertTrue(!apiTypes.isEmpty(), () -> "No Service APIs in " + apiPackage);
+            assertTrue(apiTypes.stream().allMatch(JavaClass::isInterface),
+                    () -> "Non-interface Service API in " + apiPackage + ": " + apiTypes);
+        }
+    }
 }

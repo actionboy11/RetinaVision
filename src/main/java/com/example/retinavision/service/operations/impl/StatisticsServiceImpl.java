@@ -9,7 +9,7 @@ import com.example.retinavision.mq.analysis.RabbitMqProperties;
 import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.TaskTrendItemVO;
-import com.example.retinavision.service.operations.StatisticsService;
+import com.example.retinavision.service.operations.api.StatisticsService;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.stereotype.Service;
 

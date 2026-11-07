@@ -26,8 +26,8 @@ import com.example.retinavision.pojo.patient.vo.PatientCaseProgressVO;
 import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
 import com.example.retinavision.pojo.reporting.vo.PatientSignedReportVO;
 import com.example.retinavision.pojo.reporting.vo.PatientSignedReportExplanationVO;
-import com.example.retinavision.service.cases.ClinicalAccessService;
-import com.example.retinavision.service.patient.PatientCaseService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
+import com.example.retinavision.service.patient.api.PatientCaseService;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;

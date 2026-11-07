@@ -12,7 +12,7 @@ import com.example.retinavision.mq.analysis.AnalysisTaskMessagePublisher;
 import com.example.retinavision.mq.analysis.RabbitMqProperties;
 import com.example.retinavision.pojo.analysis.entity.LogEntity;
 import com.example.retinavision.service.analysis.api.AnalysisTaskRetryService;
-import com.example.retinavision.service.operations.DeadLetterRecoveryService;
+import com.example.retinavision.service.operations.api.DeadLetterRecoveryService;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;

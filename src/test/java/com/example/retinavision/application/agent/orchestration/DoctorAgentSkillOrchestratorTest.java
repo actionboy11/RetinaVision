@@ -39,7 +39,7 @@ import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.service.agent.api.AgentClinicalReferenceService;
-import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
+import com.example.retinavision.service.cases.api.CaseAnalysisTimelineService;
 import com.example.retinavision.service.agent.api.DoctorAgentQueryService;
 import org.junit.jupiter.api.Test;
 

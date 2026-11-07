@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;
 import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
 import com.example.retinavision.pojo.user.entity.UserEntity;
-import com.example.retinavision.service.user.UserAdministrationService;
+import com.example.retinavision.service.user.api.UserAdministrationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
