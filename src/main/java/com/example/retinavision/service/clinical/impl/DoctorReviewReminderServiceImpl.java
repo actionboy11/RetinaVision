@@ -22,7 +22,7 @@ import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.clinical.vo.DoctorReviewReminderItemVO;
 import com.example.retinavision.pojo.clinical.vo.DoctorReviewReminderVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.clinical.DoctorReviewReminderService;
+import com.example.retinavision.service.clinical.api.DoctorReviewReminderService;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;

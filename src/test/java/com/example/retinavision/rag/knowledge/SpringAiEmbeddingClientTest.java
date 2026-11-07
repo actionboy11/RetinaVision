@@ -3,7 +3,7 @@ package com.example.retinavision.rag.knowledge;
 import com.example.retinavision.rag.knowledge.EmbeddingProperties;
 import com.example.retinavision.rag.knowledge.SpringAiEmbeddingClient;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.embedding.EmbeddingModel;
 

@@ -6,7 +6,7 @@ import com.example.retinavision.rag.knowledge.QdrantClient;
 import com.example.retinavision.rag.knowledge.QdrantPoint;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.knowledge.KnowledgeChunkMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeDocumentMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeDocumentCreateDTO;

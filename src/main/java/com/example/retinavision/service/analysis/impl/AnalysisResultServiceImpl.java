@@ -5,7 +5,7 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.mapper.imaging.ImageMapper;
@@ -14,7 +14,7 @@ import com.example.retinavision.pojo.imaging.vo.ImageQualitySummaryVO;
 import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
-import com.example.retinavision.service.analysis.AnalysisResultService;
+import com.example.retinavision.service.analysis.api.AnalysisResultService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -5,7 +5,7 @@ import com.example.retinavision.pojo.auth.dto.UserRegisterDTO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.auth.vo.UserLoginVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.auth.UserLoginService;
+import com.example.retinavision.service.auth.api.UserLoginService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

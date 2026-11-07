@@ -1,5 +1,6 @@
 package com.example.retinavision.llm.shared;
 
+import com.example.retinavision.exception.llm.LlmException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

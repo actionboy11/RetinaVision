@@ -12,11 +12,11 @@ import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
 import com.example.retinavision.pojo.analysis.dto.TaskListQueryDTO;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.result.PageResult;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.analysis.TaskService;
-import com.example.retinavision.service.cases.ClinicalAccessService;
+import com.example.retinavision.service.analysis.api.TaskService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

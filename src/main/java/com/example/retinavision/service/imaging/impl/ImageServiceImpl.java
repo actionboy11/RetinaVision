@@ -9,7 +9,7 @@ import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.imaging.ImageStatus;
 import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.example.retinavision.mapper.imaging.ImageMapper;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
@@ -21,8 +21,8 @@ import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.pojo.analysis.dto.CreateTaskDTO;
 import com.example.retinavision.pojo.imaging.vo.ImageFileItemVO;
-import com.example.retinavision.service.imaging.ImageService;
-import com.example.retinavision.service.analysis.TaskService;
+import com.example.retinavision.service.imaging.api.ImageService;
+import com.example.retinavision.service.analysis.api.TaskService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -191,10 +191,10 @@ public class ImageServiceImpl implements ImageService {
         long activeTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
                 .eq(TaskEntity::getImageFileId, imageId)
                 .in(TaskEntity::getStatus, TaskStatus.CREATED, TaskStatus.WAITING, TaskStatus.RUNNING, TaskStatus.RETRYING));
-        if (activeTasks > 0) throw new com.example.retinavision.exception.ConflictException("图像存在运行中任务，不能删除");
+        if (activeTasks > 0) throw new com.example.retinavision.exception.shared.ConflictException("图像存在运行中任务，不能删除");
         long successfulTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
                 .eq(TaskEntity::getImageFileId, imageId).eq(TaskEntity::getStatus, TaskStatus.SUCCESS));
-        if (successfulTasks > 0) throw new com.example.retinavision.exception.ConflictException("图像已有分析结果，不能删除");
+        if (successfulTasks > 0) throw new com.example.retinavision.exception.shared.ConflictException("图像已有分析结果，不能删除");
         imageEntity.setStatus(ImageStatus.DELETED);
         imageEntity.setDeletedAt(LocalDateTime.now());
         imageEntity.setUpdatedAt(LocalDateTime.now());
@@ -210,7 +210,7 @@ public class ImageServiceImpl implements ImageService {
             return toVO(image);
         }
         if (status == ImageQualityStatus.FAIL) {
-            throw new com.example.retinavision.exception.ConflictException("图像质量未通过，请重新上传图像");
+            throw new com.example.retinavision.exception.shared.ConflictException("图像质量未通过，请重新上传图像");
         }
         com.example.retinavision.pojo.analysis.vo.CreateTaskVO task = taskService.createTask(
                 new CreateTaskDTO(image.getCaseId(), image.getId(), TaskType.IMAGE_QUALITY_CHECK, 5), userId);

@@ -6,7 +6,7 @@ import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessage;
 import com.example.retinavision.mq.analysis.AnalysisTaskMessagePublisher;
 import com.example.retinavision.mq.analysis.RabbitMqProperties;
-import com.example.retinavision.service.analysis.AnalysisTaskRetryService;
+import com.example.retinavision.service.analysis.api.AnalysisTaskRetryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

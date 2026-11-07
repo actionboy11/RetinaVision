@@ -4,7 +4,7 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.example.retinavision.mapper.imaging.ImageMapper;
@@ -16,7 +16,7 @@ import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.pojo.patient.entity.PatientProfileEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.cases.ClinicalAccessService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;

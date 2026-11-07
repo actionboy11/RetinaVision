@@ -7,12 +7,12 @@ import com.example.retinavision.llm.shared.LlmProperties;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.example.retinavision.llm.shared.PromptRenderService;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.PromptEvaluationRunMapper;
 import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 import com.example.retinavision.pojo.governance.entity.PromptEvaluationRunEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 

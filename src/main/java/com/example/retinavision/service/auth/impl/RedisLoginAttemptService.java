@@ -3,8 +3,8 @@ package com.example.retinavision.service.auth.impl;
 import com.example.retinavision.config.shared.RedisFeatureProperties;
 import com.example.retinavision.redis.shared.RedisKeyFactory;
 
-import com.example.retinavision.exception.RateLimitException;
-import com.example.retinavision.service.auth.LoginAttemptService;
+import com.example.retinavision.exception.shared.RateLimitException;
+import com.example.retinavision.service.auth.api.LoginAttemptService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;

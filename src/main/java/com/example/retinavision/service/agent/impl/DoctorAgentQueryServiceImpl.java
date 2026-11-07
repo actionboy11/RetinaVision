@@ -6,7 +6,7 @@ import com.example.retinavision.pojo.agent.DoctorClinicalQueueCriteria;
 import com.example.retinavision.pojo.agent.DoctorTaskSearchCriteria;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.cases.DoctorAgentQueryMapper;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.cases.vo.DoctorAgentCaseSummaryVO;
@@ -15,7 +15,7 @@ import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskDetailVO;
 import com.example.retinavision.pojo.analysis.vo.DoctorAgentTaskSummaryVO;
 import com.example.retinavision.pojo.clinical.vo.DoctorClinicalQueueItemVO;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.agent.DoctorAgentQueryService;
+import com.example.retinavision.service.agent.api.DoctorAgentQueryService;
 import org.springframework.stereotype.Service;
 
 @Service

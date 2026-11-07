@@ -14,7 +14,7 @@ import com.example.retinavision.rag.knowledge.RagGroundingValidator;
 import com.example.retinavision.enumeration.user.UserRole;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatMessageMapper;
 import com.example.retinavision.mapper.knowledge.KnowledgeChatSessionMapper;
 import com.example.retinavision.pojo.knowledge.dto.KnowledgeChatRequestDTO;
@@ -22,7 +22,7 @@ import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatMessageEntity
 import com.example.retinavision.pojo.knowledge.entity.KnowledgeChatSessionEntity;
 import com.example.retinavision.pojo.knowledge.vo.KnowledgeChatResponseVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.knowledge.KnowledgeChatService;
+import com.example.retinavision.service.knowledge.api.KnowledgeChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

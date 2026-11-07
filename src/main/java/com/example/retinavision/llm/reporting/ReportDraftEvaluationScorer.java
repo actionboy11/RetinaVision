@@ -1,6 +1,6 @@
 package com.example.retinavision.llm.reporting;
 
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
 import com.example.retinavision.llm.shared.PromptScenario;
 

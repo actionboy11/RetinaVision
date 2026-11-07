@@ -3,7 +3,7 @@ package com.example.retinavision.service.governance.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.mapper.governance.LlmCallLogMapper;
 import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
-import com.example.retinavision.service.governance.LlmCallLogService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;

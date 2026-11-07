@@ -2,14 +2,14 @@ package com.example.retinavision.service.clinical.impl;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;
 import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.analysis.entity.LogEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
-import com.example.retinavision.service.clinical.ClinicalTaskLogService;
+import com.example.retinavision.service.clinical.api.ClinicalTaskLogService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

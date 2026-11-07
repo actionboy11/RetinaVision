@@ -1,0 +1,32 @@
+package com.example.retinavision.infrastructure.analysis.persistence;
+
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.example.retinavision.port.analysis.ImageQualityProjectionPort;
+import com.example.retinavision.enumeration.imaging.ImageQualityStatus;
+import com.example.retinavision.mapper.imaging.ImageMapper;
+import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+
+public final class MyBatisImageQualityProjection
+        implements ImageQualityProjectionPort {
+
+    private final ImageMapper imageMapper;
+    private final Clock clock;
+
+    public MyBatisImageQualityProjection(ImageMapper imageMapper, Clock clock) {
+        this.imageMapper = imageMapper;
+        this.clock = clock;
+    }
+
+    @Override
+    public void markErrorIfCurrent(long imageFileId, long taskId) {
+        LocalDateTime now = LocalDateTime.now(clock);
+        imageMapper.update(null, new UpdateWrapper<ImageFileEntity>()
+                .eq("id", imageFileId)
+                .eq("quality_task_id", taskId)
+                .set("quality_status", ImageQualityStatus.ERROR)
+                .set("updated_at", now));
+    }
+}

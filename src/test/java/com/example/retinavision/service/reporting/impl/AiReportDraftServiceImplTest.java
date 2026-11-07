@@ -1,6 +1,6 @@
 package com.example.retinavision.service.reporting.impl;
 
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmGenerationResult;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
@@ -20,7 +20,7 @@ import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;
 import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
-import com.example.retinavision.service.clinical.ClinicalTaskLogService;
+import com.example.retinavision.service.clinical.api.ClinicalTaskLogService;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

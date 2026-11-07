@@ -14,15 +14,15 @@ import com.example.retinavision.pojo.agent.AgentSkillRuntimeVersion;
 import com.example.retinavision.pojo.agent.AgentStructuredData;
 import com.example.retinavision.pojo.agent.DoctorAgentSkillResult;
 import com.example.retinavision.pojo.agent.PatientAgentSkillResult;
-import com.example.retinavision.service.agent.AgentSkillVersionBindingService;
-import com.example.retinavision.service.agent.AgentToolBundle;
-import com.example.retinavision.service.agent.AgentToolFactory;
-import com.example.retinavision.service.agent.DoctorAgentSkillOrchestrator;
-import com.example.retinavision.service.agent.PatientAgentSkillOrchestrator;
+import com.example.retinavision.application.agent.routing.AgentSkillVersionBindingService;
+import com.example.retinavision.application.agent.tooling.AgentToolBundle;
+import com.example.retinavision.application.agent.tooling.api.AgentToolFactory;
+import com.example.retinavision.application.agent.orchestration.DoctorAgentSkillOrchestrator;
+import com.example.retinavision.application.agent.orchestration.PatientAgentSkillOrchestrator;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.agent.AgentChatMessageMapper;
 import com.example.retinavision.mapper.agent.AgentChatSessionMapper;
 import com.example.retinavision.mapper.governance.AgentSkillExecutionLogMapper;
@@ -35,9 +35,9 @@ import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEnti
 import com.example.retinavision.pojo.agent.vo.AgentChatResponseVO;
 import com.example.retinavision.pojo.agent.vo.AgentSkillSummaryVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.agent.AgentChatService;
-import com.example.retinavision.service.governance.LlmCallLogService;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.agent.api.AgentChatService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

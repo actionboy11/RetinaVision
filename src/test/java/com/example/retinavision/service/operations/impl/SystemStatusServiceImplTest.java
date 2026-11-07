@@ -5,7 +5,7 @@ import com.example.retinavision.ai.analysis.dto.AiHealthResponse;
 import com.example.retinavision.pojo.operations.vo.QueueStatisticsVO;
 import com.example.retinavision.pojo.operations.vo.SystemStatusVO;
 import com.example.retinavision.pojo.operations.vo.TaskStatisticsVO;
-import com.example.retinavision.service.operations.StatisticsService;
+import com.example.retinavision.service.operations.api.StatisticsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;

@@ -17,12 +17,12 @@ import com.example.retinavision.rag.knowledge.RagDocumentSupport;
 import com.example.retinavision.rag.knowledge.RagGroundingValidator;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.governance.PromptEvaluationRunMapper;
 import com.example.retinavision.mapper.governance.PromptTemplateVersionMapper;
 import com.example.retinavision.pojo.governance.entity.PromptEvaluationRunEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;

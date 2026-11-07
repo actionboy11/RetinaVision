@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.cases.CaseStatus;
 import com.example.retinavision.enumeration.cases.CaseWorkflowStatus;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.example.retinavision.mapper.imaging.ImageMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;
@@ -26,8 +26,8 @@ import com.example.retinavision.pojo.cases.entity.CaseEntity;
 import com.example.retinavision.pojo.cases.vo.CaseListItemVO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.result.PageResult;
-import com.example.retinavision.service.cases.CaseService;
-import com.example.retinavision.service.patient.PatientProfileService;
+import com.example.retinavision.service.cases.api.CaseService;
+import com.example.retinavision.service.patient.api.PatientProfileService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -248,10 +248,10 @@ public class CaseServiceImpl implements CaseService {
         long activeTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
                 .eq(TaskEntity::getCaseId, caseId.longValue())
                 .in(TaskEntity::getStatus, TaskStatus.CREATED, TaskStatus.WAITING, TaskStatus.RUNNING, TaskStatus.RETRYING));
-        if (activeTasks > 0) throw new com.example.retinavision.exception.ConflictException("病例存在运行中任务，不能删除");
+        if (activeTasks > 0) throw new com.example.retinavision.exception.shared.ConflictException("病例存在运行中任务，不能删除");
         long successfulTasks = taskMapper.selectCount(new LambdaQueryWrapper<TaskEntity>()
                 .eq(TaskEntity::getCaseId, caseId.longValue()).eq(TaskEntity::getStatus, TaskStatus.SUCCESS));
-        if (successfulTasks > 0) throw new com.example.retinavision.exception.ConflictException("病例已有分析结果，请改为归档");
+        if (successfulTasks > 0) throw new com.example.retinavision.exception.shared.ConflictException("病例已有分析结果，请改为归档");
         caseEntity.setStatus(CaseStatus.DELETED);
         caseEntity.setDeletedAt(LocalDateTime.now());
         caseEntity.setUpdatedAt(LocalDateTime.now());

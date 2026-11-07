@@ -5,7 +5,7 @@ import com.example.retinavision.enumeration.user.UserRole;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
 import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.pojo.user.vo.DoctorOptionVO;
-import com.example.retinavision.service.user.DoctorDirectoryService;
+import com.example.retinavision.service.user.api.DoctorDirectoryService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 

@@ -1,12 +1,13 @@
 package com.example.retinavision.service.patient.impl;
 
+import com.example.retinavision.application.patient.support.SecurePatientNumberGenerator;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.patient.PatientProfileSource;
 import com.example.retinavision.enumeration.patient.PatientProfileStatus;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.example.retinavision.mapper.patient.PatientProfileMapper;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
@@ -17,7 +18,7 @@ import com.example.retinavision.pojo.user.entity.UserEntity;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.pojo.patient.vo.LegacyPatientProfileVO;
 import com.example.retinavision.pojo.patient.vo.PatientProfileVO;
-import com.example.retinavision.service.patient.PatientProfileService;
+import com.example.retinavision.service.patient.api.PatientProfileService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

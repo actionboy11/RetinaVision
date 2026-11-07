@@ -1,7 +1,7 @@
 package com.example.retinavision.llm.shared;
 
 import com.example.retinavision.llm.shared.LlmClient;
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmGenerationResult;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.llm.shared.LlmOrchestrationServiceImpl;
@@ -11,8 +11,8 @@ import com.example.retinavision.llm.shared.PromptRenderService;
 
 import com.example.retinavision.pojo.governance.entity.LlmCallLogEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
-import com.example.retinavision.service.governance.LlmCallLogService;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

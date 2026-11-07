@@ -1,7 +1,7 @@
 package com.example.retinavision.service.clinical.impl;
 
 import com.example.retinavision.enumeration.clinical.ReviewStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.clinical.AnalysisReviewMapper;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
@@ -9,7 +9,7 @@ import com.example.retinavision.pojo.clinical.dto.SubmitReviewDTO;
 import com.example.retinavision.pojo.analysis.entity.AnalysisResultEntity;
 import com.example.retinavision.pojo.clinical.entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.user.entity.UserEntity;
-import com.example.retinavision.service.clinical.ClinicalTaskLogService;
+import com.example.retinavision.service.clinical.api.ClinicalTaskLogService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

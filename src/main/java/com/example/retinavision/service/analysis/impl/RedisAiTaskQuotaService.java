@@ -3,10 +3,10 @@ package com.example.retinavision.service.analysis.impl;
 import com.example.retinavision.config.shared.RedisFeatureProperties;
 import com.example.retinavision.redis.shared.RedisKeyFactory;
 
-import com.example.retinavision.exception.RateLimitException;
-import com.example.retinavision.exception.RedisUnavailableException;
-import com.example.retinavision.service.analysis.AiQuotaReservation;
-import com.example.retinavision.service.analysis.AiTaskQuotaService;
+import com.example.retinavision.exception.shared.RateLimitException;
+import com.example.retinavision.exception.shared.RedisUnavailableException;
+import com.example.retinavision.pojo.analysis.dto.AiQuotaReservation;
+import com.example.retinavision.service.analysis.api.AiTaskQuotaService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;

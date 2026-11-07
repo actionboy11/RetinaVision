@@ -4,14 +4,14 @@ import com.example.retinavision.constant.shared.ErrorMessageSignal;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.user.UserRegisterMapper;
 import com.example.retinavision.mapper.cases.CaseMapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;
 import com.example.retinavision.pojo.user.dto.UpdateUserRoleDTO;
 import com.example.retinavision.pojo.user.entity.UserEntity;
-import com.example.retinavision.service.user.UserAdministrationService;
+import com.example.retinavision.service.user.api.UserAdministrationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;

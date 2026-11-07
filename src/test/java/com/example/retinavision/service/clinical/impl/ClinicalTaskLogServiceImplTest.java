@@ -1,7 +1,7 @@
 package com.example.retinavision.service.clinical.impl;
 
 import com.example.retinavision.enumeration.analysis.TaskStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.analysis.LogMapper;
 import com.example.retinavision.mapper.analysis.TaskMapper;

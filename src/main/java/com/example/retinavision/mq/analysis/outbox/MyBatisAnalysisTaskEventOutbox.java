@@ -3,7 +3,7 @@ package com.example.retinavision.mq.analysis.outbox;
 import com.example.retinavision.mapper.analysis.AnalysisOutboxMapper;
 import com.example.retinavision.pojo.analysis.entity.AnalysisOutboxEntity;
 import com.example.retinavision.pojo.analysis.event.AnalysisTaskRequestedEvent;
-import com.example.retinavision.service.analysis.port.AnalysisTaskEventOutbox;
+import com.example.retinavision.port.analysis.AnalysisTaskEventOutbox;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.util.StringUtils;

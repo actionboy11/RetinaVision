@@ -1,7 +1,7 @@
 package com.example.retinavision.service.reporting.impl;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmGenerationResult;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
@@ -10,7 +10,7 @@ import com.example.retinavision.enumeration.cases.EyeSide;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.retinavision.enumeration.reporting.ReportStatus;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.clinical.AnalysisCorrectionMapper;
 import com.example.retinavision.mapper.reporting.AnalysisReportMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
@@ -25,8 +25,8 @@ import com.example.retinavision.pojo.clinical.entity.AnalysisReviewEntity;
 import com.example.retinavision.pojo.cases.entity.CaseEntity;
 import com.example.retinavision.pojo.imaging.entity.ImageFileEntity;
 import com.example.retinavision.pojo.analysis.entity.TaskEntity;
-import com.example.retinavision.service.reporting.AiReportDraftService;
-import com.example.retinavision.service.clinical.ClinicalTaskLogService;
+import com.example.retinavision.service.reporting.api.AiReportDraftService;
+import com.example.retinavision.service.clinical.api.ClinicalTaskLogService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

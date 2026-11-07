@@ -1,10 +1,10 @@
 package com.example.retinavision.controller.governance;
 
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationAdministrationService;
-import com.example.retinavision.service.governance.evaluation.AgentEvaluationService;
+import com.example.retinavision.application.governance.evaluation.usecase.AgentEvaluationAdministrationService;
+import com.example.retinavision.application.governance.evaluation.usecase.AgentEvaluationService;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.governance.dto.ReviewAgentEvaluationDTO;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import org.junit.jupiter.api.Test;

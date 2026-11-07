@@ -1,7 +1,7 @@
 package com.example.retinavision.service.cases.impl;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
-import com.example.retinavision.llm.shared.LlmException;
+import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmGenerationResult;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.llm.shared.LlmSafetyPolicy;
@@ -13,7 +13,7 @@ import com.example.retinavision.enumeration.reporting.ReportStatus;
 import com.example.retinavision.enumeration.clinical.ReviewStatus;
 import com.example.retinavision.enumeration.analysis.TaskStatus;
 import com.example.retinavision.enumeration.analysis.TaskType;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.mapper.reporting.AnalysisReportMapper;
 import com.example.retinavision.mapper.analysis.AnalysisResultMapper;
 import com.example.retinavision.mapper.clinical.AnalysisReviewMapper;
@@ -29,7 +29,7 @@ import com.example.retinavision.pojo.analysis.entity.TaskEntity;
 import com.example.retinavision.pojo.analysis.vo.AnalysisResultComparisonVO;
 import com.example.retinavision.pojo.cases.vo.CaseAnalysisTimelineVO;
 import com.example.retinavision.pojo.cases.vo.CaseTrendSummaryVO;
-import com.example.retinavision.service.cases.CaseAnalysisTimelineService;
+import com.example.retinavision.service.cases.api.CaseAnalysisTimelineService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

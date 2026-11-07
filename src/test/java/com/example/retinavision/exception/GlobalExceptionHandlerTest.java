@@ -1,6 +1,10 @@
 package com.example.retinavision.exception;
 
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
+import com.example.retinavision.exception.handler.GlobalExceptionHandler;
+import com.example.retinavision.exception.shared.BaseException;
+import com.example.retinavision.exception.shared.RateLimitException;
+import com.example.retinavision.exception.shared.RedisUnavailableException;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;

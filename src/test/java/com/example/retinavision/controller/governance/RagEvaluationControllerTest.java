@@ -3,7 +3,7 @@ package com.example.retinavision.controller.governance;
 import com.example.retinavision.llm.governance.RagEvaluationService;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

@@ -3,9 +3,9 @@ import com.example.retinavision.pojo.reporting.entity.AnalysisReportEntity;
 
 import com.example.retinavision.pojo.analysis.vo.AnalysisResultVO;
 import com.example.retinavision.result.Result;
-import com.example.retinavision.service.analysis.AnalysisResultService;
-import com.example.retinavision.service.reporting.AnalysisReportService;
-import com.example.retinavision.service.cases.ClinicalAccessService;
+import com.example.retinavision.service.analysis.api.AnalysisResultService;
+import com.example.retinavision.service.reporting.api.AnalysisReportService;
+import com.example.retinavision.service.cases.api.ClinicalAccessService;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
 import com.example.retinavision.enumeration.reporting.ReportStatus;
 import org.springframework.core.io.InputStreamResource;
@@ -66,7 +66,7 @@ public class ResultAnalysisController {
                 .filter(report -> report.getStatus() == ReportStatus.SIGNED || report.getStatus() == ReportStatus.SUPERSEDED)
                 .max(java.util.Comparator.comparingInt(com.example.retinavision.pojo.reporting.entity.AnalysisReportEntity::getVersion))
                 .map(report -> analysisReportService.getFile(resultId, report.getVersion()))
-                .orElseThrow(() -> new com.example.retinavision.exception.ConflictException("报告尚未由医生签发"));
+                .orElseThrow(() -> new com.example.retinavision.exception.shared.ConflictException("报告尚未由医生签发"));
         String filename = "report-" + resultId + getExtension(reportPath);
 
         return ResponseEntity.ok()

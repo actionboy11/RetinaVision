@@ -1,13 +1,13 @@
 package com.example.retinavision.controller.governance;
 
 import com.example.retinavision.enumeration.user.UserRole;
-import com.example.retinavision.exception.BaseException;
+import com.example.retinavision.exception.shared.BaseException;
 import com.example.retinavision.pojo.governance.dto.UpdateActivePromptVersionDTO;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateEntity;
 import com.example.retinavision.pojo.governance.entity.PromptTemplateVersionEntity;
 import com.example.retinavision.pojo.auth.vo.CurrentUserVO;
-import com.example.retinavision.service.governance.LlmCallLogService;
-import com.example.retinavision.service.governance.PromptTemplateService;
+import com.example.retinavision.service.governance.api.LlmCallLogService;
+import com.example.retinavision.service.governance.api.PromptTemplateService;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 

@@ -1,5 +1,7 @@
 package com.example.retinavision.pojo.analysis.domain;
 
+import com.example.retinavision.exception.analysis.IllegalTaskTransitionException;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

@@ -87,11 +87,15 @@ RabbitMQ 消费者运行在 Java 后端进程中。Python 服务只负责模型�
 ```text
 src/main/java/com/example/retinavision/
 ├── controller/<功能>/   # 浏览器 API：auth、cases、clinical、governance 等
-├── service/<功能>/      # 接口、实现、编排和业务策略
+├── service/<功能>/api   # 面向 Controller 和其他模块的业务接口
+├── service/<功能>/impl  # 常规业务实现、事务和权限规则
+├── application/         # Agent、Analysis、评测等跨组件用例与编排
+├── port/                # Application 依赖的外部能力接口
+├── infrastructure/      # 持久化、模型路由、文件和 PDF 等适配器
 ├── mapper/<功能>/       # MyBatis Mapper
 ├── pojo/<功能>/         # DTO、VO、实体和领域数据结构
 ├── enumeration/<功能>/  # 业务枚举
-├── llm/                 # agent、governance、reporting、shared
+├── llm/                 # Agent 网关及通用模型调用、governance、reporting、shared
 ├── rag/                 # knowledge、governance
 ├── config/              # analysis、auth、clinical、governance、shared
 ├── mq/analysis/         # 分析任务消息、Outbox 发布和消费
@@ -104,20 +108,22 @@ src/main/resources/
 └── application.yaml
 ```
 
-后端采用“技术根目录 + 功能子包”的模块化单体结构。例如病例相关代码分别位于
-`controller/cases`、`service/cases`、`mapper/cases` 和 `pojo/cases`，查找时先按
+后端采用“技术职责 + 功能子包 + 分层角色”的模块化单体结构。例如病例相关代码分别位于
+`controller/cases`、`service/cases/api|impl`、`mapper/cases` 和 `pojo/cases`，查找时先按
 技术职责定位，再按功能归属定位。系统仍是一个 Spring Boot 进程和一个业务数据库，
 没有为了整理目录拆成微服务。
 
-Analysis 的行为边界没有因目录扁平化而取消：用例、端口、适配器和本地制品存储分别位于
-`service/analysis` 的子包，命令、领域模型、事件和持久化对象位于 `pojo/analysis`，
-消息、AI 客户端和配置分别位于 `mq/analysis`、`ai/analysis`、`config/analysis`。
-Agent 同样分为 `service/agent` 的 Java 编排、`pojo/agent` 的结构化契约和
-`llm/agent` 的模型路由适配；评测执行归入 governance。
+Analysis 执行用例位于 `application/analysis`，外部能力接口位于 `port/analysis`，
+MyBatis、Python HTTP 和本地制品实现位于 `infrastructure/analysis`；命令、领域模型、
+事件和持久化对象仍位于 `pojo/analysis`。Agent 编排、策略和工具工厂位于
+`application/agent`，持久化上下文和 LLM Router 实现位于 `infrastructure/agent`；
+通用 Agent 模型网关仍位于 `llm/agent`，评测执行按同样原则归入
+`application/governance/evaluation`。
 
 `LayerFunctionalPackageArchitectureTest` 约束技术根下必须使用批准的功能子包，
-`AnalysisModuleArchitectureTest` 继续约束领域模型无框架依赖、Service 不随意依赖具体
-MQ/AI/存储适配器，以及无关 Controller 不直接访问 Analysis 技术适配器。
+`AnalysisModuleArchitectureTest` 与 `LayeredPackageStructureTest` 继续约束领域模型无框架
+依赖、Application 不依赖 Infrastructure、Controller 不跨过业务接口访问内部处理器，
+以及无关 Controller 不直接访问 Analysis 技术适配器。
 
 ## 本地启动
 
