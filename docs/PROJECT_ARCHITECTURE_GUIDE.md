@@ -163,25 +163,29 @@ Python 返回模型结果，但不理解“这个医生是否拥有这个病例�
 
 ## 5. Java 后端组织方式
 
-Java 包根为 `src/main/java/com/example/retinavision`，采用“**技术根目录 / 功能所有者**”结构。例如病例 API 位于 `controller/cases`，病例业务位于 `service/cases`，病例 SQL 位于 `mapper/cases`，病例对象位于 `pojo/cases`。
+Java 包根为 `src/main/java/com/example/retinavision`，采用“**技术职责 / 功能所有者 / 分层角色**”结构。例如病例 API 位于 `controller/cases`，病例业务接口与实现分别位于 `service/cases/api`、`service/cases/impl`，病例 SQL 位于 `mapper/cases`，病例对象位于 `pojo/cases`。复杂跨组件流程再拆到 `application`、`port` 和 `infrastructure`，避免把所有类重新堆回 `service`。
 
 ### 5.1 技术层目录词典
 
 | 技术根目录 | 责任 | 阅读要点 |
 |---|---|---|
 | `controller/` | HTTP 入参、认证主体、返回包装、委托 Service | Controller 应薄；复杂状态和权限不应只写在这里 |
-| `service/` | 用例、业务规则、事务、状态机、权限、跨 Mapper 编排 | 本项目最需要深入阅读的区域 |
+| `service/<功能>/api` | 面向 Controller 或其他模块的业务能力接口 | 先读接口确定该模块对外提供什么能力 |
+| `service/<功能>/impl` | 业务规则、事务、权限和 Mapper 编排 | 常规业务实现；不放端口、适配器或纯工具类 |
+| `application/` | 跨组件用例、流程编排、策略和确定性处理 | 当前主要承载 Agent、Analysis 执行和治理评测 |
+| `port/` | Application 需要但不拥有的外部能力接口 | 只描述能力，不包含 MyBatis、HTTP、文件等实现细节 |
+| `infrastructure/` | Port 或 Application API 的技术实现 | 按 agent/analysis/reporting 和 context/routing/persistence 等职责定位 |
 | `mapper/` | MyBatis-Plus Mapper 和自定义数据库查询 | 基础 CRUD 不展开，重点看归属过滤、条件更新、分页统计 |
 | `pojo/` | Entity、DTO、VO、Command、Event、领域对象 | 先通过对象类型判断数据处于哪一层 |
 | `enumeration/` | 角色、任务、病例、质量、审核等有限状态 | 状态流转应与 Service 校验一起读 |
 | `config/` | Security、RabbitMQ、Analysis Bean、评测执行器、Spring AI | 理解运行时 Bean 怎样装配 |
 | `filter/auth/` | JWT 请求认证过滤器 | 每个请求怎样形成 `Authentication` |
 | `mq/analysis/` | 消息协议、发布、消费、Outbox | 与 Analysis 状态机和幂等一起读 |
-| `ai/analysis/` | Java 到 Python 的客户端和协议适配 | 它实现 Analysis 端口，不负责业务授权 |
-| `llm/` | LLM 网关、Prompt、安全和评测适配 | 按 agent/governance/reporting/shared 分组 |
+| `ai/analysis/` | Java 到 Python 的低层 HTTP 客户端和 DTO | `infrastructure/analysis/inference` 将其适配为 Analysis Port |
+| `llm/` | 通用 LLM 网关、Prompt 和模型调用能力 | `llm/agent` 保留回答模型网关；Skill Router 适配器归入 `infrastructure/agent/routing` |
 | `rag/` | 文档切分、Qdrant、受众策略、检索和引用 | 与 knowledge Service 配合 |
 | `redis/shared/` | Redis Key 的集中构造 | 防止不同功能使用冲突 Key |
-| `exception/`、`result/` | 统一异常和 API 返回 | `BaseException` 表达可控业务错误 |
+| `exception/<功能>`、`result/` | 按功能集中异常和统一 API 返回 | `BaseException` 表达可控业务错误，异常不散落在 Service 包中 |
 | `utils/` | JWT、客户端 IP 等无状态工具 | 工具不应包含业务状态机 |
 
 ### 5.2 功能子包词典
@@ -216,23 +220,32 @@ Java 包根为 `src/main/java/com/example/retinavision`，采用“**技术根�
 
 不要把 Entity 直接返回给前端作为默认做法。VO 是隐私和兼容边界，例如患者 Agent VO 会主动排除质量阈值、模型元数据、原始路径和未签发内容。
 
-### 5.4 Analysis 为什么比其他模块多一层端口
+### 5.4 `service`、`application`、`port`、`infrastructure` 如何配合
 
-`service/analysis` 同时包含：
+普通 CRUD 或单模块事务通常只需要 `service/<功能>/api` 与 `impl`。涉及消息、远程模型、文件或多种持久化能力的复杂流程使用下面的结构：
 
 ```text
-service/analysis/
-|-- ExecuteAnalysisTaskUseCase.java
-|-- ExecuteAnalysisTaskHandler.java
-|-- port/       用例依赖的能力接口
-|-- adapter/    MyBatis/旧 Service 到端口的实现
-|-- storage/    本地制品存储
-`-- impl/       面向现有 Controller 的 Service 实现
+application/analysis/
+|-- usecase/ExecuteAnalysisTaskUseCase.java
+`-- handler/ExecuteAnalysisTaskHandler.java
+
+port/analysis/
+|-- AnalysisTaskRepository.java
+|-- AiInferencePort.java
+|-- ArtifactStore.java
+`-- ...
+
+infrastructure/analysis/
+|-- persistence/   MyBatis 与旧 Service 的端口实现
+|-- inference/     Python HTTP 推理适配
+`-- storage/       本地分析制品存储
 ```
 
-推理链路涉及数据库、文件、HTTP、MQ 和状态机，若直接在 Listener 里调用多个 Mapper，会很难测试。`ExecuteAnalysisTaskHandler` 只依赖 `AnalysisTaskRepository`、`AiInferencePort`、`ArtifactStore` 等端口，所以可用内存替身验证状态转换；具体 MyBatis 和本地文件实现放在 adapter/storage。
+`service` 回答“业务模块对外提供什么”；`application` 回答“一个完整用例如何按顺序运行”；`port` 回答“该用例依赖哪些外部能力”；`infrastructure` 回答“这些能力用 MyBatis、HTTP、文件或模型具体怎样实现”。
 
-这是一种局部的六边形架构实践，不要求整个项目一次性改成同样形态。
+推理链路涉及数据库、文件、HTTP、MQ 和状态机，若直接在 Listener 里调用多个 Mapper，会很难测试。`ExecuteAnalysisTaskHandler` 只依赖 `AnalysisTaskRepository`、`AiInferencePort`、`ArtifactStore` 等端口，所以可用内存替身验证状态转换；具体实现分别放在 `infrastructure/analysis/persistence|inference|storage`。
+
+Agent 也遵循同一边界：Orchestrator、策略、上下文命令解析在 `application/agent`，Router 工厂接口在 `application/agent/routing/api`，真实 LLM Router 适配器在 `infrastructure/agent/routing`。评测 Application 因此只依赖工厂接口，不直接构造基础设施类。
 
 ---
 
@@ -465,7 +478,7 @@ Listener 使用手动 ACK，根据执行结果处理消息：
 
 #### `ExecuteAnalysisTaskHandler.execute(...)`
 
-路径：`service/analysis/ExecuteAnalysisTaskHandler.java`
+路径：`application/analysis/handler/ExecuteAnalysisTaskHandler.java`
 
 执行步骤：
 
@@ -480,7 +493,7 @@ Listener 使用手动 ACK，根据执行结果处理消息：
 
 #### `LocalArtifactStore`
 
-路径：`service/analysis/storage/LocalArtifactStore.java`
+路径：`infrastructure/analysis/storage/LocalArtifactStore.java`
 
 `resolveSource(...)`、`storeMask(...)` 会对配置根目录和目标路径做规范化，要求最终路径仍在允许根下。原因是数据库中的 object key 不能被无条件当作系统绝对路径，否则可能形成路径穿越。
 
@@ -531,13 +544,13 @@ Listener 使用手动 ACK，根据执行结果处理消息：
 
 #### `AgentUnsafeRequestPolicy.requireAllowed(...)`
 
-路径：`service/agent/policy/AgentUnsafeRequestPolicy.java`
+路径：`application/agent/policy/AgentUnsafeRequestPolicy.java`
 
 该策略在 Router 之前确定性拒绝：绕过规则、明确写操作、读取其他患者/医生、未签发报告、任务日志、文件路径和原始 mask。安全拒绝不依赖 LLM 是否“听话”。解释性问题先被识别，避免把“签发是什么意思”误判成签发命令。
 
 #### `AgentSkillRegistry`
 
-路径：`service/agent/AgentSkillRegistry.java`
+路径：`application/agent/routing/AgentSkillRegistry.java`
 
 - `isAvailable(...)`：医生 Skill 与患者 Skill 使用两个显式集合。
 - `executionMode(...)`：标记 Native `DIRECT` 或受控工具模式。
@@ -548,13 +561,13 @@ LLM 只负责“从自然语言提出候选路由和参数”，Java Registry �
 
 #### `LlmAgentSkillRouter.route(...)`
 
-路径：`llm/agent/LlmAgentSkillRouter.java`
+路径：`infrastructure/agent/routing/LlmAgentSkillRouter.java`
 
 `writeContext(...)` 把自然语言问题、当前 Skill、**本角色本会话可用**的 Skill 定义、少量路由样例和参数 Schema 组装为 JSON，再使用版本化 `AGENT_SKILL_ROUTER` Prompt 调用模型。返回值必须是合法 JSON，Skill 必须在传入目录内，置信度必须有效；模型不能通过“猜到一个代码”获得未提供能力。
 
 #### 医生 Orchestrator
 
-路径：`service/agent/DoctorAgentSkillOrchestrator.java`
+路径：`application/agent/orchestration/DoctorAgentSkillOrchestrator.java`
 
 `handle(...)` 的关键顺序：安全策略 -> 加载会话上下文 -> 解析“下一页/查看第二个”等确定性命令 -> Router -> 置信度门槛 -> Registry 参数校验 -> Native Skill 分派 -> 绑定实际 Skill 版本。
 
@@ -562,7 +575,7 @@ Native 分支包括工作量、负责病例筛选、病例摘要、随访比较�
 
 #### 患者 Orchestrator
 
-路径：`service/agent/PatientAgentSkillOrchestrator.java`
+路径：`application/agent/orchestration/PatientAgentSkillOrchestrator.java`
 
 患者 Skill 仅包括 `MY_CASE_LIST`、`MY_CASE_PROGRESS`、`MY_SIGNED_REPORT`、`PATIENT_KNOWLEDGE_QA`。`listCases(...)`、`progress(...)`、`reports(...)` 通过 `PatientAgentQueryService` 查询当前账号关联患者；报告详情只接受已签发报告。
 
@@ -596,7 +609,7 @@ Native 分支包括工作量、负责病例筛选、病例摘要、随访比较�
 
 #### `DefaultAgentToolFactory.create(...)`
 
-路径：`service/agent/DefaultAgentToolFactory.java`
+路径：`application/agent/tooling/DefaultAgentToolFactory.java`
 
 工具工厂按角色和显式 allowlist 创建 Spring AI `ToolCallback`。当前医生/患者知识问答只注册 `searchMedicalKnowledge`。管理员使用 `create(sessionId, user, traceId)`，获得公共知识工具以及 `getQualityControlOverview`、`listQualityRiskAlerts` 两个不返回患者身份的治理工具。类中虽还定义了临床工具，但本轮医生/患者知识回退并未注册它们；未注册的工具对模型不可见。
 
@@ -608,7 +621,7 @@ Native 分支包括工作量、负责病例筛选、病例摘要、随访比较�
 
 #### `AgentEvaluationService.start(...)`
 
-路径：`service/governance/evaluation/AgentEvaluationService.java`
+路径：`application/governance/evaluation/usecase/AgentEvaluationService.java`
 
 启动时校验数据集状态、目标角色、受控 `modelKey` 和版本映射；同一时间只允许一个 `QUEUED/RUNNING` 真实模型运行。它创建 Run，并把本次 Prompt、Skill、模型和数据集版本写入 binding 快照，然后提交到独立单线程执行器。
 
@@ -979,7 +992,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify-monorepo-layout.ps1
 1. `README.md`：部署组件和角色。
 2. `config/auth/SecurityConfig.java`：接口角色地图。
 3. `controller/`：有哪些外部用例。
-4. 对应 `service/<功能>` 接口：能力边界。
+4. 对应 `service/<功能>/api` 接口：能力边界。
 5. `service/<功能>/impl`：复杂规则和事务。
 6. `mapper/<功能>` + XML：数据归属和条件更新。
 7. `pojo/<功能>` + `enumeration/<功能>`：输入、输出和状态。
@@ -993,7 +1006,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify-monorepo-layout.ps1
 
 ### 13.3 修改分析任务
 
-按顺序阅读：`TaskController` -> `TaskServiceImpl` -> `AnalysisOutboxPublisher` -> `AnalysisTaskListener` -> `ExecuteAnalysisTaskHandler` -> Analysis ports/adapters -> Python API schema -> 状态机测试。
+按顺序阅读：`TaskController` -> `TaskServiceImpl` -> `AnalysisOutboxPublisher` -> `AnalysisTaskListener` -> `application/analysis/handler/ExecuteAnalysisTaskHandler` -> `port/analysis` -> `infrastructure/analysis` -> Python API schema -> 状态机测试。
 
 新增状态时同时检查枚举、数据库字段/迁移、条件 claim、列表过滤、审计、重试和前端显示。
 
@@ -1034,11 +1047,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify-monorepo-layout.ps1
 新增功能先确定“技术职责”和“功能所有者”：
 
 - 新增病例 HTTP 接口：`controller/cases`。
-- 新增病例业务规则：`service/cases` 或 `service/cases/impl`。
+- 新增病例业务接口：`service/cases/api`；实现放在 `service/cases/impl`。
 - 新增病例复杂 SQL：`mapper/cases`，必要时配 `resources/mapper` XML。
 - 新增病例请求/响应：`pojo/cases/dto|vo`。
-- 新增跨组件 Analysis 能力：优先定义 `service/analysis/port`，在 adapter 实现。
-- 新增 Agent 模型适配：`llm/agent`；Java 执行编排仍在 `service/agent`。
+- 新增跨组件 Analysis 外部能力：在 `port/analysis` 定义，在 `infrastructure/analysis` 实现。
+- 新增 Analysis 执行流程：用例接口放 `application/analysis/usecase`，处理器放 `application/analysis/handler`。
+- 新增 Agent 编排、策略或确定性解析：放 `application/agent` 对应子包；模型 Router 等技术实现放 `infrastructure/agent`。
+- 新增业务 Service：接口放 `service/<功能>/api`，实现放 `service/<功能>/impl`；不要把端口、适配器或辅助类混入其中。
 - 多模块共享且没有业务所有者的能力才进入 `shared`，不要把它当作杂物箱。
 
 保持 Controller 薄、Service 负责业务、Mapper 负责数据过滤、VO 控制暴露字段。一个方法若同时处理 HTTP、权限、SQL、文件和远程调用，应优先拆成可测试的用例和端口，而不是继续向 Controller 堆代码。

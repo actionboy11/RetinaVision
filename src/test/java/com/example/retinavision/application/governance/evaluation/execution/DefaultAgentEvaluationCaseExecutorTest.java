@@ -7,7 +7,7 @@ import com.example.retinavision.pojo.agent.AgentSkillCode;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOutcome;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
 import com.example.retinavision.application.agent.routing.AgentSkillRegistry;
-import com.example.retinavision.application.governance.evaluation.execution.DefaultAgentEvaluationCaseExecutor;
+import com.example.retinavision.infrastructure.agent.routing.LlmAgentSkillRouterFactory;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
 import com.example.retinavision.pojo.agent.entity.AgentSkillVersionEntity;
 import com.example.retinavision.pojo.governance.entity.AgentEvaluationCaseEntity;
@@ -127,8 +127,9 @@ class DefaultAgentEvaluationCaseExecutorTest {
         definition.setName(skillName); definition.setDescription("匿名评测 Skill");
         when(versions.selectById(31L)).thenReturn(version);
         when(skills.selectById(11L)).thenReturn(definition);
+        ObjectMapper json = new ObjectMapper();
         return new Fixture(llm, new DefaultAgentEvaluationCaseExecutor(bindings, versions, skills,
-                llm, new AgentSkillRegistry(), new ObjectMapper()));
+                llm, new LlmAgentSkillRouterFactory(json, new AgentSkillRegistry()), json));
     }
 
     private AgentEvaluationRunEntity run() {

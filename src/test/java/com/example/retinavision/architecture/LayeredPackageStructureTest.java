@@ -198,22 +198,71 @@ class LayeredPackageStructureTest {
 
         for (String domain : domains) {
             String serviceRoot = BASE_PACKAGE + ".service." + domain;
-            List<String> rootTypes = productionClasses.stream()
-                    .filter(javaClass -> javaClass.getPackageName().equals(serviceRoot))
+            List<JavaClass> domainTypes = productionClasses.stream()
+                    .filter(javaClass -> javaClass.getPackageName().startsWith(serviceRoot))
+                    .filter(javaClass -> !javaClass.getName().contains("$"))
+                    .toList();
+            List<String> misplacedTypes = domainTypes.stream()
+                    .filter(javaClass -> !javaClass.getPackageName().equals(serviceRoot + ".api")
+                            && !javaClass.getPackageName().equals(serviceRoot + ".impl"))
                     .map(JavaClass::getName)
                     .sorted()
                     .toList();
-            assertTrue(rootTypes.isEmpty(),
-                    () -> "Types in " + serviceRoot + ": " + rootTypes);
+            assertTrue(misplacedTypes.isEmpty(),
+                    () -> "Service types outside api/impl in " + serviceRoot + ": " + misplacedTypes);
 
             String apiPackage = serviceRoot + ".api";
-            List<JavaClass> apiTypes = productionClasses.stream()
+            List<JavaClass> apiTypes = domainTypes.stream()
                     .filter(javaClass -> javaClass.getPackageName().equals(apiPackage))
-                    .filter(javaClass -> !javaClass.getName().contains("$"))
                     .toList();
             assertTrue(!apiTypes.isEmpty(), () -> "No Service APIs in " + apiPackage);
             assertTrue(apiTypes.stream().allMatch(JavaClass::isInterface),
                     () -> "Non-interface Service API in " + apiPackage + ": " + apiTypes);
+
+            String implPackage = serviceRoot + ".impl";
+            List<JavaClass> implTypes = domainTypes.stream()
+                    .filter(javaClass -> javaClass.getPackageName().equals(implPackage))
+                    .toList();
+            assertTrue(implTypes.stream().noneMatch(JavaClass::isInterface),
+                    () -> "Interface in Service implementation package " + implPackage + ": " + implTypes);
         }
+    }
+
+    @Test
+    void application_and_port_layers_do_not_depend_on_infrastructure() {
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().startsWith(BASE_PACKAGE + ".application.")
+                        || javaClass.getPackageName().startsWith(BASE_PACKAGE + ".port."))
+                .flatMap(javaClass -> javaClass.getDirectDependenciesFromSelf().stream())
+                .filter(dependency -> dependency.getTargetClass().getPackageName()
+                        .startsWith(BASE_PACKAGE + ".infrastructure."))
+                .map(Object::toString)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Application/port depends on infrastructure: " + violations);
+    }
+
+    @Test
+    void controllers_depend_on_public_boundaries_only() {
+        List<String> violations = productionClasses.stream()
+                .filter(javaClass -> javaClass.getPackageName().startsWith(BASE_PACKAGE + ".controller."))
+                .flatMap(javaClass -> javaClass.getDirectDependenciesFromSelf().stream())
+                .filter(dependency -> {
+                    String targetPackage = dependency.getTargetClass().getPackageName();
+                    return targetPackage.contains(".service.")
+                            && (targetPackage.endsWith(".impl") || targetPackage.contains(".impl."))
+                            || targetPackage.contains(".application.")
+                            && (targetPackage.contains(".handler")
+                            || targetPackage.contains(".fixture")
+                            || targetPackage.contains(".support"));
+                })
+                .map(Object::toString)
+                .sorted()
+                .toList();
+
+        assertTrue(violations.isEmpty(),
+                () -> "Controller depends on implementation/internal application package: " + violations);
     }
 }

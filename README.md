@@ -44,7 +44,11 @@ directory.
 ```text
 src/main/java/com/example/retinavision/
 |-- controller/{agent,analysis,auth,cases,clinical,...}
-|-- service/{agent,analysis,auth,cases,clinical,...}
+|-- service/<domain>/api                 # business service contracts
+|-- service/<domain>/impl                # business service implementations
+|-- application/{agent,analysis,governance,...} # use cases and orchestration
+|-- port/{analysis,reporting}            # external capability contracts
+|-- infrastructure/{agent,analysis,reporting}   # technical adapters
 |-- mapper/{agent,analysis,cases,clinical,...}
 |-- pojo/{agent,analysis,auth,cases,clinical,...}
 |-- llm/{agent,governance,reporting,shared}
@@ -52,17 +56,20 @@ src/main/java/com/example/retinavision/
 |-- config/{analysis,auth,clinical,governance,shared}
 |-- mq/analysis
 |-- ai/analysis
+|-- exception/<domain>
 `-- redis/shared
 ```
 
-Analysis behavioral boundaries remain explicit inside this layout. Its use
-cases, ports, adapters, and artifact storage live below `service/analysis`;
-commands, domain models, events, and persistence records live below
-`pojo/analysis`. Agent orchestration follows the same rule: Java execution is
-under `service/agent`, structured contracts under `pojo/agent`, and model
-adapters under `llm/agent`. ArchUnit tests prevent classes from being placed
-directly in functionalized technical roots and keep the Analysis dependency
-rules enforceable.
+Business-facing contracts and implementations remain easy to find under
+`service/<domain>/api` and `service/<domain>/impl`. Cross-component workflows
+live under `application`, technical dependencies are expressed through `port`,
+and their concrete adapters live under `infrastructure`. For example, Analysis
+execution is in `application/analysis`, while persistence, HTTP inference, and
+artifact storage adapters are in `infrastructure/analysis`. Agent orchestration
+and policies are in `application/agent`; the LLM router adapter is in
+`infrastructure/agent/routing`, while shared Agent model gateway contracts and
+Spring AI gateway implementations remain under `llm/agent`. ArchUnit tests enforce these boundaries and
+prevent interfaces or implementations from drifting back into flat packages.
 
 ## Architecture
 

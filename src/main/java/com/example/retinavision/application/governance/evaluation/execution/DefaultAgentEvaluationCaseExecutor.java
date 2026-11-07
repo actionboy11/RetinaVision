@@ -1,8 +1,8 @@
 package com.example.retinavision.application.governance.evaluation.execution;
 
 import com.example.retinavision.application.governance.evaluation.fixture.AgentEvaluationFixtureRuntime;
+import com.example.retinavision.application.agent.routing.api.AgentSkillRouterFactory;
 import com.example.retinavision.constant.shared.ErrorMessageSignal;
-import com.example.retinavision.infrastructure.agent.routing.LlmAgentSkillRouter;
 import com.example.retinavision.exception.llm.LlmException;
 import com.example.retinavision.llm.shared.LlmOrchestrationService;
 import com.example.retinavision.pojo.agent.AgentSkillCode;
@@ -11,7 +11,6 @@ import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationCaseOu
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationExecution;
 import com.example.retinavision.pojo.governance.evaluation.AgentEvaluationFailureType;
 import com.example.retinavision.exception.evaluation.AgentEvaluationInfrastructureException;
-import com.example.retinavision.application.agent.routing.AgentSkillRegistry;
 import com.example.retinavision.application.agent.routing.api.AgentSkillRouter;
 import com.example.retinavision.exception.agent.AgentUnsafeRequestException;
 import com.example.retinavision.pojo.agent.entity.AgentSkillEntity;
@@ -40,7 +39,7 @@ public class DefaultAgentEvaluationCaseExecutor implements AgentEvaluationCaseEx
     private final AgentSkillVersionMapper skillVersions;
     private final AgentSkillMapper skills;
     private final LlmOrchestrationService llm;
-    private final AgentSkillRegistry registry;
+    private final AgentSkillRouterFactory routerFactory;
     private final ObjectMapper json;
     private final Map<Long, RunConfiguration> configurations = new ConcurrentHashMap<>();
     private final Map<Long, AgentEvaluationFixtureRuntime> runtimes = new ConcurrentHashMap<>();
@@ -49,13 +48,13 @@ public class DefaultAgentEvaluationCaseExecutor implements AgentEvaluationCaseEx
                                               AgentSkillVersionMapper skillVersions,
                                               AgentSkillMapper skills,
                                               LlmOrchestrationService llm,
-                                              AgentSkillRegistry registry,
+                                              AgentSkillRouterFactory routerFactory,
                                               ObjectMapper json) {
         this.bindings = bindings;
         this.skillVersions = skillVersions;
         this.skills = skills;
         this.llm = llm;
-        this.registry = registry;
+        this.routerFactory = routerFactory;
         this.json = json;
     }
 
@@ -106,7 +105,7 @@ public class DefaultAgentEvaluationCaseExecutor implements AgentEvaluationCaseEx
         LlmOrchestrationService candidateLlm = (templateCode, context) ->
                 llm.generateJsonForEvaluation(templateCode, configuration.routerPromptVersionId(),
                         context, run.getId());
-        LlmAgentSkillRouter delegate = new LlmAgentSkillRouter(candidateLlm, json, registry);
+        AgentSkillRouter delegate = routerFactory.create(candidateLlm);
         return (question, currentSkill) -> delegate.route(question, currentSkill, configuration.definitions());
     }
 
